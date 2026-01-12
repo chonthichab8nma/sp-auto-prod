@@ -271,7 +271,7 @@ export default function GarageSystem() {
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
-                placeholder="ค้นหา ทะเบียนรถ / เลขถุง..."
+                placeholder="ค้นหา ทะเบียนรถ / เลขถัง..."
                 className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -415,7 +415,7 @@ function DashboardView({
                       </span>
                     </div>
                     <div className="text-sm text-slate-500 flex gap-2">
-                      <span>เลขถุง: {job.bagNumber}</span>
+                      <span>เลขถัง: {job.bagNumber}</span>
                       <span>•</span>
                       <span>{job.paymentType}</span>
                     </div>
@@ -526,7 +526,7 @@ function CreateJobForm({ onCancel, onSubmit }: CreateJobFormProps) {
           required
         />
         <FormInput
-          label="เลขถุง (Job No.)"
+          label="เลขถัง (Job No.)"
           name="bagNumber"
           value={formData.bagNumber}
           onChange={handleChange}
@@ -1103,3 +1103,4 @@ function StepRow({
     </div>
   );
 }
+
