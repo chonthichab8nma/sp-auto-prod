@@ -35,6 +35,7 @@ export default function CreateJobForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+   
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -147,7 +148,7 @@ export default function CreateJobForm({
               onChange={handleChange}
             />
             <FormInput
-              label="ค่าความเสียหายส่วนแรก (Excess)"
+              label="ค่าความเสียหายส่วนแรก"
               name="excessFee"
               value={formData.excessFee}
               onChange={handleChange}
