@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import {
   ArrowRight,
   Save,
@@ -233,14 +234,15 @@ function StageCard({
 interface JobDetailViewProps {
   job: Job;
   onUpdate: (j: Job) => void;
-  onBack: () => void;
+ 
 }
 
 export default function JobDetail({
   job,
   onUpdate,
-  onBack,
+  
 }: JobDetailViewProps) {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Job>(job);
 
@@ -288,7 +290,7 @@ export default function JobDetail({
   return (
     <div className="space-y-6 pb-20">
       <button
-        onClick={onBack}
+        onClick={() => navigate("/")}
         className="flex items-center text-slate-500 hover:text-slate-800 transition-colors"
       >
         <ArrowRight className="rotate-180 mr-1" size={16} /> กลับหน้าหลัก

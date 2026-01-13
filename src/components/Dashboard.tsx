@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router";
 import {
   Car,
   ClipboardCheck,
@@ -8,12 +9,7 @@ import {
   LayoutDashboard,
   ArrowRight,
 } from "lucide-react";
-import { type Job } from "../Type"; 
-
-interface DashboardProps {
-  jobs: Job[];
-  onViewJob: (id: string) => void;
-}
+import { type Job } from "../Type";
 
 interface StatCardProps {
   title: string;
@@ -36,12 +32,14 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
   );
 }
 
-export default function Dashboard({ jobs, onViewJob }: DashboardProps) {
+export default function Dashboard({ jobs }: { jobs: Job[] }) {
+  const navigate = useNavigate();
   const stats = {
     total: jobs.length,
     claim: jobs.filter((j) => j.currentStageIndex === 0).length,
     repair: jobs.filter((j) => j.currentStageIndex === 1).length,
-    billing: jobs.filter((j) => j.currentStageIndex === 2 && !j.isFinished).length,
+    billing: jobs.filter((j) => j.currentStageIndex === 2 && !j.isFinished)
+      .length,
     finished: jobs.filter((j) => j.isFinished).length,
   };
 
@@ -53,21 +51,48 @@ export default function Dashboard({ jobs, onViewJob }: DashboardProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard title="รถทั้งหมด" value={stats.total} icon={<Car />} color="bg-slate-600" />
-        <StatCard title="ขั้นตอนเคลม" value={stats.claim} icon={<ClipboardCheck />} color="bg-blue-500" />
-        <StatCard title="ขั้นตอนซ่อม" value={stats.repair} icon={<Wrench />} color="bg-orange-500" />
-        <StatCard title="ขั้นตอนตั้งเบิก" value={stats.billing} icon={<FileText />} color="bg-purple-500" />
-        <StatCard title="เสร็จสิ้น" value={stats.finished} icon={<CheckCircle2 />} color="bg-green-500" />
+        <StatCard
+          title="รถทั้งหมด"
+          value={stats.total}
+          icon={<Car />}
+          color="bg-slate-600"
+        />
+        <StatCard
+          title="ขั้นตอนเคลม"
+          value={stats.claim}
+          icon={<ClipboardCheck />}
+          color="bg-blue-500"
+        />
+        <StatCard
+          title="ขั้นตอนซ่อม"
+          value={stats.repair}
+          icon={<Wrench />}
+          color="bg-orange-500"
+        />
+        <StatCard
+          title="ขั้นตอนตั้งเบิก"
+          value={stats.billing}
+          icon={<FileText />}
+          color="bg-purple-500"
+        />
+        <StatCard
+          title="เสร็จสิ้น"
+          value={stats.finished}
+          icon={<CheckCircle2 />}
+          color="bg-green-500"
+        />
       </div>
 
-      {/* Job List */}
+
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-100 bg-slate-50 font-semibold text-slate-700">
           รายการรถในอู่ล่าสุด
         </div>
         <div className="divide-y divide-slate-100">
           {jobs.length === 0 ? (
-            <div className="p-8 text-center text-slate-400">ไม่มีรายการรถในระบบ</div>
+            <div className="p-8 text-center text-slate-400">
+              ไม่มีรายการรถในระบบ
+            </div>
           ) : (
             jobs.map((job) => (
               <div
@@ -121,11 +146,12 @@ export default function Dashboard({ jobs, onViewJob }: DashboardProps) {
                         : job.stages[job.currentStageIndex].name}
                     </span>
                     <div className="text-xs text-slate-400 mt-1">
-                      รับรถ: {new Date(job.startDate).toLocaleDateString("th-TH")}
+                      รับรถ:{" "}
+                      {new Date(job.startDate).toLocaleDateString("th-TH")}
                     </div>
                   </div>
                   <button
-                    onClick={() => onViewJob(job.id)}
+                    onClick={() => navigate(`/job/${job.id}`)}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                   >
                     <ArrowRight />

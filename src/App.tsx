@@ -1,106 +1,108 @@
-// App.tsx
-import React, { useState } from "react";
-import { Wrench, Search, Plus } from "lucide-react";
-import  { type Job, type JobFormData, MOCK_JOBS, INITIAL_STAGES } from "./Type";
-
-// Import Components ที่เราแยกไว้
+import { useState, useEffect } from "react";
+import { Routes, Route, useParams, useNavigate } from "react-router-dom";
 import Dashboard from "./components/Dashboard";
-import CreateJobForm from "./components/CreateJobForm";
 import JobDetail from "./components/JobDetail";
+import Header from "./components/Header";
+import CreateJobForm from "./components/CreateJobForm";
 
-export default function GarageSystem() {
-  const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
-  const [activeView, setActiveView] = useState<"dashboard" | "create" | "detail">("dashboard");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+import { type Job, type JobFormData, INITIAL_STAGES, MOCK_JOBS } from "./Type";
 
-  const activeJob = jobs.find((j) => j.id === selectedJobId);
+function JobDetailWrapper({
+  jobs,
+  onUpdate,
+}: {
+  jobs: Job[];
+  onUpdate: (j: Job) => void;
+}) {
+  const { jobId } = useParams();
+  const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.setItem("job_form", JSON.stringify(jobs));
+  }, [jobs]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const found = jobs.find(
-      (j) => j.registration.includes(searchQuery) || j.bagNumber.includes(searchQuery)
+  const job = jobs.find((j) => j.id === jobId);
+
+  if (!job) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500 mb-4">ไม่พบข้อมูลรถที่ระบุ</p>
+        <button
+          onClick={() => navigate("/")}
+          className="text-blue-600 hover:underline font-medium"
+        >
+          กลับหน้าหลัก
+        </button>
+      </div>
     );
-    if (found) {
-      setSelectedJobId(found.id);
-      setActiveView("detail");
-    } else {
-      alert("ไม่พบข้อมูลรถทะเบียนนี้");
-    }
-  };
+  }
+  return <JobDetail job={job} onUpdate={onUpdate} />;
+}
 
-  const createNewJob = (formData: JobFormData) => {
+function App() {
+  const [jobs, setJobs] = useState<Job[]>(() => {
+    const savedJobs = localStorage.getItem("job_form");
+    return savedJobs ? JSON.parse(savedJobs) : MOCK_JOBS;
+  });
+
+  const navigate = useNavigate();
+
+  const handleCreateJob = (formData: JobFormData) => {
+    const newStages = INITIAL_STAGES.map((stage) => ({
+      ...stage,
+      steps: stage.steps.map((step) => ({ ...step })), 
+    }));
+
     const newJob: Job = {
-      id: Date.now().toString(),
       ...formData,
+      id: Date.now().toString(),
+      stages: newStages,
       currentStageIndex: 0,
       isFinished: false,
-      stages: JSON.parse(JSON.stringify(INITIAL_STAGES)),
     };
-    setJobs((prev) => [newJob, ...prev]);
-    setSelectedJobId(newJob.id);
-    setActiveView("detail");
+
+    setJobs((prevJobs) => [newJob, ...prevJobs]);
+
+    navigate("/");
   };
 
-  const updateJob = (updatedJob: Job) => {
-    setJobs((prev) => prev.map((j) => (j.id === updatedJob.id ? updatedJob : j)));
+  const handleUpdateJob = (updatedJob: Job) => {
+    setJobs(jobs.map((j) => (j.id === updatedJob.id ? updatedJob : j)));
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveView("dashboard")}>
-            <div className="bg-blue-600 p-2 rounded-lg text-white">
-              <Wrench size={20} />
-            </div>
-            <h1 className="text-xl font-bold text-blue-900 hidden md:block">Garage Pro</h1>
-          </div>
+    <>
+      <Header
+        jobs={jobs}
+        onJobSelect={(id) => navigate(`/job/${id}`)}
+        onGoHome={() => navigate("/")}
+        onNewJob={() => navigate("/create")}
+      />
+      <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+        <div className="max-w-6xl mx-auto mt-6">
+          <Routes>
+            <Route path="/" element={<Dashboard jobs={jobs} />} />
 
-          <div className="flex-1 max-w-lg mx-4">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="ค้นหา ทะเบียนรถ / เลขถัง..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
-            </form>
-          </div>
+            <Route
+              path="/create"
+              element={
+                <CreateJobForm
+                  onCancel={() => navigate("/")}
+                  onSubmit={handleCreateJob}
+                />
+              }
+            />
 
-          <button onClick={() => setActiveView("create")} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
-            <Plus size={16} />
-            <span className="hidden sm:inline">รับรถใหม่</span>
-          </button>
+            <Route
+              path="/job/:jobId"
+              element={
+                <JobDetailWrapper jobs={jobs} onUpdate={handleUpdateJob} />
+              }
+            />
+          </Routes>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto p-4 md:p-6">
-        {activeView === "dashboard" && (
-          <Dashboard
-            jobs={jobs}
-            onViewJob={(id) => {
-              setSelectedJobId(id);
-              setActiveView("detail");
-            }}
-          />
-        )}
-        {activeView === "create" && (
-          <CreateJobForm
-            onCancel={() => setActiveView("dashboard")}
-            onSubmit={createNewJob}
-          />
-        )}
-        {activeView === "detail" && activeJob && (
-          <JobDetail
-            job={activeJob}
-            onUpdate={updateJob}
-            onBack={() => setActiveView("dashboard")}
-          />
-        )}
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
+
+export default App;
