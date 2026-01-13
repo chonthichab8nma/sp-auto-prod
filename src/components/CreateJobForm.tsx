@@ -153,6 +153,7 @@ export default function CreateJobForm({
               value={formData.excessFee}
               onChange={handleChange}
               type="number"
+              onFocus={(e) => e.target.select()}
             />
           </div>
         </section>

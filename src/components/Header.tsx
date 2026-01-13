@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react"; 
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Wrench, Search, Plus, X } from "lucide-react";
 import { type Job } from "../Type";
 
@@ -59,6 +59,14 @@ export default function Header({
     setShowDropdown(false);
   };
 
+  const handleSearchSubmit = () => {
+    if (!searchQuery.trim()) return;
+
+    setShowDropdown(false);
+
+    console.log("User wants to search for:", searchQuery);
+  };
+
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
@@ -70,24 +78,31 @@ export default function Header({
             <Wrench size={20} />
           </div>
           <h1 className="text-xl font-bold text-blue-900 hidden md:block">
-           เอ.พี.ออโต้เซอร์วิส
+            เอ.พี.ออโต้เซอร์วิส
           </h1>
         </div>
 
         <div className="flex-1 max-w-lg relative" ref={searchRef}>
           <div className="relative">
-            <input
-              type="text"
-              placeholder="ค้นหา ทะเบียนรถ / เลขถัง..."
-              className="w-full pl-10 pr-10 py-2 bg-slate-100 border-none rounded-full focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => searchQuery && setShowDropdown(true)}
-            />
-            <Search
-              className="absolute left-3 top-2.5 text-slate-400"
-              size={16}
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="ค้นหา ทะเบียนรถ / เลขถัง..."
+                className="w-full pl-4 pr-12 py-2 bg-slate-100 border-none rounded-full focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => searchQuery && setShowDropdown(true)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+              />
+
+              <button
+                onClick={handleSearchSubmit}
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm"
+                title="ค้นหา"
+              >
+                <Search size={14} />
+              </button>
+            </div>
             {searchQuery && (
               <button
                 onClick={() => {
