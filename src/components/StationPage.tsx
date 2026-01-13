@@ -50,7 +50,6 @@ export default function StationPage({ job, onUpdateStep }: StationPageProps) {
 
   return (
     <div className="animate-in slide-in-from-right duration-300 min-h-screen bg-gray-50 flex flex-col p-6">
-      {/* Breadcrumb Header */}
       <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center gap-2 mb-4 rounded-t-xl shadow-sm">
         <button
           onClick={() => navigate("/")}
