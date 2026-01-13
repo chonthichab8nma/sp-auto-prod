@@ -1,13 +1,60 @@
-import { useNavigate } from "react-router-dom";
-import { ChevronLeft, CarFront } from "lucide-react";
-
+import { useNavigate } from "react-router";
+import { ChevronLeft, CarFront, X, Save } from "lucide-react";
+import { useState } from "react";
 import { type Job } from "../Type";
 
 interface JobDetailPageProps {
   job: Job;
   onUpdate: (job: Job) => void;
-  
 }
+
+interface SectionProps {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode; 
+  hasBorder?: boolean;      
+}
+
+interface EditableFieldProps {
+  label: string;
+  name: keyof Job;
+  value: string | number | undefined;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const EditableRow = ({
+  label,
+  name,
+  value,
+  onChange,
+}: {
+  label: string;
+  name: keyof Job;
+  value: string | number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) => (
+  <div className="flex flex-col md:flex-row md:items-center py-2 border-b border-gray-50 last:border-0">
+    <span className="w-40 text-slate-400 font-light text-sm">{label}</span>
+    <input
+      name={name}
+      value={value ?? ""}
+      onChange={onChange}
+      className="flex-1 bg-blue-50 border border-blue-100 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+    />
+  </div>
+);
+
+const EditableStack = ({ label, name, value, onChange }: EditableFieldProps) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-slate-400 font-light text-sm">{label}</span>
+    <input
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="bg-blue-50 border border-blue-100 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+    />
+  </div>
+);
 
 const RowItem = ({
   label,
@@ -37,17 +84,7 @@ const StackItem = ({
   </div>
 );
 
-const Section = ({
-  title,
-  subtitle,
-  children,
-  hasBorder = true,
-}: {
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-  hasBorder?: boolean;
-}) => (
+const Section = ({ title, subtitle, children, hasBorder = true }: SectionProps) => (
   <div
     className={`flex flex-col md:flex-row py-8 ${
       hasBorder ? "border-b border-gray-100" : ""
@@ -61,14 +98,32 @@ const Section = ({
   </div>
 );
 
-export default function JobDetailPage({ job }: JobDetailPageProps) {
+export default function JobDetailPage({ job, onUpdate }: JobDetailPageProps) {
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Job>(job);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSave = () => {
+    onUpdate(formData);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setFormData(job);
+    setIsEditing(false);
+  };
 
   return (
     <div className="animate-in fade-in duration-300 p-6 min-h-screen bg-gray-50 font-sans">
- 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -102,14 +157,32 @@ export default function JobDetailPage({ job }: JobDetailPageProps) {
           </div> */}
         </div>
 
-        <button
-          onClick={() => navigate(`/station/${job.id}`)}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 transition-all"
-        >
-          เช็กสถานะรถ
-        </button>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 bg-white border border-gray-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                <X size={16} /> ยกเลิก
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-green-700 transition-all"
+              >
+                <Save size={16} /> บันทึกข้อมูล
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate(`/station/${job.id}`)}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 transition-all"
+            >
+              เช็กสถานะรถ
+            </button>
+          )}
+        </div>
       </div>
-
 
       <div className="mb-6 pl-1 text-slate-500 text-sm flex items-center gap-2">
         <span>สเตชั่น</span>
@@ -146,18 +219,65 @@ export default function JobDetailPage({ job }: JobDetailPageProps) {
                   </p>
                 </div>
               </div>
-
-              <button className="border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors">
-                แก้ไขข้อมูล
-              </button>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                >
+                  แก้ไขข้อมูล
+                </button>
+              )}
             </div>
-            <RowItem label="ทะเบียนรถ" value={job.registration} />
-            <RowItem label="เลขตัวถัง" value={job.bagNumber} />{" "}
-            <RowItem label="ประเภทรถ" value={job.type} />
-            <RowItem label="ยี่ห้อ/แบรนด์" value={job.brand} />
-            <RowItem label="รุ่น" value={job.model} />
-            <RowItem label="ปี" value={job.year} />
-            <RowItem label="สี" value={job.color} />
+
+            {isEditing ? (
+              <div className="bg-slate-50 p-4 rounded-lg space-y-1">
+                <EditableRow
+                  label="ทะเบียนรถ"
+                  name="registration"
+                  value={formData.registration}
+                  onChange={handleChange}
+                />
+                <EditableRow
+                  label="เลขตัวถัง"
+                  name="bagNumber"
+                  value={formData.bagNumber}
+                  onChange={handleChange}
+                />
+                <EditableRow
+                  label="ยี่ห้อ/แบรนด์"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                />
+                <EditableRow
+                  label="รุ่น"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleChange}
+                />
+                <EditableRow
+                  label="ปี"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                />
+                <EditableRow
+                  label="สี"
+                  name="color"
+                  value={formData.color}
+                  onChange={handleChange}
+                />
+              </div>
+            ) : (
+              <>
+                <RowItem label="ทะเบียนรถ" value={job.registration} />
+                <RowItem label="เลขตัวถัง" value={job.bagNumber} />
+                <RowItem label="ยี่ห้อ/แบรนด์" value={job.brand} />
+                <RowItem label="รุ่น" value={job.model} />
+                <RowItem label="ปี" value={job.year} />
+                <RowItem label="สี" value={job.color} />
+              </>
+            )}
           </div>
         </Section>
 
@@ -179,22 +299,53 @@ export default function JobDetailPage({ job }: JobDetailPageProps) {
           </div>
         </Section>
 
-        <Section title="รายละเอียดลูกค้า" subtitle="ข้อมูลลูกค้า">
+        <Section
+          title="รายละเอียดลูกค้า"
+          subtitle="ข้อมูลลูกค้า"
+          hasBorder={false}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-            <StackItem
-              label="ชื่อ-นามสกุล"
-              value={job.customerName || "ไม่ระบุ"}
-            />
-            <StackItem
-              label="เบอร์โทรศัพท์"
-              value={job.customerPhone || "ไม่ระบุ"}
-            />
-            <div className="md:col-span-2">
-              <StackItem
-                label="ที่อยู่"
-                value={job.customerAddress || "ไม่ระบุ"}
-              />
-            </div>
+            {isEditing ? (
+              <>
+                <EditableStack
+                  label="ชื่อ-นามสกุล"
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleChange}
+                />
+                <EditableStack
+                  label="เบอร์โทรศัพท์"
+                  name="customerPhone"
+                  value={formData.customerPhone}
+                  onChange={handleChange}
+                />
+                <div className="md:col-span-2">
+                  <EditableStack
+                    label="ที่อยู่"
+                    name="customerAddress"
+                    value={formData.customerAddress}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <StackItem
+                  label="ชื่อ-นามสกุล"
+                  value={job.customerName || "ไม่ระบุ"}
+                />
+                <StackItem
+                  label="เบอร์โทรศัพท์"
+                  value={job.customerPhone || "ไม่ระบุ"}
+                />
+                <div className="md:col-span-2">
+                  <StackItem
+                    label="ที่อยู่"
+                    value={job.customerAddress || "ไม่ระบุ"}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </Section>
 
