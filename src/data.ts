@@ -30,7 +30,7 @@ export const MOCK_JOBS: Job[] = [
     paymentType: "Insurance",
     insuranceCompany: "วิริยะประกันภัย",
     customerName: "สมชาย ใจดี",
-    customerPhone: "081-234-5678",
+    customerPhone: "0812345678",
     customerAddress: "กรุงเทพมหานคร",
     currentStageIndex: 1, 
     isFinished: false,
