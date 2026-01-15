@@ -1,0 +1,40 @@
+@import "tailwindcss";
+/* @import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
+
+@theme {
+  --font-sans: "Itim", cursive;
+}
+
+@layer base {
+
+  :root {
+    --font-sans: "Itim", cursive !important;
+  }
+
+
+  html, body, #root, .app {
+    font-family: var(--font-sans) !important;
+  }
+
+
+  input, 
+  select, 
+  textarea, 
+  button, 
+  label, 
+  span, 
+  p, 
+  h1, h2, h3, h4 {
+    font-family: var(--font-sans) !important;
+  }
+
+
+  ::placeholder {
+    font-family: var(--font-sans) !important;
+  }
+
+
+  *, ::before, ::after {
+    font-family: var(--font-sans) !important;
+  }
+} */

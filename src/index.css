@@ -1,1 +1,49 @@
 @import "tailwindcss";
+/* @import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
+
+@theme {
+    --font-sans: "Itim", cursive;
+}
+
+@layer base {
+
+    html,
+    body {
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+    }
+
+
+    *,
+    ::before,
+    ::after {
+        font-family: inherit;
+    }
+
+
+    code,
+    kbd,
+    samp,
+    pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    b,
+    strong {
+        font-weight: 400;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+        font-family: var(--font-sans) !important;
+      
+    }
+} */

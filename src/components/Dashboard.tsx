@@ -21,6 +21,7 @@ import { type Job } from "../Type";
 import { filterData } from "../hook/useSearch";
 import { CAR_TYPES } from "../data";
 
+
 export default function Dashboard({ jobs }: { jobs: Job[] }) {
   const navigate = useNavigate();
 
@@ -36,16 +37,30 @@ export default function Dashboard({ jobs }: { jobs: Job[] }) {
   const datePickerRef = useRef<HTMLDivElement>(null);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
-  const displayJobs = useMemo(() => {
+  const jobsForStats = useMemo(() => {
     return filterData(
       jobs,
       searchTerm,
       selectedCarType,
       startDate,
       endDate,
-      selectedStatus
+      "ทั้งหมด"
     );
-  }, [jobs, searchTerm, selectedCarType, startDate, endDate, selectedStatus]);
+  }, [jobs, searchTerm, selectedCarType, startDate, endDate]);
+
+  const displayJobs = useMemo(() => {
+    if (selectedStatus === "ทั้งหมด") return jobsForStats;
+
+    return jobsForStats.filter((j) => {
+
+      if (selectedStatus === "เสร็จสิ้น") return j.isFinished;
+
+      const currentStageName = j.stages[j.currentStageIndex]?.name;
+
+      return !j.isFinished && currentStageName === selectedStatus;
+    });
+  }, [jobsForStats, selectedStatus]);
+  
 
   const totalPages = Math.ceil(displayJobs.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -114,17 +129,17 @@ export default function Dashboard({ jobs }: { jobs: Job[] }) {
     return { label: currentStatus, className: "bg-slate-50 text-slate-600" };
   };
 
-  const totalJobs = jobs.length;
-  const claimJobs = jobs.filter(
+  const totalJobs = jobsForStats.length;
+  const claimJobs = jobsForStats.filter(
     (j) => !j.isFinished && j.stages[j.currentStageIndex]?.name === "เคลม"
   ).length;
-  const repairJobs = jobs.filter(
+  const repairJobs = jobsForStats.filter(
     (j) => !j.isFinished && j.stages[j.currentStageIndex]?.name === "ซ่อม"
   ).length;
-  const billingJobs = jobs.filter(
+  const billingJobs = jobsForStats.filter(
     (j) => !j.isFinished && j.stages[j.currentStageIndex]?.name === "ตั้งเบิก"
   ).length;
-  const finishedJobs = jobs.filter((j) => j.isFinished).length;
+  const finishedJobs =jobsForStats.filter((j) => j.isFinished).length;
 
   const summaryCards = [
     {

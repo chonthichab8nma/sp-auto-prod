@@ -8,64 +8,62 @@ export const filterData = (
   endDate?: string,
   selectedStatus: string = "ทั้งหมด"
 ): Job[] => {
-  const query = searchTerm.toLowerCase().replace(/\s+/g, "");
+  if (!data || data.length === 0) return [];
 
-  if (!data || data.length === 0) {
-    console.warn("ไม่มีข้อมูลส่งเข้ามาใน filterData (data เป็น array ว่าง)");
-    return [];
-  }
-
-  if (query.length === 1) {
-    console.log("กำลังค้นหาคำว่า:", query);
-    console.log("หน้าตาข้อมูลจริง (ตัวแรก):", data[0]);
-    console.log("มี registration ไหม?:", data[0].registration);
-    console.log("มี customerName ไหม?:", data[0].customerName);
-  }
+  const queryNoSpace = searchTerm.toLowerCase().replace(/\s+/g, "");
+  const queryNormal = searchTerm.toLowerCase().trim();
 
   return data.filter((item) => {
+    
     const reg = (item.registration || "").toLowerCase().replace(/\s+/g, "");
-    const name = (item.customerName || "").toLowerCase().replace(/\s+/g, "");
-    const brand = (item.brand || "").toLowerCase().replace(/\s+/g, "");
-    const model = (item.model || "").toLowerCase().replace(/\s+/g, "");
-    const bag = (item.bagNumber || "").toLowerCase().replace(/\s+/g, "");
+    const name = (item.customerName || "").toLowerCase();
+    const brand = (item.brand || "").toLowerCase();
+    const model = (item.model || "").toLowerCase();
+    const bag = (item.bagNumber || "").toLowerCase();
 
     const matchesSearch =
-      !query ||
-      reg.includes(query) ||
-      name.includes(query) ||
-      brand.includes(query) ||
-      model.includes(query) ||
-      bag.includes(query);
+      !searchTerm ||
+      reg.includes(queryNoSpace) ||
+      name.includes(queryNormal) ||
+      brand.includes(queryNormal) ||
+      model.includes(queryNormal) ||
+      bag.includes(queryNormal);
+
     const matchesType =
       selectedCarType === "ทั้งหมด" || item.type === selectedCarType;
 
-    const currentStatusName = item.isFinished
-      ? "เสร็จสิ้น"
-      : item.stages[item.currentStageIndex]?.name || "";
+    let currentStatusName = "รอดำเนินการ";
+    if (item.isFinished) {
+      currentStatusName = "เสร็จสิ้น";
+    } else if (item.stages && item.stages[item.currentStageIndex]) {
+      currentStatusName = item.stages[item.currentStageIndex].name.trim();
+    }
 
     const matchesStatus =
       selectedStatus === "ทั้งหมด" || currentStatusName === selectedStatus;
 
     let matchesDate = true;
     if (startDate || endDate) {
-      const startJob = new Date(item.startDate).getTime();
-
-      const endJob = item.estimatedEndDate
-        ? new Date(item.estimatedEndDate).getTime()
-        : startJob;
+      const jobStart = new Date(item.startDate).getTime();
+      // ถ้าไม่มีวันจบ ให้ใช้วันเริ่มแทน (หรือจะจัดการ logic อื่นตาม business flow)
+      const jobEnd = item.estimatedEndDate 
+        ? new Date(item.estimatedEndDate).getTime() 
+        : jobStart; 
 
       if (startDate) {
         const filterStart = new Date(startDate).setHours(0, 0, 0, 0);
-
-        if (endJob < filterStart) matchesDate = false;
+        // เช็คว่า: วันเริ่มงาน ต้องไม่น้อยกว่า วันเริ่มที่เลือก (ต้องเริ่มในกรอบ)
+        if (jobStart < filterStart) matchesDate = false;
       }
 
       if (endDate) {
         const filterEnd = new Date(endDate).setHours(23, 59, 59, 999);
-
-        if (endJob > filterEnd) matchesDate = false;
+        // เช็คว่า: วันจบงาน ต้องไม่เกิน วันสิ้นสุดที่เลือก (ต้องจบในกรอบ)
+        // ** จุดที่แก้คือตรงนี้ครับ เปลี่ยนจาก jobStart เป็น jobEnd **
+        if (jobEnd > filterEnd) matchesDate = false;
       }
     }
-    return matchesSearch && matchesType && matchesDate && matchesStatus;
+
+    return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 };

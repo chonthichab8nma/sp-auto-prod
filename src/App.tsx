@@ -1,3 +1,4 @@
+import "./App.css";
 import { useState, useEffect } from "react";
 import {
   Routes,
@@ -15,7 +16,6 @@ import CreateJobForm from "./components/CreateJobForm";
 
 import { type Job, type JobFormData, type StepStatus } from "./Type";
 import { INITIAL_STAGES, MOCK_JOBS } from "./data";
-
 
 function JobDetailWrapper({
   jobs,
@@ -93,20 +93,16 @@ function App() {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // โหลดข้อมูล Jobs จาก LocalStorage
   const [jobs, setJobs] = useState<Job[]>(() => {
     const savedJobs = localStorage.getItem("job_form");
     return savedJobs ? JSON.parse(savedJobs) : MOCK_JOBS;
   });
 
-  // บันทึก Jobs ลง LocalStorage เมื่อมีการเปลี่ยนแปลง
   useEffect(() => {
     localStorage.setItem("job_form", JSON.stringify(jobs));
   }, [jobs]);
 
-  // ฟังก์ชัน Logout (แบบ Dummy เพราะไม่มีระบบ Login แล้ว แต่คงไว้เผื่อ Sidebar ต้องการ prop นี้)
   const handleLogout = () => {
-    // อาจจะให้แจ้งเตือนหรือ Refresh หน้าจอก็ได้
     console.log("Logout clicked (No Auth mode)");
     navigate("/");
   };
@@ -193,7 +189,7 @@ function App() {
       <main className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-10 font-sans">
           <Routes>
-            {/* หน้าแรกเป็น Dashboard */}
+
             <Route path="/" element={<Dashboard jobs={jobs} />} />
 
             <Route path="/stations" element={<Station jobs={jobs} />} />

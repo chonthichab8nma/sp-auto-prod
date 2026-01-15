@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-// import { XCircle } from "lucide-react";
 import { type JobFormData } from "../Type";
 import FormInput from "./FormInput";
 import FormSelect from "./FormSelect";
@@ -73,7 +72,7 @@ export default function CreateJobForm({
   };
 
   return (
-    <div className="w-full bg-white border border-slate-200 overflow-hidden font-sans">
+    <div className="w-full bg-white border border-slate-200 overflow-hidden ">
       <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-start">
         <div>
           <h2 className="text-xl font-bold text-slate-800">รับรถเข้าจอดซ่อม</h2>
@@ -205,12 +204,6 @@ export default function CreateJobForm({
                 type="text"
                 required
               />
-              {/* <div className="flex items-center gap-2 text-sm">
-                <span className="text-slate-500">เจ้าหน้าที่รับรถ:</span>
-                <span className="text-slate-800 font-medium">
-                  {formData.receiver || "Teach Tichan"}
-                </span>
-              </div> */}
             </div>
           </div>
         </div>
