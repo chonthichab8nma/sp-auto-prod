@@ -1,15 +1,20 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
-import { BrowserRouter } from 'react-router'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
+import { BrowserRouter } from "react-router-dom";
+import { JobsStoreProvider } from "./features/jobs/hooks/JobsStoreProvider";
+import AppToaster from "./shared/components/ui/AppToaster";
 // import Sidebar from './components/Sidebar.tsx'
 
-
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <JobsStoreProvider>
+        <AppToaster />
+        <App />
+      </JobsStoreProvider>
+
       {/* <Sidebar
       activePath=''
       onLogout={() => {}}
@@ -17,4 +22,4 @@ createRoot(document.getElementById('root')!).render(
       /> */}
     </BrowserRouter>
   </StrictMode>
-)
+);

@@ -1,11 +1,22 @@
-import React, { useState } from "react";
-import { type JobFormData } from "../Type";
-import FormInput from "./FormInput";
-import FormSelect from "./FormSelect";
-import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../data";
+import React, { useMemo, useState } from "react";
+import type { Job, JobFormData } from "../../../Type";
+import FormInput from "../../../shared/components/form/FormInput";
+import FormSelect from "../../../shared/components/form/FormSelect";
+import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../../../data";
+
+import {
+  getDefaultCreateJobFormData,
+  normalizeCreateJobPayload,
+  validateCreateJob,
+} from "../types/jobForm";
+import { jobsService } from "../services/jobs.service";
+
 interface CreateJobFormProps {
   onCancel: () => void;
-  onSubmit: (data: JobFormData) => void;
+
+  onSubmit?: (data: JobFormData) => void;
+
+  onSubmitCreated?: (job: Job) => void;
 }
 
 const LabelWithStar = ({ text }: { text: string }) => (
@@ -14,61 +25,76 @@ const LabelWithStar = ({ text }: { text: string }) => (
   </span>
 );
 
+function parseFieldValue(name: string, value: string) {
+  if (name === "excessFee") return value === "" ? 0 : Number(value);
+  return value;
+}
+
 export default function CreateJobForm({
   onCancel,
   onSubmit,
+  onSubmitCreated,
 }: CreateJobFormProps) {
-  const [formData, setFormData] = useState<JobFormData>({
-    registration: "",
-    bagNumber: "",
-    brand: "",
-    type: "",
-    model: "",
-    year: "",
-    color: "",
-    startDate: new Date().toISOString().split("T")[0],
-    estimatedEndDate: "",
-    receiver: "",
-    excessFee: 0,
-    paymentType: "Insurance",
-    insuranceCompany: "",
-    customerName: "",
-    customerPhone: "",
-    customerAddress: "",
-  });
+  const [formData, setFormData] = useState<JobFormData>(() =>
+    getDefaultCreateJobFormData()
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const insuranceRequired = useMemo(
+    () => formData.paymentType === "Insurance",
+    [formData.paymentType]
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    if (name === "customerPhone") {
+      let digits = value.replace(/\D/g, "");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+      digits = digits.slice(0, 10);
 
-    if (!formData.registration || !formData.brand) {
-      return alert("กรุณากรอกข้อมูลสำคัญ");
+      if (digits.length > 0 && digits[0] !== "0") {
+        return;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        customerPhone: digits,
+      }));
+      return;
     }
 
-    const fixDateToAD = (dateString: string) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
+    setFormData((prev) => ({ ...prev, [name]: parseFieldValue(name, value) }));
+  };
 
-      if (date.getFullYear() > 2400) {
-        date.setFullYear(date.getFullYear() - 543);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    const v = validateCreateJob(formData);
+    if (!v.ok) {
+      alert(v.errors[0]);
+      return;
+    }
+
+    const payload = normalizeCreateJobPayload(formData);
+
+    if (onSubmit && !onSubmitCreated) {
+      onSubmit(payload);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const res = await jobsService.create(payload);
+      if (!res.ok) {
+        alert(res.error);
+        return;
       }
-
-      return date.toISOString().split("T")[0];
-    };
-
-    const finalData = {
-      ...formData,
-      startDate: fixDateToAD(formData.startDate),
-      estimatedEndDate: fixDateToAD(formData.estimatedEndDate),
-    };
-
-    onSubmit(finalData);
+      onSubmitCreated?.(res.data);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,12 +106,6 @@ export default function CreateJobForm({
             ระบุรายละเอียดการรับรถใหม่
           </p>
         </div>
-        {/* <button
-          onClick={onCancel}
-          className="text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <XCircle size={24} />
-        </button> */}
       </div>
 
       <form onSubmit={handleSubmit} className="px-8 py-8 space-y-10">
@@ -324,33 +344,36 @@ export default function CreateJobForm({
               </label>
             </div>
 
-            {formData.paymentType === "Insurance" && (
+            {insuranceRequired && (
               <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
                 <FormInput
                   label={<LabelWithStar text="ชื่อบริษัทประกันภัย" />}
                   name="insuranceCompany"
                   value={formData.insuranceCompany || ""}
                   onChange={handleChange}
-                  placeholder="เลือกบริษัทประกันภัย"
+                  placeholder="ระบุบริษัทประกันภัย"
                   required
                 />
               </div>
             )}
           </div>
         </div>
+
         <div className="pt-4 flex justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium"
+            disabled={isSubmitting}
+            className="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium disabled:opacity-60"
           >
             ยกเลิก
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm"
+            disabled={isSubmitting}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm disabled:opacity-60"
           >
-            บันทึกรับรถ
+            {isSubmitting ? "กำลังบันทึก..." : "บันทึกรับรถ"}
           </button>
         </div>
       </form>

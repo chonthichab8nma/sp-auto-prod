@@ -17,9 +17,9 @@ import {
   Wrench,
   Check,
 } from "lucide-react";
-import { type Job } from "../Type";
-import { filterData } from "../hook/useSearch";
-import { CAR_TYPES } from "../data";
+import { type Job } from "../../../Type";
+import { filterData } from "../hooks/useSearch";
+import { CAR_TYPES } from "../../../data";
 
 
 export default function Dashboard({ jobs }: { jobs: Job[] }) {

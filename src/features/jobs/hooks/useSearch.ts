@@ -1,4 +1,4 @@
-import type { Job } from "../Type";
+import type { Job } from "../../../Type";
 
 export const filterData = (
   data: Job[],
@@ -16,17 +16,17 @@ export const filterData = (
   return data.filter((item) => {
     const reg = (item.registration || "").toLowerCase().replace(/\s+/g, "");
     const name = (item.customerName || "").toLowerCase();
-    const brand = (item.brand || "").toLowerCase();
-    const model = (item.model || "").toLowerCase();
-    const bag = (item.bagNumber || "").toLowerCase();
+    // const brand = (item.brand || "").toLowerCase();
+    // const model = (item.model || "").toLowerCase();
+    // const bag = (item.bagNumber || "").toLowerCase();
 
     const matchesSearch =
       !searchTerm ||
       reg.includes(queryNoSpace) ||
-      name.includes(queryNormal) ||
-      brand.includes(queryNormal) ||
-      model.includes(queryNormal) ||
-      bag.includes(queryNormal);
+      name.includes(queryNormal) ;
+      // brand.includes(queryNormal) ||
+      // model.includes(queryNormal) ||
+      // bag.includes(queryNormal);
 
     const matchesType =
       selectedCarType === "ทั้งหมด" || item.type === selectedCarType;

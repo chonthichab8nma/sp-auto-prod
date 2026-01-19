@@ -1,7 +1,6 @@
 // import React, { useState } from "react";
 // import { Lock, EyeOff, Eye } from "lucide-react";
 // import { useNavigate } from "react-router";
-// import FormInput from "./FormInput";
 
 // interface LoginProps {
 //   onLoginSuccess: () => void;
