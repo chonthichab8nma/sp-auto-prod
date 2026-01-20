@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { Routes, Route, useNavigate, useParams,Navigate } from "react-router-dom";
 import AppShell from "./AppShell";
 
 import Dashboard from "../features/jobs/pages/Dashboard";
@@ -12,6 +12,11 @@ import type { Job, JobFormData, StepStatus } from "../Type";
 
 import { useJobsStore } from "../features/jobs/hooks/useJobsStore";
 import JobEditPage from "../features/jobs/pages/JobEditPage";
+
+import RequireAuth from "../shared/auth/RequireAuth";
+import { useAuth } from "../shared/auth/useAuth";
+import LoginPage from "../features/auth/pages/LoginPage";
+// import {}
 
 function JobDetailWrapper({ jobs }: { jobs: Job[] }) {
   const { jobId } = useParams();
@@ -98,21 +103,27 @@ function JobEditWrapper() {
   }
 
   return (
-  <JobEditPage
-    job={job}
-    onCancel={() => navigate(-1)}
-    onSave={(updatedJob) => {
-      updateJob(updatedJob);
-      navigate(-1); // ✅ กลับไป Detail เดิมทันที (ไม่สร้าง Detail ซ้ำ)
-    }}
-  />
-);
+    <JobEditPage
+      job={job}
+      onCancel={() => navigate(-1)}
+      onSave={(updatedJob) => {
+        updateJob(updatedJob);
+        navigate(-1); 
+      }}
+    />
+  );
+}
+
+function LoginGate() {
+  const { isAuthed } = useAuth();
+  if (isAuthed) return <Navigate to="/" replace />;
+  return <LoginPage />;
 }
 
 export default function AppRoutes() {
   const navigate = useNavigate();
   const { jobs, createJob, updateStep } = useJobsStore();
-  console.log("jobs in store:", jobs);
+
   const handleCreateJob = (formData: JobFormData) => {
     createJob(formData);
     navigate("/");
@@ -120,30 +131,38 @@ export default function AppRoutes() {
 
   return (
     <Routes>
-      <Route element={<AppShell />}>
-        <Route path="/" element={<Dashboard jobs={jobs} />} />
+      <Route path="/login" element={<LoginGate />} />
+      <Route element={<RequireAuth />}>
+      
+        <Route element={<AppShell />}>
+          <Route path="/" element={<Dashboard jobs={jobs} />} />
 
-        <Route path="/stations" element={<StationsPage jobs={jobs} />} />
+          <Route path="/stations" element={<StationsPage jobs={jobs} />} />
 
-        <Route
-          path="/create"
-          element={
-            <CreateJobForm
-              onCancel={() => navigate("/")}
-              onSubmit={handleCreateJob}
-            />
-          }
-        />
+          <Route
+            path="/create"
+            element={
+              <CreateJobForm
+                onCancel={() => navigate("/")}
+                onSubmit={handleCreateJob}
+              />
+            }
+          />
 
-        <Route path="/job/:jobId/edit" element={<JobEditWrapper />} />
+          <Route path="/job/:jobId/edit" element={<JobEditWrapper />} />
 
-        <Route path="/job/:jobId" element={<JobDetailWrapper jobs={jobs} />} />
+          <Route
+            path="/job/:jobId"
+            element={<JobDetailWrapper jobs={jobs} />}
+          />
 
-        <Route
-          path="/stations/:jobId"
-          element={<StationWrapper jobs={jobs} onUpdateStep={updateStep} />}
-        />
+          <Route
+            path="/stations/:jobId"
+            element={<StationWrapper jobs={jobs} onUpdateStep={updateStep} />}
+          />
+        </Route>
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

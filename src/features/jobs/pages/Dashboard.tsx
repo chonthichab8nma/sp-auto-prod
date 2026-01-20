@@ -1,16 +1,16 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Job } from "../../../Type";
+
 
 import DashboardFilters from "../components/DashboardFilters";
 import DashboardStats from "../components/DashboardStats";
 import JobsTable from "../components/JobsTable";
 import Pagination from "../../../shared/components/ui/Pagination";
 
-import type { JobStatusFilter, JobsQuery } from "../api/job.api";
+import type { JobsQuery, JobStatusFilter } from "../api/job.api";
 import { useDashboardQuery } from "../hooks/useDashboardQuery";
 
-export default function Dashboard({ jobs }: { jobs: Job[] }) {
+export default function Dashboard() {
   const navigate = useNavigate();
   const pageSize = 10;
 
@@ -39,17 +39,19 @@ export default function Dashboard({ jobs }: { jobs: Job[] }) {
       endDate,
       selectedStatus,
       currentPage,
+      pageSize,
     ]
   );
 
-  const { data, loading, error } = useDashboardQuery(jobs, query);
+  const { data, error } = useDashboardQuery(query);
 
   const totalPages = Math.ceil((data?.totalItems ?? 0) / pageSize);
 
   const handleSearchAction = () => {
     setCurrentPage(1);
-    if (document.activeElement instanceof HTMLElement)
+    if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
+    }
   };
 
   return (
@@ -111,12 +113,11 @@ export default function Dashboard({ jobs }: { jobs: Job[] }) {
             onRowClick={(id) => navigate(`/job/${id}`)}
           />
 
-          {loading && (
-            <div className="text-sm text-slate-400 mt-3">
-              กำลังโหลดข้อมูล...
-            </div>
-          )}
+          {/* {loading && (
+            <div className="text-sm text-slate-400 mt-3">กำลังโหลดข้อมูล...</div>
+          )} */}
         </div>
+
         <div className="pt-6 border-t border-slate-100">
           <Pagination
             currentPage={currentPage}
@@ -124,9 +125,7 @@ export default function Dashboard({ jobs }: { jobs: Job[] }) {
             onGoTo={(p) => setCurrentPage(p)}
             onFirst={() => setCurrentPage(1)}
             onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            onNext={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
+            onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             onLast={() => setCurrentPage(totalPages)}
           />
         </div>

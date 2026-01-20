@@ -1,43 +1,75 @@
-import { useEffect, useRef, useState } from "react";
-import type { Job } from "../../../Type";
-import type { JobsQuery, JobsResponse } from "../api/job.api";
-import { getJobsDashboardMock } from "../api/job.api";
+// import { useEffect, useState } from "react";
+// // import type { Job } from "../../../Type";
+// import type { JobsQuery, JobsResponse } from "../api/job.api";
+// // import { getJobsDashboardMock } from "../api/job.api";
+// import { getJobsApi } from "../api/job.api";
 
-export function useDashboardQuery(allJobs: Job[], query: JobsQuery) {
+// export function useDashboardQuery(query: JobsQuery) {
+//   const [data, setData] = useState<JobsResponse | null>(null);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string>("");
+
+//   useEffect(() => {
+//     let alive = true;
+//     // const reqId = ++reqIdRef.current;
+
+//     (async () => {
+//       setLoading(true);
+//       setError("");
+
+//       try {
+//         const res = await getJobsApi(query);
+//         if (!alive) return;
+//         setData(res);
+//       } catch (e: unknown) {
+//         if (!alive) return;
+//         setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
+//       } finally {
+//         if (!alive) setLoading(false);
+//       }
+//     })();
+
+//     return () => {
+//       alive = false;
+//     };
+//   }, [query]);
+
+//   return { data, loading, error };
+// }
+
+// src/features/jobs/hooks/useDashboardQuery.ts
+import { useEffect, useState } from "react";
+import type { JobsQuery, JobsResponse } from "../api/job.api";
+import { getJobsApi } from "../api/job.api";
+
+export function useDashboardQuery(query: JobsQuery) {
   const [data, setData] = useState<JobsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  const reqIdRef = useRef(0);
-
   useEffect(() => {
-    let cancelled = false;
-    const reqId = ++reqIdRef.current;
+    let alive = true;
 
-    async function run() {
+    (async () => {
       setLoading(true);
       setError("");
 
       try {
-        const res = await getJobsDashboardMock(allJobs, query);
-
-        if (cancelled) return;
-        if (reqId !== reqIdRef.current) return;
-
+        const res = await getJobsApi(query);
+        if (!alive) return;
         setData(res);
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Unknown error");
+      } catch (e: unknown) {
+        if (!alive) return;
+        setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
       } finally {
-        if (!cancelled) setLoading(false);
+        if (alive) setLoading(false);
       }
-    }
+    })();
 
-    run();
     return () => {
-      cancelled = true;
+      alive = false;
     };
-  }, [allJobs, query]);
+  }, [query]);
 
   return { data, loading, error };
 }
