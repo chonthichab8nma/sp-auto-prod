@@ -10,11 +10,9 @@ import AppShell from "./AppShell";
 import Dashboard from "../features/jobs/pages/Dashboard";
 import CreateJobForm from "../features/jobs/pages/CreateJobForm";
 import JobDetailPage from "../features/jobs/pages/JobDetailPage";
-
+import type { JobFormData, StepStatus } from "../Type";
 import StationsPage from "../stations/pages/StationPage";
 import StationProgressPage from "../stations/pages/StationProgressPage";
-
-import type { Job, JobFormData, StepStatus } from "../Type";
 
 import { useJobsStore } from "../features/jobs/hooks/useJobsStore";
 import JobEditPage from "../features/jobs/pages/JobEditPage";
@@ -50,10 +48,8 @@ function JobDetailWrapper() {
   return <JobDetailPage job={job} />;
 }
 function StationWrapper({
-  jobs,
   onUpdateStep,
 }: {
-  jobs: Job[];
   onUpdateStep: (
     jobId: string,
     stageIdx: number,
@@ -65,12 +61,16 @@ function StationWrapper({
   const { jobId } = useParams();
   const navigate = useNavigate();
 
-  const job = jobs.find((j) => String(j.id) === String(jobId));
+  const { data: job, loading, error } = useJobQuery(jobId);
 
-  if (!job) {
+  if (loading) return <JobDetailSkeleton />;
+
+  if (error || !job) {
     return (
       <div className="p-8 text-center">
-        <p className="text-gray-500 mb-4">ไม่พบข้อมูลสำหรับตรวจสอบสถานะ</p>
+        <p className="text-red-600 mb-4">
+          {error || "ไม่พบข้อมูลสำหรับตรวจสอบสถานะ"}
+        </p>
         <button
           onClick={() => navigate("/")}
           className="text-blue-600 hover:underline"
@@ -84,7 +84,7 @@ function StationWrapper({
     <StationProgressPage
       job={job}
       onUpdateStep={(stageIdx, stepId, status, employee) =>
-        onUpdateStep(job.id, stageIdx, stepId, status, employee)
+        onUpdateStep(String(job.id), stageIdx, stepId, status, employee)
       }
     />
   );
@@ -163,7 +163,7 @@ export default function AppRoutes() {
 
           <Route
             path="/stations/:jobId"
-            element={<StationWrapper jobs={jobs} onUpdateStep={updateStep} />}
+            element={<StationWrapper onUpdateStep={updateStep} />}
           />
         </Route>
       </Route>

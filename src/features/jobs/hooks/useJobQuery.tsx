@@ -32,7 +32,7 @@ export function useJobQuery(jobId: string | undefined) {
         if (!alive) return;
         setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
       } finally {
-        if (!alive) {
+        if (alive) {
           setLoading(false);
         }
       }

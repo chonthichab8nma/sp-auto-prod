@@ -53,7 +53,7 @@ export default function StationsPage({ jobs }: { jobs: Job[] }) {
       <StationsTable
         jobs={filteredJobs}
         onRowClick={(id) => {
-          navigate(`/job/${id}`);
+          navigate(`//stations/${id}`);
         }}
       />
     </div>

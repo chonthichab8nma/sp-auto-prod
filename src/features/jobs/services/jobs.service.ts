@@ -1,6 +1,6 @@
 import type { Job } from "../../../Type";
 import type { CreateJobPayload } from "../types/jobForm";
-import { createJobMockApi } from "../api/jobs.api";
+import { createJobMockApi } from "../api/mock.jobs.api";
 
 export type ServiceResult<T> =
   | { ok: true; data: T }
