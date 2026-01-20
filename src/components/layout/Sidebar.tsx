@@ -2,7 +2,6 @@ import {
   PanelLeft,
   LayoutDashboard,
   RadioTower,
-  CirclePlus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -43,7 +42,7 @@ export default function Sidebar({
       </div>
 
       <nav className="flex-1 px-4 space-y-1 overflow-x-hidden">
-        <Link
+        {/* <Link
           to="/create"
           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
             isCollapsed ? "justify-center" : ""
@@ -58,7 +57,7 @@ export default function Sidebar({
           {!isCollapsed && (
             <span className="whitespace-nowrap">รับรถเข้าจอดซ่อม</span>
           )}
-        </Link>
+        </Link> */}
 
         <Link
           to="/"

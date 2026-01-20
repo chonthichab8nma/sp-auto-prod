@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
-import type { JobsQuery, JobsListApiResponse } from "../api/job.api";
-import { getJobsApi } from "../api/job.api";
+import type { JobApi } from "../api/job.api";
+import { getJobByIdApi } from "../api/job.api";
 
-export function useDashboardQuery(query: JobsQuery) {
-  const [data, setData] = useState<JobsListApiResponse | null>(null);
+
+
+export function useJobQuery(jobId: string | undefined) {
+  const [data, setData] = useState<JobApi | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!jobId) return;
+
+    const id = Number(jobId);
+    if (!Number.isFinite(id)) {
+      setError("jobId ไม่ถูกต้อง");
+      return;
+    }
+
     let alive = true;
 
     (async () => {
@@ -15,21 +25,23 @@ export function useDashboardQuery(query: JobsQuery) {
       setError("");
 
       try {
-        const res = await getJobsApi(query);
+        const res = await getJobByIdApi(id);
         if (!alive) return;
         setData(res);
       } catch (e: unknown) {
         if (!alive) return;
         setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
       } finally {
-        if (alive) setLoading(false);
+        if (!alive) {
+          setLoading(false);
+        }
       }
     })();
 
     return () => {
       alive = false;
     };
-  }, [query]);
+  }, [jobId]);
 
   return { data, loading, error };
 }

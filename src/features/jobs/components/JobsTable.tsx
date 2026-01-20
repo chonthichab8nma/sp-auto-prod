@@ -1,16 +1,15 @@
 import { ArrowUpDown, MoreVertical } from "lucide-react";
-import type { Job } from "../../../Type";
-import StatusBadge from "../../../shared/components/ui/StatusBadge";
+import type { JobApi } from "../api/job.api";
 
 export default function StationsTable({
   jobs,
   onRowClick,
 }: {
-  jobs: Job[];
-  onRowClick: (id: string) => void;
+  jobs: JobApi[];
+  onRowClick: (id: number) => void;
 }) {
   return (
-    <div className="w-full bg-white  overflow-hidden">
+    <div className="w-full bg-white overflow-hidden">
       <table className="min-w-full border-collapse">
         <thead>
           <tr className="bg-[#F7f7f7] border-b border-slate-100">
@@ -25,7 +24,7 @@ export default function StationsTable({
             ].map((head, idx) => (
               <th
                 key={head}
-                className="px-2  text-left text-[14px] font-medium text-slate-500"
+                className="px-2 text-left text-[14px] font-medium text-slate-500"
               >
                 <div className="flex items-center gap-1.5">
                   {head}
@@ -54,28 +53,38 @@ export default function StationsTable({
                 onClick={() => onRowClick(job.id)}
               >
                 <td className="px-6 py-5 text-[14px] text-slate-700 font-medium">
-                  {job.registration}
+                  {job.vehicle.registration}
                 </td>
+
                 <td className="px-6 py-5 text-[14px] text-slate-600">
-                  {job.customerName || "-"}
+                  {job.customer.name || "-"}
                 </td>
-                <td className="px-6 py-5 text-[14px] text-slate-600 ">
-                  {job.customerPhone || "-"}
-                </td>
+
                 <td className="px-6 py-5 text-[14px] text-slate-600">
-                  {job.type || `${job.brand} ${job.model}`}
+                  {job.customer.phone || "-"}
                 </td>
-                <td className="px-6 py-5">
-                  <StatusBadge job={job} />
-                </td>
+
                 <td className="px-6 py-5 text-[14px] text-slate-600">
-                  {new Date(job.startDate).toLocaleDateString("en-GB")}
+                  {job.vehicle.type ||
+                    `${job.vehicle.brand} ${job.vehicle.model}`}
                 </td>
+
+                <td className="px-6 py-5 text-[14px] text-slate-600">
+                  {job.status}
+                </td>
+
+                <td className="px-6 py-5 text-[14px] text-slate-600">
+                  {job.startDate
+                    ? new Date(job.startDate).toLocaleDateString("en-GB")
+                    : "-"}
+                </td>
+
                 <td className="px-6 py-5 text-[14px] text-slate-600">
                   {job.estimatedEndDate
                     ? new Date(job.estimatedEndDate).toLocaleDateString("en-GB")
                     : "-"}
                 </td>
+
                 <td className="px-6 py-5 text-right">
                   <button
                     onClick={(e) => e.stopPropagation()}

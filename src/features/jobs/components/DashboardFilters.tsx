@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Calendar, ChevronDown, Check, Search } from "lucide-react";
 import { CAR_TYPES } from "../../../data";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardFilters({
   searchTerm,
@@ -23,6 +24,7 @@ export default function DashboardFilters({
   onEndDateChange: (v: string) => void;
   onSubmitSearch: () => void;
 }) {
+  const navigate = useNavigate();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
@@ -55,7 +57,7 @@ export default function DashboardFilters({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
       {/* Search */}
-      <div className="lg:col-span-8">
+      <div className="lg:col-span-3">
         <label className="text-sm font-semibold text-slate-700 block mb-2">
           ค้นหา
         </label>
@@ -73,7 +75,7 @@ export default function DashboardFilters({
       </div>
 
       {/* Car type dropdown */}
-      <div className="lg:col-span-2 relative" ref={dropdownRef}>
+      <div className="lg:col-span-3 relative" ref={dropdownRef}>
         <label className="text-sm font-semibold text-slate-700 block mb-2">
           ประเภทรถ
         </label>
@@ -129,7 +131,7 @@ export default function DashboardFilters({
       </div>
 
       {/* Date picker */}
-      <div className="lg:col-span-2 relative" ref={datePickerRef}>
+      <div className="lg:col-span-3 relative" ref={datePickerRef}>
         <label className="text-sm font-semibold text-slate-700 block mb-2">
           เลือกวันที่
         </label>
@@ -187,6 +189,16 @@ export default function DashboardFilters({
             </button>
           </div>
         )}
+      </div>
+
+      <div className="lg:col-span-3">
+        <button
+          type="button"
+          onClick={() => navigate("/create")}
+          className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+        >
+          + รับรถ
+        </button>
       </div>
 
       {/* Submit */}

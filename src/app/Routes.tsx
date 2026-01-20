@@ -1,4 +1,10 @@
-import { Routes, Route, useNavigate, useParams,Navigate } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+  Navigate,
+} from "react-router-dom";
 import AppShell from "./AppShell";
 
 import Dashboard from "../features/jobs/pages/Dashboard";
@@ -16,18 +22,21 @@ import JobEditPage from "../features/jobs/pages/JobEditPage";
 import RequireAuth from "../shared/auth/RequireAuth";
 import { useAuth } from "../shared/auth/useAuth";
 import LoginPage from "../features/auth/pages/LoginPage";
-// import {}
+import { useJobQuery } from "../features/jobs/hooks/useJobQuery";
+import JobDetailSkeleton from "../components/layout/JobSkeleton";
 
-function JobDetailWrapper({ jobs }: { jobs: Job[] }) {
+function JobDetailWrapper() {
   const { jobId } = useParams();
   const navigate = useNavigate();
 
-  const job = jobs.find((j) => String(j.id) === String(jobId));
+  const { data: job, loading, error } = useJobQuery(jobId);
 
-  if (!job) {
+  if (loading) return <JobDetailSkeleton />;
+
+  if (error) {
     return (
       <div className="p-8 text-center">
-        <p className="text-gray-500 mb-4">ไม่พบข้อมูลรถที่ระบุ</p>
+        <p className="text-red-600 mb-4">{error}</p>
         <button
           onClick={() => navigate("/")}
           className="text-blue-600 hover:underline font-medium"
@@ -50,7 +59,7 @@ function StationWrapper({
     stageIdx: number,
     stepId: string,
     status: StepStatus,
-    employee: string
+    employee: string,
   ) => void;
 }) {
   const { jobId } = useParams();
@@ -108,7 +117,7 @@ function JobEditWrapper() {
       onCancel={() => navigate(-1)}
       onSave={(updatedJob) => {
         updateJob(updatedJob);
-        navigate(-1); 
+        navigate(-1);
       }}
     />
   );
@@ -133,9 +142,8 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginGate />} />
       <Route element={<RequireAuth />}>
-      
         <Route element={<AppShell />}>
-          <Route path="/" element={<Dashboard jobs={jobs} />} />
+          <Route path="/" element={<Dashboard />} />
 
           <Route path="/stations" element={<StationsPage jobs={jobs} />} />
 
@@ -151,10 +159,7 @@ export default function AppRoutes() {
 
           <Route path="/job/:jobId/edit" element={<JobEditWrapper />} />
 
-          <Route
-            path="/job/:jobId"
-            element={<JobDetailWrapper jobs={jobs} />}
-          />
+          <Route path="/job/:jobId" element={<JobDetailWrapper />} />
 
           <Route
             path="/stations/:jobId"

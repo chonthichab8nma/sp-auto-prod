@@ -1,119 +1,111 @@
-// //dashboard
-
-// import type { Job } from "../../../Type";
-// import { filterData } from "../hooks/useSearch";
-
-// export type JobStatusFilter =
-//   | "ทั้งหมด"
-//   | "เคลม"
-//   | "ซ่อม"
-//   | "ตั้งเบิก"
-//   | "เสร็จสิ้น";
-
-// export type JobsQuery = {
-//   search: string;
-//   carType: string;
-//   from: string;
-//   to: string;
-//   status: JobStatusFilter;
-//   page: number;
-//   pageSize: number;
-// };
-
-// export type JobsSummary = {
-//   total: number;
-//   claim: number;
-//   repair: number;
-//   billing: number;
-//   finished: number;
-// };
-
-// export type JobsResponse = {
-//   items: Job[];
-//   totalItems: number;
-//   summary: JobsSummary;
-// };
-
-// export async function getJobsDashboardMock(
-//   allJobs: Job[],
-//   q: JobsQuery
-// ): Promise<JobsResponse> {
-//   const base = filterData(
-//     allJobs,
-//     q.search,
-//     q.carType,
-//     q.from,
-//     q.to,
-//     "ทั้งหมด"
-//   );
-
-//   const summary: JobsSummary = {
-//     total: base.length,
-//     claim: base.filter(
-//       (j) => !j.isFinished && j.stages[j.currentStageIndex]?.name === "เคลม"
-//     ).length,
-//     repair: base.filter(
-//       (j) => !j.isFinished && j.stages[j.currentStageIndex]?.name === "ซ่อม"
-//     ).length,
-//     billing: base.filter(
-//       (j) => !j.isFinished && j.stages[j.currentStageIndex]?.name === "ตั้งเบิก"
-//     ).length,
-//     finished: base.filter((j) => j.isFinished).length,
-//   };
-
-//   const filtered =
-//     q.status === "ทั้งหมด"
-//       ? base
-//       : base.filter((j) => {
-//           if (q.status === "เสร็จสิ้น") return j.isFinished;
-//           const stageName = j.stages[j.currentStageIndex]?.name;
-//           return !j.isFinished && stageName === q.status;
-//         });
-
-//   const totalItems = filtered.length;
-//   const start = (q.page - 1) * q.pageSize;
-//   const items = filtered.slice(start, start + q.pageSize);
-
-//   await new Promise((r) => setTimeout(r, 80));
-
-//   return { items, totalItems, summary };
-// }
-
 import { http } from "../../../shared/lib/http";
-import type { Job } from "../../../Type";
 
-export type JobStatusFilter =
-  | "ทั้งหมด"
-  | "เคลม"
-  | "ซ่อม"
-  | "ตั้งเบิก"
-  | "เสร็จสิ้น";
-
+// -----------------------------
+// Query (ตอนนี้ดึงอย่างเดียว: pagination)
+// -----------------------------
 export type JobsQuery = {
-  search: string;
-  carType: string;
-  from: string;
-  to: string;
-  status: JobStatusFilter;
   page: number;
   pageSize: number;
 };
 
-export type JobsSummary = {
-  total: number;
-  claim: number;
-  repair: number;
-  billing: number;
-  finished: number;
+// -----------------------------
+// Backend types (ตรงตามที่คุณส่งมา)
+// -----------------------------
+export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "FINISHED";
+export type JobStepStatusApi = "pending" | "in_progress" | "completed";
+
+export type VehicleApi = {
+  id: number;
+  customerId: number;
+  registration: string;
+  vinNumber: string | null;
+  brand: string;
+  model: string;
+  type: string;
+  year: string;
+  color: string;
+
+  registrationProvince: string | null;
+  registrationProvinceCode: string | null;
+  registrationDate: string | null;
+  ownerProvince: string | null;
+  ownerProvinceCode: string | null;
+  ownerDistrict: string | null;
+  ownerSubDistrict: string | null;
+  ownerAddress: string | null;
+  ownerPostalCode: string | null;
+  engineNumber: string | null;
+  chassisNumber: string | null;
+
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type JobsResponse = {
-  items: Job[];
-  totalItems: number;
-  summary: JobsSummary;
+export type CustomerApi = {
+  id: number;
+  name: string;
+  phone: string;
+  address: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-type JobApi = {
+export type InsuranceCompanyApi = {
+  id: number;
+  name: string;
+  contactPhone: string;
+  logoUrl: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type StageApi = {
+  id: number;
+  code: string;
+  name: string;
+  orderIndex: number;
+};
+
+export type StepTemplateApi = {
+  id: number;
+  stageId: number;
+  name: string;
+  orderIndex: number;
+  isSkippable: boolean;
+};
+
+export type EmployeeApi =
+  | {
+      id: number;
+      name: string;
+    }
+  | null;
+
+export type JobStepApi = {
+  id: number;
+  jobStageId: number;
+  stepTemplateId: number;
+  status: JobStepStatusApi;
+  employeeId: number | null;
+  completedAt: string | null;
+  notes: string | null;
+  stepTemplate: StepTemplateApi;
+  employee: EmployeeApi;
+};
+
+export type JobStageApi = {
+  id: number;
+  jobId: number;
+  stageId: number;
+  isLocked: boolean;
+  isCompleted: boolean;
+  startedAt: string | null;
+  completedAt: string | null;
+  stage: StageApi;
+  jobSteps: JobStepApi[];
+};
+
+export type JobApi = {
   id: number;
   jobNumber: string;
   vehicleId: number;
@@ -128,197 +120,60 @@ type JobApi = {
   repairDescription: string;
   notes: string | null;
   currentStageIndex: number;
-  status: "CLAIM" | "REPAIR" | "BILLING" | "FINISHED" | string;
+  status: JobStatusApi;
   isFinished: boolean;
   createdAt: string;
   updatedAt: string;
 
-  vehicle: {
-    id: number;
-    customerId: number;
-    registration: string;
-    brand: string;
-    model: string;
-    type: string;
-    year: string;
-    color: string;
-  };
+  vehicle: VehicleApi;
+  customer: CustomerApi;
+  insuranceCompany: InsuranceCompanyApi | null;
 
-  customer: {
-    id: number;
-    name: string;
-    phone: string;
-    address: string;
-  };
+  jobStages: JobStageApi[];
+  jobPhotos: unknown[];
+};
 
-  insuranceCompany: unknown | null;
-
-  jobStages: Array<{
-    id: number;
-    jobId: number;
-    stageId: number;
-    isLocked: boolean;
-    isCompleted: boolean;
-    startedAt: string | null;
-    completedAt: string | null;
-    jobSteps: Array<{
-      id: number;
-      jobStageId: number;
-      stepTemplateId: number;
-      status: "pending" | "in_progress" | "completed" | string;
-      employeeId: number | null;
-      completedAt: string | null;
-      notes: string | null;
-      stepTemplate: {
-        id: number;
-        stageId: number;
-        name: string;
-        orderIndex: number;
-        isSkippable: boolean;
+// -----------------------------
+// List response (รองรับ 2 แบบที่เจอบ่อย)
+// -----------------------------
+export type JobsListApiResponse =
+  | {
+      data: JobApi[];
+      meta: {
+        totalItems: number;
+        page: number;
+        pageSize: number;
+        totalPages?: number;
       };
-    }>;
-  }>;
-};
+    }
+  | {
+      data: JobApi[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
 
-type JobsListApiResponse = {
-  data: JobApi[];
-  meta?: {
-    totalItems?: number;
-    total?: number;
-    page?: number;
-    pageSize?: number;
-  };
-};
-
-/** ---------- Helpers ---------- */
-function mapStageName(
-  stageId: number,
-): "เคลม" | "ซ่อม" | "ตั้งเบิก" | "เสร็จสิ้น" {
-  switch (stageId) {
-    case 1:
-      return "เคลม";
-    case 2:
-      return "ซ่อม";
-    case 3:
-      return "ตั้งเบิก";
-    default:
-      return "เสร็จสิ้น";
-  }
-}
-
-function mapJobApiToJob(api: JobApi): Job {
-  const stages =
-    api.jobStages?.map((s) => ({
-      id: String(s.id),
-      name: mapStageName(s.stageId),
-      isLocked: s.isLocked,
-      isCompleted: s.isCompleted,
-      startedAt: s.startedAt,
-      completedAt: s.completedAt,
-      steps: s.jobSteps?.map((st) => ({
-        id: String(st.id),
-        name: st.stepTemplate?.name ?? "",
-        status: st.status,
-        employeeId: st.employeeId,
-        completedAt: st.completedAt,
-        notes: st.notes,
-        orderIndex: st.stepTemplate?.orderIndex ?? 0,
-        isSkippable: st.stepTemplate?.isSkippable ?? false,
-      })),
-    })) ?? [];
-  const {
-    id,
-    jobNumber,
-    vehicleId,
-    customerId,
-    receiverId,
-    insuranceCompanyId,
-    paymentType,
-    excessFee,
-    startDate,
-    estimatedEndDate,
-    actualEndDate,
-    repairDescription,
-    notes,
-    currentStageIndex,
-    status,
-    isFinished,
-    createdAt,
-    updatedAt,
-  } = api;
-  const job: unknown = {
-    id: String(id),
-    jobNumber,
-    vehicleId,
-    customerId,
-    receiverId,
-    insuranceCompanyId,
-    paymentType,
-    excessFee,
-    startDate,
-    estimatedEndDate,
-    actualEndDate,
-    repairDescription,
-    notes,
-    currentStageIndex,
-    status,
-    isFinished,
-    createdAt,
-    updatedAt,
-
-    registration: api.vehicle?.registration ?? "",
-    brand: api.vehicle?.brand ?? "",
-    model: api.vehicle?.model ?? "",
-    type: api.vehicle?.type ?? "",
-    year: api.vehicle?.year ?? "",
-    color: api.vehicle?.color ?? "",
-    customerName: api.customer?.name ?? "",
-    customerPhone: api.customer?.phone ?? "",
-    customerAddress: api.customer?.address ?? "",
-
-    stages,
-  };
-
-  return job as Job;
-}
-
-function buildSummary(jobs: JobApi[]): JobsSummary {
-  const total = jobs.length;
-  const finished = jobs.filter((j) => j.isFinished).length;
-  const claim = jobs.filter(
-    (j) => !j.isFinished && j.status === "CLAIM",
-  ).length;
-  const repair = jobs.filter(
-    (j) => !j.isFinished && j.status === "REPAIR",
-  ).length;
-  const billing = jobs.filter(
-    (j) => !j.isFinished && j.status === "BILLING",
-  ).length;
-
-  return { total, claim, repair, billing, finished };
-}
-
-export async function getJobsApi(q: JobsQuery): Promise<JobsResponse> {
+// -----------------------------
+// API: ดึงอย่างเดียว (ไม่ summary ไม่ map)
+// -----------------------------
+export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
   const { data } = await http.get<JobsListApiResponse>("private/jobs", {
     params: {
       page: q.page,
       pageSize: q.pageSize,
-
-      search: q.search || undefined,
-      carType: q.carType !== "ทั้งหมด" ? q.carType : undefined,
-      from: q.from || undefined,
-      to: q.to || undefined,
-      status: q.status !== "ทั้งหมด" ? q.status : undefined,
+      // ถ้า backend ใช้ limit ให้เปลี่ยนเป็น:
+      // limit: q.pageSize,
     },
   });
 
-  const jobsApi = data.data ?? [];
-  const items = jobsApi.map(mapJobApiToJob);
+  return data;
+}
 
-  const totalItems =
-    data.meta?.totalItems ?? data.meta?.total ?? jobsApi.length;
-
-  const summary = buildSummary(jobsApi);
-
-  return { items, totalItems, summary };
+// -----------------------------
+// (Optional) helper: ดึง job by id แบบตรง backend
+// -----------------------------
+export async function getJobByIdApi(jobId: number): Promise<JobApi> {
+  const { data } = await http.get<JobApi>(`private/jobs/${jobId}`);
+  return data;
 }
