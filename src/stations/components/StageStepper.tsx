@@ -10,6 +10,7 @@ export default function StageStepper({ job }: { job: JobApi }) {
     <div className="flex items-center gap-2">
       {stages.map((s, idx) => {
         const isActive = idx === (job.currentStageIndex ?? 0);
+        const isCompleted = s.isCompleted;
 
         return (
           <div key={s.id} className="flex items-center">
@@ -27,7 +28,7 @@ export default function StageStepper({ job }: { job: JobApi }) {
               </div>
               <span
                 className={`text-sm font-medium ${
-                  isActive ? "text-blue-700" : "text-slate-500"
+                  isCompleted ? "text-green-700" : isActive ? "text-blue-700" : "text-slate-500"
                 }`}
               >
                 {s.stage.name.replace(/^\d+\.\s*/, "")}

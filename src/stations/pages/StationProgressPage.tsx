@@ -28,6 +28,28 @@ function sortSteps(steps: JobStepApi[]) {
     .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
 }
 
+type JobOverallStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
+
+function deriveJobStatusFromStages(job: JobApi): JobOverallStatus {
+  const stages = (job.jobStages ?? [])
+    .slice()
+    .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
+
+  
+  if (stages.length === 0) return (job.status as JobOverallStatus) ?? "CLAIM";
+
+  
+  if (stages.every((s) => s.isCompleted)) return "DONE";
+
+  // หา stage แรกที่ยังไม่ completed แล้ว map เป็น status
+  const firstNotDoneIdx = stages.findIndex((s) => !s.isCompleted);
+
+  // สมมติ stage order: 0=CLAIM, 1=REPAIR, 2=BILLING
+  if (firstNotDoneIdx <= 0) return "CLAIM";
+  if (firstNotDoneIdx === 1) return "REPAIR";
+  return "BILLING";
+}
+
 export default function StationProgressPage({
   job,
   onUpdateStep,
@@ -41,6 +63,10 @@ export default function StationProgressPage({
   ) => void;
 }) {
   const navigate = useNavigate();
+  const overallStatus = useMemo(() => deriveJobStatusFromStages(job), [job]);
+
+
+  
 
   // =========================
   // 1) Stage / Step timeline
@@ -92,11 +118,11 @@ export default function StationProgressPage({
     null,
   ); // คนที่เลือกแล้ว
 
-  // ✅ เรียก hook ด้วยคำค้น
+  // เรียก hook ด้วยคำค้น
   const { employees, loading: employeesLoading } =
     useEmployeesQuery(employeeQuery);
 
-  // ✅ ถ้าจะจำกัดจำนวนตัวเลือก ทำที่นี่ (hook ส่งมาเป็น list ที่ match แล้ว)
+  // ถ้าจะจำกัดจำนวนตัวเลือก ทำที่นี่ (hook ส่งมาเป็น list ที่ match แล้ว)
   const employeeOptions = useMemo(() => employees.slice(0, 8), [employees]);
 
   // =========================
@@ -180,10 +206,13 @@ export default function StationProgressPage({
     }
   };
 
+  
+
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] font-sans text-slate-800">
       <ProgressHeader
         registration={job.vehicle.registration}
+        status={overallStatus}
         onBack={() => navigate(-1)}
       />
 

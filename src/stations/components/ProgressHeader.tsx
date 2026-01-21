@@ -2,11 +2,22 @@ import { ChevronLeft } from "lucide-react";
 
 export default function ProgressHeader({
   registration,
+  status,
   onBack,
 }: {
   registration: string;
+  status: "CLAIM" | "REPAIR" | "BILLING" | "DONE";
   onBack: () => void;
 }) {
+  const label =
+    status === "CLAIM"
+      ? "เคลม"
+      : status === "REPAIR"
+        ? "ซ่อม"
+        : status === "BILLING"
+          ? "ตั้งเบิก"
+          : "เสร็จสิ้น";
+
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 mb-6 flex items-center gap-4">
       <button
@@ -29,6 +40,10 @@ export default function ProgressHeader({
         <span className="text-slate-300 mx-1">/</span>
 
         <span className="font-bold text-slate-900">สถานะ</span>
+
+        <span className="ml-2 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+          {label}
+        </span>
       </div>
     </div>
   );
