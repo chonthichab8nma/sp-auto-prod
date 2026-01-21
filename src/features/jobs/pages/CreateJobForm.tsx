@@ -73,10 +73,40 @@ export default function CreateJobForm() {
       alert(v.errors[0]);
       return;
     }
-    console.log(formData);
+    console.log({
+      ...formData,
+      vehicle: {
+        registration: formData.registration,
+        brand: formData.brand,
+        model: formData.model,
+        color: formData.color,
+        vinNumber: formData.vinNumber,
+        chassisNumber:formData.chassisNumber,
+      },
+      customer: {
+        name: formData.customerName,
+        phone: formData.customerPhone,
+        address: formData.customerAddress,
+      },
+    });
+
+    const test = { ...formData,
+      vehicle: {
+        registration: formData.registration,
+        brand: formData.brand,
+        model: formData.model,
+        color: formData.color,
+        vinNumber: formData.vinNumber,
+        chassisNumber:formData.chassisNumber,
+      },
+      customer: {
+        name: formData.customerName,
+        phone: formData.customerPhone,
+        address: formData.customerAddress,
+      },}
 
     try {
-      const res = await jobsService.create(formData);
+      const res = await jobsService.create(test);
       console.log(res.data);
     } catch (error) {
       console.log(error);

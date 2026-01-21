@@ -28,27 +28,27 @@ function sortSteps(steps: JobStepApi[]) {
     .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
 }
 
-type JobOverallStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
+// type JobOverallStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 
-function deriveJobStatusFromStages(job: JobApi): JobOverallStatus {
-  const stages = (job.jobStages ?? [])
-    .slice()
-    .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
+// function deriveJobStatusFromStages(job: JobApi): JobOverallStatus {
+//   const stages = (job.jobStages ?? [])
+//     .slice()
+//     .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
+
+//   // ถ้าไม่มี stage ใช้ status จาก backend
+//   if (stages.length === 0) return (job.status as JobOverallStatus) ?? "CLAIM";
 
   
-  if (stages.length === 0) return (job.status as JobOverallStatus) ?? "CLAIM";
+//   if (stages.every((s) => s.isCompleted)) return "DONE";
 
-  
-  if (stages.every((s) => s.isCompleted)) return "DONE";
+//   // หา stage แรกที่ยังไม่ completed แล้ว map เป็น status
+//   const firstNotDoneIdx = stages.findIndex((s) => !s.isCompleted);
 
-  // หา stage แรกที่ยังไม่ completed แล้ว map เป็น status
-  const firstNotDoneIdx = stages.findIndex((s) => !s.isCompleted);
-
-  // สมมติ stage order: 0=CLAIM, 1=REPAIR, 2=BILLING
-  if (firstNotDoneIdx <= 0) return "CLAIM";
-  if (firstNotDoneIdx === 1) return "REPAIR";
-  return "BILLING";
-}
+//   // สมมติ stage order: 0=CLAIM, 1=REPAIR, 2=BILLING
+//   if (firstNotDoneIdx <= 0) return "CLAIM";
+//   if (firstNotDoneIdx === 1) return "REPAIR";
+//   return "BILLING";
+// }
 
 export default function StationProgressPage({
   job,
@@ -63,7 +63,7 @@ export default function StationProgressPage({
   ) => void;
 }) {
   const navigate = useNavigate();
-  const overallStatus = useMemo(() => deriveJobStatusFromStages(job), [job]);
+  // const overallStatus = useMemo(() => deriveJobStatusFromStages(job), [job]);
 
 
   
@@ -89,24 +89,27 @@ export default function StationProgressPage({
     return steps.map((s) => ({
       id: String(s.id),
       name: s.stepTemplate?.name ?? "-",
-      status: (s.status as StepStatus) ?? "pending",
+      status: (s.status ?? "pending") as StepStatus,
       timestamp: s.completedAt,
       isSkippable: Boolean(s.stepTemplate?.isSkippable),
     }));
   }, [currentStage]);
 
-  const [activeStepId, setActiveStepId] = useState<string>(() => {
-    const first = stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
-    return first ? first.id : "";
-  });
+const [activeStepId, setActiveStepId] = useState<string>("");
 
-  useEffect(() => {
-    // ถ้า stage/steps เปลี่ยน แล้ว activeStepId ไม่อยู่ในรายการ ให้รีเซ็ต
-    if (!stepsVm.some((s) => s.id === activeStepId)) {
-      const first = stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
-      setActiveStepId(first ? first.id : "");
-    }
-  }, [stepsVm, activeStepId]);
+useEffect(() => {
+  if (!stepsVm.length) {
+    setActiveStepId("");
+    return;
+  }
+
+  // ถ้า activeStepId ยังว่าง หรือ step เดิมหายไป -> ตั้งค่าใหม่
+  if (!activeStepId || !stepsVm.some((s) => s.id === activeStepId)) {
+    const first =
+      stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
+    setActiveStepId(first?.id ?? "");
+  }
+}, [stepsVm, activeStepId]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
 
@@ -212,7 +215,7 @@ export default function StationProgressPage({
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] font-sans text-slate-800">
       <ProgressHeader
         registration={job.vehicle.registration}
-        status={overallStatus}
+        // status={overallStatus}
         onBack={() => navigate(-1)}
       />
 
@@ -239,7 +242,7 @@ export default function StationProgressPage({
 
           <div className="w-full xl:w-auto xl:text-right border-t xl:border-t-0 border-slate-100 pt-4 xl:pt-0">
             <div className="flex justify-between xl:block items-center mb-4 xl:mb-0">
-              <div className="text-xs text-slate-400 mb-1">ทะเบียนรถ</div>
+              <div className="text-xs text-red-600 mb-1">ทะเบียนรถ</div>
               <div className="text-xl font-bold text-slate-900">
                 {job.vehicle.registration}
               </div>

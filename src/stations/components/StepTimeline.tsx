@@ -1,4 +1,4 @@
-import { Check, Plus, SkipForward } from "lucide-react";
+import { Check, Plus} from "lucide-react";
 import type { StepStatus } from "../../Type";
 
 export type StepVM = {
@@ -33,7 +33,7 @@ export default function StepTimeline({
 }) {
   return (
     <div className="pb-4">
-      <div className="px-6 py-5 border-b border-slate-100 mb-2">
+      <div className="px-6 py-5 bg-amber-400 border-b border-slate-100 mb-2">
         <h3 className="text-base font-semibold text-slate-900">{title}</h3>
       </div>
 
@@ -105,12 +105,12 @@ export default function StepTimeline({
                     </div>
                   </div>
 
-                  {isActive && !isCompleted && !isSkipped && (
+                  {/* {isActive && !isCompleted && !isSkipped && (
                     <div className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 shadow-sm">
                       <SkipForward size={12} className="text-slate-400" />
                       ข้าม
                     </div>
-                  )}
+                  )} */}
                 </div>
               );
             })}

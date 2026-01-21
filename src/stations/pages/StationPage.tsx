@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Job } from "../../Type";
 import { filterData } from "../../features/jobs/hooks/useSearch";
-import StationsFilters from "../components/StationsFilters";
-import StationsTable from "../components/StationsTable";
-import { INITIAL_STAGES } from "../../data";
+// import StationsFilters from "../components/StationsFilters";
+// import StationsTable from "../components/StationsTable";
+// import { INITIAL_STAGES } from "../../data";
 
 export default function StationsPage({ jobs }: { jobs: Job[] }) {
   const navigate = useNavigate();

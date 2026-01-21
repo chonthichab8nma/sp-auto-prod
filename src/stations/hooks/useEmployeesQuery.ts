@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { getEmployeesApi, type EmployeeApi } from "../api/employees.api";
 
+
 export function useEmployeesQuery(search: string) {
   const [employees, setEmployees] = useState<EmployeeApi[]>([]);
   const [loading, setLoading] = useState(false);

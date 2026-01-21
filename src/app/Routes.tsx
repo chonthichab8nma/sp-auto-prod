@@ -14,8 +14,8 @@ import type { StepStatus } from "../Type";
 import StationsPage from "../stations/pages/StationPage";
 import StationProgressPage from "../stations/pages/StationProgressPage";
 
-import { useJobsStore } from "../features/jobs/hooks/useJobsStore";
-import JobEditPage from "../features/jobs/pages/JobEditPage";
+// import { useJobsStore } from "../features/jobs/hooks/useJobsStore";
+// import JobEditPage from "../features/jobs/pages/JobEditPage";
 
 import RequireAuth from "../shared/auth/RequireAuth";
 import { useAuth } from "../shared/auth/useAuth";
@@ -89,38 +89,38 @@ function StationWrapper({
   );
 }
 
-function JobEditWrapper() {
-  const { jobId } = useParams();
-  const navigate = useNavigate();
-  const { jobs, updateJob } = useJobsStore();
+// function JobEditWrapper() {
+//   const { jobId } = useParams();
+//   const navigate = useNavigate();
+//   const { jobs, updateJob } = useJobsStore();
 
-  const job = jobs.find((j) => String(j.id) === String(jobId));
+//   const job = jobs.find((j) => String(j.id) === String(jobId));
 
-  if (!job) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-gray-500 mb-4">ไม่พบข้อมูลรถที่ต้องการแก้ไข</p>
-        <button
-          onClick={() => navigate("/")}
-          className="text-blue-600 hover:underline font-medium"
-        >
-          กลับหน้าหลัก
-        </button>
-      </div>
-    );
-  }
+//   if (!job) {
+//     return (
+//       <div className="p-8 text-center">
+//         <p className="text-gray-500 mb-4">ไม่พบข้อมูลรถที่ต้องการแก้ไข</p>
+//         <button
+//           onClick={() => navigate("/")}
+//           className="text-blue-600 hover:underline font-medium"
+//         >
+//           กลับหน้าหลัก
+//         </button>
+//       </div>
+//     );
+//   }
 
-  return (
-    <JobEditPage
-      job={job}
-      onCancel={() => navigate(-1)}
-      onSave={(updatedJob) => {
-        updateJob(updatedJob);
-        navigate(-1);
-      }}
-    />
-  );
-}
+//   return (
+//     <JobEditPage
+//       job={job}
+//       onCancel={() => navigate(-1)}
+//       onSave={(updatedJob) => {
+//         updateJob(updatedJob);
+//         navigate(-1);
+//       }}
+//     />
+//   );
+// }
 
 function LoginGate() {
   const { isAuthed } = useAuth();
@@ -157,7 +157,7 @@ const updateStep = (
             }
           />
 
-          <Route path="/job/:jobId/edit" element={<JobEditWrapper />} />
+          {/* <Route path="/job/:jobId/edit" element={<JobEditWrapper />} /> */}
 
           <Route path="/job/:jobId" element={<JobDetailWrapper />} />
 

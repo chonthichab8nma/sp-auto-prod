@@ -36,6 +36,8 @@ export interface JobFormData {
   customerAddress?: string;
 }
 
+
+
 export interface Job extends JobFormData {
   id: string;
   stages: Stage[];
