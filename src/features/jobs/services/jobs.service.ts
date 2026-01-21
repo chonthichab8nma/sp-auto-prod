@@ -1,6 +1,6 @@
 import type { Job } from "../../../Type";
 import type { CreateJobPayload } from "../types/jobForm";
-import { createJobMockApi } from "../api/mock.jobs.api";
+import { http } from "../../../shared/lib/http"; 
 
 export type ServiceResult<T> =
   | { ok: true; data: T }
@@ -8,8 +8,17 @@ export type ServiceResult<T> =
 
 export const jobsService = {
   async create(payload: CreateJobPayload): Promise<ServiceResult<Job>> {
-    const res = await createJobMockApi(payload);
-    if (!res.ok) return { ok: false, error: res.error };
-    return { ok: true, data: res.data };
+    try {
+      const { data } = await http.post<Job>(
+        "/private/jobs",
+        payload
+      );
+      return { ok: true, data };
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        return { ok: false, error: e.message };
+      }
+      return { ok: false, error: "สร้างงานไม่สำเร็จ" };
+    }
   },
 };

@@ -4,7 +4,7 @@ export type CreateJobPayload = JobFormData;
 
 export const getDefaultCreateJobFormData = (): JobFormData => ({
   registration: "",
-  bagNumber: "",
+  chassisNumber: "",
   brand: "",
   type: "",
   model: "",
@@ -57,7 +57,7 @@ export function validateCreateJob(form: JobFormData) {
 
 
   if (!form.registration?.trim()) errors.push("กรุณากรอกทะเบียนรถ");
-  if (!form.bagNumber?.trim()) errors.push("กรุณากรอกเลขตัวถัง");
+  if (!form.chassisNumber?.trim()) errors.push("กรุณากรอกเลขตัวถัง");
   if (!form.type?.trim()) errors.push("กรุณาเลือกประเภทรถ");
   if (!form.brand?.trim()) errors.push("กรุณาเลือกยี่ห้อ/แบรนด์");
   if (!form.model?.trim()) errors.push("กรุณาเลือกรุ่น");

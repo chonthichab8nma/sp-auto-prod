@@ -1,5 +1,13 @@
 import { Check, Plus, SkipForward } from "lucide-react";
-import type { Job, StepStatus } from "../../Type";
+import type { StepStatus } from "../../Type";
+
+export type StepVM = {
+  id: string;
+  name: string;
+  status: StepStatus;
+  timestamp?: string | null;
+  isSkippable?: boolean;
+};
 
 function StatusBadge({ status }: { status: StepStatus }) {
   if (status === "completed") {
@@ -19,7 +27,7 @@ export default function StepTimeline({
   onSelectStep,
 }: {
   title: string;
-  steps: Job["stages"][number]["steps"];
+  steps: StepVM[];
   activeStepId: string;
   onSelectStep: (id: string) => void;
 }) {
@@ -52,7 +60,7 @@ export default function StepTimeline({
                 iconColor = "text-blue-600";
                 dotColor = "bg-blue-50 border-blue-200";
               } else if (isSkipped) {
-                // Logic for skipped icon if needed
+                // ถ้าอยากทำ icon skipped ทีหลังค่อยเพิ่ม
               }
 
               return (

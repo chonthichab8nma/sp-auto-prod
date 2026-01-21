@@ -6,7 +6,7 @@ import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../../../data";
 
 import {
   getDefaultCreateJobFormData,
-  normalizeCreateJobPayload,
+  // normalizeCreateJobPayload,
   validateCreateJob,
 } from "../types/jobForm";
 import { jobsService } from "../services/jobs.service";
@@ -30,23 +30,19 @@ function parseFieldValue(name: string, value: string) {
   return value;
 }
 
-export default function CreateJobForm({
-  onCancel,
-  onSubmit,
-  onSubmitCreated,
-}: CreateJobFormProps) {
+export default function CreateJobForm() {
   const [formData, setFormData] = useState<JobFormData>(() =>
-    getDefaultCreateJobFormData()
+    getDefaultCreateJobFormData(),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const insuranceRequired = useMemo(
     () => formData.paymentType === "Insurance",
-    [formData.paymentType]
+    [formData.paymentType],
   );
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     if (name === "customerPhone") {
@@ -72,30 +68,41 @@ export default function CreateJobForm({
     if (isSubmitting) return;
 
     const v = validateCreateJob(formData);
+
     if (!v.ok) {
       alert(v.errors[0]);
       return;
     }
-
-    const payload = normalizeCreateJobPayload(formData);
-
-    if (onSubmit && !onSubmitCreated) {
-      onSubmit(payload);
-      return;
-    }
+    console.log(formData);
 
     try {
-      setIsSubmitting(true);
-      const res = await jobsService.create(payload);
-      if (!res.ok) {
-        alert(res.error);
-        return;
-      }
-      onSubmitCreated?.(res.data);
-    } finally {
-      setIsSubmitting(false);
+      const res = await jobsService.create(formData);
+      console.log(res.data);
+    } catch (error) {
+      console.log(error);
     }
+
+    // const payload = normalizeCreateJobPayload(formData);
+
+    // if (onSubmit && !onSubmitCreated) {
+    //   onSubmit(payload);
+    //   return;
+    // }
+
+    // try {
+    //   setIsSubmitting(true);
+    //   const res = await jobsService.create(payload);
+    //   if (!res.ok) {
+    //     alert(res.error);
+    //     return;
+    //   }
+    //   onSubmitCreated?.(res.data);
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
+
+  function onCancel() {}
 
   return (
     <div className="w-full bg-white border border-slate-200 overflow-hidden ">
@@ -125,8 +132,8 @@ export default function CreateJobForm({
             />
             <FormInput
               label={<LabelWithStar text="เลขตัวถัง" />}
-              name="bagNumber"
-              value={formData.bagNumber}
+              name="chassisNumber"
+              value={formData.chassisNumber}
               onChange={handleChange}
               required
             />

@@ -131,13 +131,14 @@ function LoginGate() {
 
 export default function AppRoutes() {
   const navigate = useNavigate();
-  const { jobs, createJob, updateStep } = useJobsStore();
-
-  const handleCreateJob = (formData: JobFormData) => {
-    createJob(formData);
-    navigate("/");
-  };
-
+  
+const updateStep = ( jobId: string,
+    stageIdx: number,
+    stepId: string,
+    status: StepStatus,
+    employee: string,) => {
+       console.log({jobId,stageIdx,stepId,status,employee})
+    }
   return (
     <Routes>
       <Route path="/login" element={<LoginGate />} />
@@ -145,14 +146,14 @@ export default function AppRoutes() {
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
 
-          <Route path="/stations" element={<StationsPage jobs={jobs} />} />
+          <Route path="/stations" element={<StationsPage />} />
 
           <Route
             path="/create"
             element={
               <CreateJobForm
-                onCancel={() => navigate("/")}
-                onSubmit={handleCreateJob}
+                
+  
               />
             }
           />
@@ -161,6 +162,7 @@ export default function AppRoutes() {
 
           <Route path="/job/:jobId" element={<JobDetailWrapper />} />
 
+        
           <Route
             path="/stations/:jobId"
             element={<StationWrapper onUpdateStep={updateStep} />}

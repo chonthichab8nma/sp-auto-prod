@@ -32,30 +32,31 @@ export default function StationsPage({ jobs }: { jobs: Job[] }) {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   };
 
-  return (
-    <div className="bg-white min-h-screen p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">สเตชั่น</h1>
-        <p className="text-slate-500 text-sm">ระบุรายละเอียดการรับรถใหม่</p>
-      </div>
+  // return (
+  //   <div className="bg-white min-h-screen p-6">
+  //     <div className="mb-8">
+  //       <h1 className="text-2xl font-bold text-slate-800 mb-1">สเตชั่น</h1>
+  //       <p className="text-slate-500 text-sm">ระบุรายละเอียดการรับรถใหม่</p>
+  //     </div>
 
-      <StationsFilters
-        searchTerm={searchTerm}
-        selectedCarType={selectedCarType}
-        selectedStatus={selectedStatus}
-        statusOptions={allStatusOptions}
-        onSearchTermChange={setSearchTerm}
-        onCarTypeChange={setSelectedCarType}
-        onStatusChange={setSelectedStatus}
-        onSubmitSearch={handleSearchAction}
-      />
+  //     <StationsFilters
+  //       searchTerm={searchTerm}
+  //       selectedCarType={selectedCarType}
+  //       selectedStatus={selectedStatus}
+  //       statusOptions={allStatusOptions}
+  //       onSearchTermChange={setSearchTerm}
+  //       onCarTypeChange={setSelectedCarType}
+  //       onStatusChange={setSelectedStatus}
+  //       onSubmitSearch={handleSearchAction}
+  //     />
 
-      <StationsTable
-        jobs={filteredJobs}
-        onRowClick={(id) => {
-          navigate(`//stations/${id}`);
-        }}
-      />
-    </div>
-  );
+  //     <StationsTable
+  //       jobs={filteredJobs}
+  //       onRowClick={(id) => {
+  //         navigate(`//stations/${id}`);
+  //       }}
+  //     />
+  //   </div>
+  // );
+  return "station"
 }

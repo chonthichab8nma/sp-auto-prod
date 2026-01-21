@@ -19,7 +19,7 @@ export interface Stage {
 
 export interface JobFormData {
   registration: string;
-  bagNumber: string;
+  chassisNumber: string;
   brand: string;
   type: string;
   model: string;
