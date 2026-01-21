@@ -1,4 +1,4 @@
-export type StepStatus = "pending" | "processing" | "completed" | "skipped";
+export type StepStatus = "pending" | "in_progress" | "completed" | "skipped";
 export type PaymentType = "Insurance" | "Cash";
 
 export interface Step {

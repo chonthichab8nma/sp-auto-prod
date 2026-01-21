@@ -1,11 +1,19 @@
 import { Check } from "lucide-react";
 import type { StepStatus } from "../../Type";
+import type { EmployeeApi } from "../api/employees.api";
 
 export default function StepActionPanel({
   stepName,
   stepStatus,
-  operatorName,
-  onOperatorChange,
+
+  // ✅ autocomplete props
+  employeeQuery,
+  onEmployeeQueryChange,
+  employeeOptions,
+  employeeLoading,
+  selectedEmployee,
+  onSelectEmployee,
+
   selectedAction,
   onSelectAction,
   error,
@@ -14,8 +22,14 @@ export default function StepActionPanel({
 }: {
   stepName: string;
   stepStatus: StepStatus;
-  operatorName: string;
-  onOperatorChange: (v: string) => void;
+
+  employeeQuery: string;
+  onEmployeeQueryChange: (v: string) => void;
+  employeeOptions: EmployeeApi[];
+  employeeLoading?: boolean;
+  selectedEmployee: EmployeeApi | null;
+  onSelectEmployee: (emp: EmployeeApi) => void;
+
   selectedAction: StepStatus | null;
   onSelectAction: (s: StepStatus) => void;
   error: string | null;
@@ -42,34 +56,34 @@ export default function StepActionPanel({
     );
   };
 
+  const showDropdown =
+    !!employeeQuery.trim() && !selectedEmployee && (employeeLoading || employeeOptions.length > 0);
+
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h3 className="text-sm font-medium text-slate-500 mb-1">
-            เช็กรายการ
-          </h3>{" "}
-          {/* Label ในรูป */}
+          <h3 className="text-sm font-medium text-slate-500 mb-1">เช็กรายการ</h3>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-slate-900">{stepName}</span>{" "}
-            {/* ชื่อ step จริง */}
+            <span className="text-lg font-bold text-slate-900">{stepName}</span>
             {getBadge()}
           </div>
         </div>
       </div>
 
       <div className="flex-1 space-y-6">
-        {/* Input */}
-        <div className="space-y-2">
+        {/* Operator autocomplete */}
+        <div className="space-y-2 relative">
           <label className="text-sm font-medium text-slate-700">
             ผู้ดำเนินการ <span className="text-red-500">*</span>
           </label>
+
           <input
             type="text"
-            placeholder="ระบุชื่อผู้ดำเนินการ"
-            value={operatorName}
-            onChange={(e) => onOperatorChange(e.target.value)}
+            placeholder="พิมพ์ชื่อพนักงานเพื่อค้นหา"
+            value={selectedEmployee ? selectedEmployee.name : employeeQuery}
+            onChange={(e) => onEmployeeQueryChange(e.target.value)}
             className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all
               ${
                 error
@@ -78,8 +92,47 @@ export default function StepActionPanel({
               }
             `}
           />
+
+          {/* Dropdown */}
+          {showDropdown && (
+            <div className="absolute z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
+              {employeeLoading ? (
+                <div className="px-4 py-3 text-sm text-slate-500">กำลังค้นหา...</div>
+              ) : employeeOptions.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-slate-500">ไม่พบพนักงาน</div>
+              ) : (
+                <ul className="max-h-64 overflow-auto">
+                  {employeeOptions.map((e) => (
+                    <li key={e.id}>
+                      <button
+                        type="button"
+                        onClick={() => onSelectEmployee(e)}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center justify-between"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-slate-800 truncate">{e.name}</div>
+                          <div className="text-xs text-slate-500 truncate">
+                            {e.role} • {e.phone}
+                          </div>
+                        </div>
+                        <span className="text-xs text-slate-400">#{e.id}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* Selected hint */}
+          {selectedEmployee && (
+            <div className="text-xs text-slate-500">
+              ผู้ดำเนินการ: {selectedEmployee.name}
+            </div>
+          )}
         </div>
 
+        {/* Status */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">สถานะ</label>
           <div className="grid grid-cols-2 gap-4">
@@ -100,9 +153,7 @@ export default function StepActionPanel({
                     : "border-slate-300 bg-white"
                 }`}
               >
-                {selectedAction === "skipped" && (
-                  <Check size={12} className="text-white" />
-                )}
+                {selectedAction === "skipped" && <Check size={12} className="text-white" />}
               </div>
               <span className="text-sm font-medium text-slate-700">ข้าม</span>
             </button>
@@ -124,13 +175,9 @@ export default function StepActionPanel({
                     : "border-slate-300 bg-white"
                 }`}
               >
-                {selectedAction === "completed" && (
-                  <Check size={12} className="text-white" />
-                )}
+                {selectedAction === "completed" && <Check size={12} className="text-white" />}
               </div>
-              <span className="text-sm font-medium text-slate-700">
-                เสร็จสิ้น
-              </span>
+              <span className="text-sm font-medium text-slate-700">เสร็จสิ้น</span>
             </button>
           </div>
         </div>
@@ -140,7 +187,7 @@ export default function StepActionPanel({
         <button
           onClick={onSave}
           disabled={saving}
-          className="px-8 py-2.5 bg-slate-100 hover:bg-blue-700 hover:text-white text-slate-600 font-medium rounded-lg text-sm transition-colors shadow-blue-200 "
+          className="px-8 py-2.5 bg-slate-100 hover:bg-blue-700 hover:text-white text-slate-600 font-medium rounded-lg text-sm transition-colors shadow-blue-200"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>

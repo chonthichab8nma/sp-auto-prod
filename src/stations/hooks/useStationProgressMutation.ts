@@ -1,22 +1,27 @@
 import { useState } from "react";
 import type { StepStatus } from "../../Type";
 import { http } from "../../shared/lib/http";
-import type { JobStepStatusApi } from "../../features/jobs/api/job.api";
 
 type SaveStepPayload = {
-  jobId: string;
-  stageIdx: number;
   stepId: string;
   status: StepStatus;
-  employee: string;
+  employeeId?: number;
 };
 
-function mapStatusToApi(status: StepStatus): JobStepStatusApi {
-  if (status === "skipped") {
-    // backend ไม่รองรับ skipped
-    return "pending";
+type ApiBody = {
+  status: "pending" | "in_progress" | "completed" | "skipped";
+  employeeId?: number;
+};
+
+function assertEmployeeId(payload: SaveStepPayload) {
+  if (
+    (payload.status === "completed" || payload.status === "in_progress") &&
+    !payload.employeeId
+  ) {
+    throw new Error(
+      "employeeId is required when status is completed or in_progress",
+    );
   }
-  return status;
 }
 
 export function useStationProgressMutation() {
@@ -25,18 +30,16 @@ export function useStationProgressMutation() {
 
   const saveStep = async (payload: SaveStepPayload) => {
     setSaving(true);
-    setSaveError(null);
+    setSaveError("");
 
     try {
-      const apiStatus = mapStatusToApi(payload.status);
+      assertEmployeeId(payload);
+      const body: ApiBody = {
+        status: payload.status,
+        ...(payload.employeeId ? { employeeId: payload.employeeId } : {}),
+      };
 
-      await http.patch(
-        `/private/jobs/${payload.jobId}/stages/${payload.stageIdx}/steps/${payload.stepId}`,
-        {
-          status: apiStatus,
-          employee: payload.employee,
-        }
-      );
+      await http.patch(`/private/jobs/steps/${payload.stepId}`, body);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "บันทึกสถานะไม่สำเร็จ";

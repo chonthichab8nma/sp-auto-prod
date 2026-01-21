@@ -10,7 +10,7 @@ import AppShell from "./AppShell";
 import Dashboard from "../features/jobs/pages/Dashboard";
 import CreateJobForm from "../features/jobs/pages/CreateJobForm";
 import JobDetailPage from "../features/jobs/pages/JobDetailPage";
-import type { JobFormData, StepStatus } from "../Type";
+import type { StepStatus } from "../Type";
 import StationsPage from "../stations/pages/StationPage";
 import StationProgressPage from "../stations/pages/StationProgressPage";
 
@@ -51,11 +51,10 @@ function StationWrapper({
   onUpdateStep,
 }: {
   onUpdateStep: (
-    jobId: string,
     stageIdx: number,
     stepId: string,
     status: StepStatus,
-    employee: string,
+    employeeId: number | null
   ) => void;
 }) {
   const { jobId } = useParams();
@@ -82,11 +81,11 @@ function StationWrapper({
   }
   return (
     <StationProgressPage
-      job={job}
-      onUpdateStep={(stageIdx, stepId, status, employee) =>
-        onUpdateStep(String(job.id), stageIdx, stepId, status, employee)
-      }
-    />
+  job={job}
+  onUpdateStep={(stageIdx, stepId, status, employeeId) => {
+    onUpdateStep(stageIdx, stepId, status, employeeId);
+  }}
+/>
   );
 }
 
@@ -130,14 +129,14 @@ function LoginGate() {
 }
 
 export default function AppRoutes() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   
-const updateStep = ( jobId: string,
+const updateStep = ( 
     stageIdx: number,
     stepId: string,
     status: StepStatus,
-    employee: string,) => {
-       console.log({jobId,stageIdx,stepId,status,employee})
+    employeeId: number | null) => {
+       console.log({ stageIdx, stepId, status, employeeId });
     }
   return (
     <Routes>

@@ -4,13 +4,19 @@ import { Car } from "lucide-react";
 import toast from "react-hot-toast";
 
 import type { StepStatus } from "../../Type";
-import type { JobApi, JobStageApi, JobStepApi } from "../../features/jobs/api/job.api";
+import type {
+  JobApi,
+  JobStageApi,
+  JobStepApi,
+} from "../../features/jobs/api/job.api";
 
 import StageStepper from "../components/StageStepper";
 import StepTimeline, { type StepVM } from "../components/StepTimeline";
 import StepActionPanel from "../components/StepActionPanel";
 import { useStationProgressMutation } from "../hooks/useStationProgressMutation";
 import ProgressHeader from "../components/ProgressHeader";
+import { useEmployeesQuery } from "../hooks/useEmployeesQuery";
+import type { EmployeeApi } from "../api/employees.api";
 
 function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
@@ -31,12 +37,18 @@ export default function StationProgressPage({
     stageIdx: number,
     stepId: string,
     status: StepStatus,
-    employee: string
+    employeeId: number | null,
   ) => void;
 }) {
   const navigate = useNavigate();
 
-  const stages = useMemo(() => sortStages(job.jobStages ?? []), [job.jobStages]);
+  // =========================
+  // 1) Stage / Step timeline
+  // =========================
+  const stages = useMemo(
+    () => sortStages(job.jobStages ?? []),
+    [job.jobStages],
+  );
 
   const stageIdx = useMemo(() => {
     const raw = job.currentStageIndex ?? 0;
@@ -58,23 +70,38 @@ export default function StationProgressPage({
   }, [currentStage]);
 
   const [activeStepId, setActiveStepId] = useState<string>(() => {
-    const first =
-      stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
+    const first = stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
     return first ? first.id : "";
   });
 
   useEffect(() => {
     // ถ้า stage/steps เปลี่ยน แล้ว activeStepId ไม่อยู่ในรายการ ให้รีเซ็ต
     if (!stepsVm.some((s) => s.id === activeStepId)) {
-      const first =
-        stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
+      const first = stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
       setActiveStepId(first ? first.id : "");
     }
   }, [stepsVm, activeStepId]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
 
-  const [operatorName, setOperatorName] = useState("");
+  // =========================
+  // 2) Employee autocomplete (ใช้ useEmployeesQuery)
+  // =========================
+  const [employeeQuery, setEmployeeQuery] = useState<string>(""); // สิ่งที่ user พิมพ์
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
+    null,
+  ); // คนที่เลือกแล้ว
+
+  // ✅ เรียก hook ด้วยคำค้น
+  const { employees, loading: employeesLoading } =
+    useEmployeesQuery(employeeQuery);
+
+  // ✅ ถ้าจะจำกัดจำนวนตัวเลือก ทำที่นี่ (hook ส่งมาเป็น list ที่ match แล้ว)
+  const employeeOptions = useMemo(() => employees.slice(0, 8), [employees]);
+
+  // =========================
+  // 3) Action + save
+  // =========================
   const [selectedAction, setSelectedAction] = useState<StepStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,11 +118,16 @@ export default function StationProgressPage({
       toast.error("กรุณาเลือกสถานะก่อนบันทึก");
       return;
     }
-    if (!operatorName.trim()) {
+
+    const needEmployee =
+      selectedAction === "completed" || selectedAction === "in_progress";
+
+    if (needEmployee && selectedEmployee == null) {
       setError("กรุณาระบุชื่อผู้ดำเนินการ");
       toast.error("กรุณาระบุชื่อผู้ดำเนินการ");
       return;
     }
+
     if (!activeStepId) {
       toast.error("กรุณาเลือกรายการก่อนบันทึก");
       return;
@@ -103,18 +135,24 @@ export default function StationProgressPage({
 
     const tId = toast.loading("กำลังบันทึก...");
     try {
-      // หมายเหตุ: backend type ของ status อาจไม่มี "skipped"
-      // ถ้า backend ไม่รับ skipped จริง ๆ ค่อยปรับใน hook mutation ให้ map ก่อนยิง
       await saveStep({
-        jobId: String(job.id),
-        stageIdx,
         stepId: activeStepId,
         status: selectedAction,
-        employee: operatorName,
+        //  ส่งเป็น number (id) เท่านั้น
+        employeeId: selectedEmployee?.id,
       });
 
-      // update ฝั่ง store/UI ที่เดิมคุณทำไว้
-      onUpdateStep(stageIdx, activeStepId, selectedAction, operatorName);
+    
+      onUpdateStep(
+        stageIdx,
+        activeStepId,
+        selectedAction,
+        selectedEmployee?.id ?? null,
+      );
+
+      // รีเซ็ทช่องชื่อพนักงานหลังบันทึก
+      setSelectedEmployee(null);
+      setEmployeeQuery("");
 
       toast.dismiss(tId);
       toast.success("บันทึกสำเร็จ");
@@ -125,11 +163,19 @@ export default function StationProgressPage({
 
   const handleSelectStep = (id: string) => {
     setActiveStepId(id);
+
+    // เปลี่ยน step -> ล้างค่าฝั่ง action panel
+    // setSelectedEmployee(null);
+    // setEmployeeQuery("");
+    setSelectedAction(null);
+    setError(null);
+
     if (window.innerWidth < 1280) {
       setTimeout(() => {
-        document
-          .getElementById("action-panel-section")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById("action-panel-section")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }, 100);
     }
   };
@@ -179,7 +225,6 @@ export default function StationProgressPage({
               </button>
               <button
                 onClick={() => {
-                  // ไป step ถัดไปแบบง่าย ๆ
                   const idx = stepsVm.findIndex((s) => s.id === activeStepId);
                   const next = stepsVm[idx + 1];
                   if (next) handleSelectStep(next.id);
@@ -203,14 +248,28 @@ export default function StationProgressPage({
           />
         </div>
 
-        <div id="action-panel-section" className="xl:col-span-1 xl:sticky xl:top-6">
+        <div
+          id="action-panel-section"
+          className="xl:col-span-1 xl:sticky xl:top-6"
+        >
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             {activeStep ? (
               <StepActionPanel
                 stepName={activeStep.name}
                 stepStatus={activeStep.status}
-                operatorName={operatorName}
-                onOperatorChange={setOperatorName}
+                // ✅ ส่งของ autocomplete เข้า panel
+                employeeQuery={employeeQuery}
+                onEmployeeQueryChange={(v) => {
+                  setEmployeeQuery(v);
+                  setSelectedEmployee(null); // พิมพ์ใหม่ = ยังไม่เลือกคน
+                }}
+                employeeOptions={employeeOptions}
+                employeeLoading={employeesLoading}
+                selectedEmployee={selectedEmployee}
+                onSelectEmployee={(emp) => {
+                  setSelectedEmployee(emp);
+                  setEmployeeQuery(emp.name); // เลือกแล้ว = โชว์ชื่อในช่อง
+                }}
                 selectedAction={selectedAction}
                 onSelectAction={setSelectedAction}
                 error={error}
