@@ -38,7 +38,6 @@ function sortSteps(steps: JobStepApi[]) {
 //   // ถ้าไม่มี stage ใช้ status จาก backend
 //   if (stages.length === 0) return (job.status as JobOverallStatus) ?? "CLAIM";
 
-  
 //   if (stages.every((s) => s.isCompleted)) return "DONE";
 
 //   // หา stage แรกที่ยังไม่ completed แล้ว map เป็น status
@@ -63,10 +62,14 @@ export default function StationProgressPage({
   ) => void;
 }) {
   const navigate = useNavigate();
+
+  const [jobState, setJobState] = useState<JobApi>(job);
+
+  useEffect(() => {
+    setJobState(job);
+  }, [job]);
+
   // const overallStatus = useMemo(() => deriveJobStatusFromStages(job), [job]);
-
-
-  
 
   // =========================
   // 1) Stage / Step timeline
@@ -77,40 +80,54 @@ export default function StationProgressPage({
   );
 
   const stageIdx = useMemo(() => {
-    const raw = job.currentStageIndex ?? 0;
+    const raw = jobState.currentStageIndex ?? 0;
     if (stages.length === 0) return 0;
     return Math.min(Math.max(raw, 0), stages.length - 1);
-  }, [job.currentStageIndex, stages.length]);
+  }, [jobState.currentStageIndex, stages.length]);
 
   const currentStage = stages[stageIdx];
 
   const stepsVm: StepVM[] = useMemo(() => {
-    const steps = sortSteps(currentStage?.jobSteps ?? []);
-    return steps.map((s) => ({
-      ...s,
-      id: String(s.id),
-      name: s.stepTemplate?.name ?? "-",
-      status: (s.status ?? "pending") as StepStatus,
-      timestamp: s.completedAt,
-      isSkippable: Boolean(s.stepTemplate?.isSkippable),
-    }));
-  }, [currentStage]);
+    const jobStatusMap = {
+      CLAIM: 1,
+      REPAIR: 2,
+      BILLING: 3,
+      DONE: 4,
+    };
+    // const steps = sortSteps(currentStage?.jobSteps ?? []);
 
-const [activeStepId, setActiveStepId] = useState<string>("");
+    const steps =
+      stages.find((s) => s.stageId === jobStatusMap[job.status])?.jobSteps ??
+      [];
 
-useEffect(() => {
-  if (!stepsVm.length) {
-    setActiveStepId("");
-    return;
-  }
+    console.log("memo", steps);
 
-  // ถ้า activeStepId ยังว่าง หรือ step เดิมหายไป -> ตั้งค่าใหม่
-  if (!activeStepId || !stepsVm.some((s) => s.id === activeStepId)) {
-    const first =
-      stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
-    setActiveStepId(first?.id ?? "");
-  }
-}, [stepsVm, activeStepId]);
+    return steps.map((s) => {
+      return {
+        ...s,
+        id: String(s.id),
+        name: s.stepTemplate?.name ?? "-",
+        status: (s.status ?? "pending") as StepStatus,
+        timestamp: s.completedAt,
+        isSkippable: Boolean(s.stepTemplate?.isSkippable),
+      };
+    });
+  }, [job.status, stages]);
+
+  const [activeStepId, setActiveStepId] = useState<string>("");
+
+  useEffect(() => {
+    if (!stepsVm.length) {
+      setActiveStepId("");
+      return;
+    }
+
+    // ถ้า activeStepId ยังว่าง หรือ step เดิมหายไป -> ตั้งค่าใหม่
+    if (!activeStepId || !stepsVm.some((s) => s.id === activeStepId)) {
+      const first = stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
+      setActiveStepId(first?.id ?? "");
+    }
+  }, [stepsVm, activeStepId]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
 
@@ -172,13 +189,49 @@ useEffect(() => {
         employeeId: selectedEmployee?.id,
       });
 
-    
       onUpdateStep(
         stageIdx,
         activeStepId,
         selectedAction,
         selectedEmployee?.id ?? null,
       );
+
+      setJobState((prev) => {
+        const stages = (prev.jobStages ?? [])
+          .slice()
+          .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
+        const st = stages[stageIdx];
+        if (!st) return prev;
+
+        const updatedSteps = (st.jobSteps ?? []).map((s) =>
+          String(s.id) === String(activeStepId)
+            ? {
+                ...s,
+                status: selectedAction,
+                employeeId: selectedEmployee?.id ?? null,
+                completedAt: new Date().toISOString(),
+              }
+            : s,
+        );
+
+        const newStages = stages.map((x, i) =>
+          i === stageIdx ? { ...x, jobSteps: updatedSteps } : x,
+        );
+
+        const stageDone =
+          updatedSteps.length > 0 &&
+          updatedSteps.every(
+            (x) => x.status === "completed" || x.status === "skipped",
+          );
+
+        return {
+          ...prev,
+          jobStages: newStages,
+          currentStageIndex: stageDone
+            ? Math.min(stageIdx + 1, newStages.length - 1)
+            : (prev.currentStageIndex ?? 0),
+        };
+      });
 
       // รีเซ็ทช่องชื่อพนักงานหลังบันทึก
       setSelectedEmployee(null);
@@ -208,9 +261,7 @@ useEffect(() => {
         });
       }, 100);
     }
-  };
-
-  
+  };  
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] font-sans text-slate-800">
@@ -274,7 +325,7 @@ useEffect(() => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <div className="xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <StepTimeline
-            title={currentStage?.stage?.name ?? "รายละเอียดสถานะ"}
+            title={"Hello world"}
             steps={stepsVm}
             activeStepId={activeStepId}
             onSelectStep={handleSelectStep}
