@@ -1,24 +1,27 @@
-import React, { useMemo, useState } from "react";
-import type { Job, JobFormData } from "../../../Type";
+import React, { useMemo, useState, useEffect } from "react";
+import type { JobFormData } from "../../../Type";
 import FormInput from "../../../shared/components/form/FormInput";
 import FormSelect from "../../../shared/components/form/FormSelect";
-import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../../../data";
-
+// import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../../../data";
 import {
   getDefaultCreateJobFormData,
-  // normalizeCreateJobPayload,
   validateCreateJob,
 } from "../types/jobForm";
+
+import {
+  vehiclesService,
+  normalizeRegistration,
+  type InsuranceCompanyApi,
+  type VehicleApi,
+  type VehicleBrandApi,
+  type VehicleTypeApi,
+  type VehicleModelApi,
+} from "../services/vehicles.service";
 import { jobsService } from "../services/jobs.service";
 
-interface CreateJobFormProps {
-  onCancel: () => void;
-
-  onSubmit?: (data: JobFormData) => void;
-
-  onSubmitCreated?: (job: Job) => void;
-}
-
+type CreateJobFormState = JobFormData & {
+  insuranceCompanyId?: number | null; // optional
+};
 const LabelWithStar = ({ text }: { text: string }) => (
   <span>
     {text} <span className="text-red-500">*</span>
@@ -30,29 +33,229 @@ function parseFieldValue(name: string, value: string) {
   return value;
 }
 
+function uniqueStrings(items: string[]) {
+  return Array.from(new Set(items.filter(Boolean)));
+}
+
+function ReadOnlyValue({
+  label,
+  value,
+}: {
+  label?: string;
+  value?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-slate-800 ">{label}</label>
+
+      <div className="w-full px-3 py-2 text-sm rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+        {value || "-"}
+      </div>
+    </div>
+  );
+}
+function parseInsuranceOption(v: string) {
+  const [idStr, ...rest] = v.split("::");
+  return { id: Number(idStr), name: rest.join("::") };
+}
+
 export default function CreateJobForm() {
-  const [formData, setFormData] = useState<JobFormData>(() =>
+  const [formData, setFormData] = useState<CreateJobFormState>(
     getDefaultCreateJobFormData(),
   );
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleTypeApi[]>([]);
+
+  const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
+  const [isLoadingVehicleMeta, setIsLoadingVehicleMeta] = useState(false);
+  const [brandModels, setBrandModels] = useState<VehicleModelApi[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+
+  const [vehiclesCache, setVehiclesCache] = useState<VehicleApi[] | null>(null);
+
+  const [insurances, setInsurances] = useState<InsuranceCompanyApi[]>([]);
+  const [isLoadingInsurances, setIsLoadingInsurances] = useState(false);
+
+  function buildYearOptions() {
+    const now = new Date().getFullYear();
+    const years: string[] = [];
+    for (let y = now; y >= now - 40; y--) years.push(String(y));
+    return years;
+  }
 
   const insuranceRequired = useMemo(
     () => formData.paymentType === "Insurance",
     [formData.paymentType],
   );
 
+  // Step 1: fetch dropdown meta (types + brands/models)
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        setIsLoadingVehicleMeta(true);
+
+        const [types, brandList] = await Promise.all([
+          vehiclesService.fetchCarType(),
+          vehiclesService.listBrands(),
+        ]);
+
+        if (!alive) return;
+
+        setVehicleTypes(types);
+        setBrands(brandList);
+      } catch (err) {
+        console.error("Fetch vehicle meta failed:", err);
+      } finally {
+        if (alive) setIsLoadingVehicleMeta(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const yearOptions = useMemo(() => buildYearOptions(), []);
+
+  const typeOptions = useMemo(() => {
+    return vehicleTypes.map((t) => t.name);
+  }, [vehicleTypes]);
+
+  const brandOptions = useMemo(
+    () => uniqueStrings(brands.map((b) => b.name)),
+    [brands],
+  );
+
+  const selectedBrand = useMemo(
+    () => brands.find((b) => b.name === formData.brand) ?? null,
+    [brands, formData.brand],
+  );
+
+  const modelOptions = useMemo(() => {
+    if (!selectedBrand) return [];
+    return uniqueStrings(brandModels.map((m) => m.name));
+  }, [selectedBrand, brandModels]);
+
+  const selectedModel = useMemo(() => {
+    return brandModels.find((m) => m.name === formData.model) ?? null;
+  }, [brandModels, formData.model]);
+
+  const insuranceOptions = useMemo(() => {
+    return insurances ? insurances.map((i) => `${i.id}::${i.name}`) : [];
+  }, [insurances]);
+
+  useEffect(() => {
+    const typeName = selectedModel?.type?.name;
+    if (!typeName) return;
+
+    setFormData((prev) => {
+      if (prev.type === typeName) return prev;
+      return { ...prev, type: typeName };
+    });
+  }, [selectedModel?.type?.name]);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      if (!selectedBrand?.id) {
+        setBrandModels([]);
+        return;
+      }
+
+      try {
+        setIsLoadingModels(true);
+
+        // ✅ เรียกเส้น /private/vehicles/brands/:id
+        const brandDetail = await vehiclesService.getBrandById(
+          selectedBrand.id,
+        );
+
+        if (!alive) return;
+        setBrandModels(brandDetail.models ?? []);
+      } catch (e) {
+        console.error("load brand models failed", e);
+        if (alive) setBrandModels([]);
+      } finally {
+        if (alive) setIsLoadingModels(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [selectedBrand?.id]);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        setIsLoadingInsurances(true);
+
+        const list = await vehiclesService.listInsurances();
+        console.log({list})
+        if (!alive) return;
+
+        setInsurances(list.data);
+      } catch (e) {
+        console.error("Fetch insurances failed:", e);
+        if (alive) setInsurances([]);
+      } finally {
+        if (alive) setIsLoadingInsurances(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // optional Step 4: lookup ทะเบียน → autofill
+  const lookupRegistrationAndAutofill = async () => {
+    const reg = normalizeRegistration(formData.registration || "");
+    if (!reg) return;
+
+    try {
+      let list = vehiclesCache;
+      if (!list) {
+        list = await vehiclesService.listVehicles();
+        setVehiclesCache(list);
+      }
+
+      const found =
+        list.find((v) => normalizeRegistration(v.registration) === reg) ?? null;
+
+      if (!found) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        chassisNumber: found.chassisNumber ?? prev.chassisNumber,
+        brand: found.brand ?? prev.brand,
+        model: found.model ?? prev.model,
+        type: found.type ?? prev.type,
+        year: found.year ?? prev.year,
+        color: found.color ?? prev.color,
+      }));
+    } catch (err) {
+      console.error("Lookup registration failed:", err);
+    }
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+
     if (name === "customerPhone") {
       let digits = value.replace(/\D/g, "");
-
       digits = digits.slice(0, 10);
+      if (digits.length > 0 && digits[0] !== "0") return;
 
-      if (digits.length > 0 && digits[0] !== "0") {
-        return;
-      }
       setFormData((prev) => ({
         ...prev,
         customerPhone: digits,
@@ -60,6 +263,51 @@ export default function CreateJobForm() {
       return;
     }
 
+    if (name === "brand") {
+      setFormData((prev) => ({
+        ...prev,
+        brand: value,
+        model: "",
+        type: "",
+      }));
+      return;
+    }
+
+    if (name === "model") {
+      const nextTypeName =
+        brandModels.find((m) => m.name === value)?.type?.name ?? "";
+
+      setFormData((prev) => ({
+        ...prev,
+        model: value,
+        type: nextTypeName || prev.type,
+      }));
+      return;
+    }
+
+    if (name === "insuranceCompanyId") {
+      const { id, name: companyName } = parseInsuranceOption(value);
+
+      setFormData((prev) => ({
+        ...prev,
+        insuranceCompanyId: Number.isFinite(id) ? id : null,
+        insuranceCompany: companyName || "",
+      }));
+      return;
+    }
+
+    if (name === "paymentType") {
+      const next = value as "Insurance" | "Cash";
+
+      setFormData((prev) => ({
+        ...prev,
+        paymentType: next,
+        ...(next === "Insurance"
+          ? {}
+          : { insuranceCompanyId: null, insuranceCompany: "" }),
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: parseFieldValue(name, value) }));
   };
 
@@ -73,22 +321,6 @@ export default function CreateJobForm() {
       alert(v.errors[0]);
       return;
     }
-    console.log({
-      ...formData,
-      vehicle: {
-        registration: formData.registration,
-        brand: formData.brand,
-        model: formData.model,
-        color: formData.color,
-        vinNumber: formData.vinNumber,
-        chassisNumber:formData.chassisNumber,
-      },
-      customer: {
-        name: formData.customerName,
-        phone: formData.customerPhone,
-        address: formData.customerAddress,
-      },
-    });
 
     const test = { ...formData,
       vehicle: {
@@ -96,7 +328,6 @@ export default function CreateJobForm() {
         brand: formData.brand,
         model: formData.model,
         color: formData.color,
-        vinNumber: formData.vinNumber,
         chassisNumber:formData.chassisNumber,
       },
       customer: {
@@ -106,30 +337,17 @@ export default function CreateJobForm() {
       },}
 
     try {
+      setIsSubmitting(true);
       const res = await jobsService.create(test);
-      console.log(res.data);
-    } catch (error) {
-      console.log(error);
+      if (!res.ok) {
+        alert(res.error);
+        return;
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // const payload = normalizeCreateJobPayload(formData);
-
-    // if (onSubmit && !onSubmitCreated) {
-    //   onSubmit(payload);
-    //   return;
-    // }
-
-    // try {
-    //   setIsSubmitting(true);
-    //   const res = await jobsService.create(payload);
-    //   if (!res.ok) {
-    //     alert(res.error);
-    //     return;
-    //   }
-    //   onSubmitCreated?.(res.data);
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    // NOTE: คุณยังคอมเมนต์ flow create job อยู่ เลยยังไม่แตะตรงนี้
+    console.log("submit payload (draft):", formData);
   };
 
   function onCancel() {}
@@ -158,6 +376,7 @@ export default function CreateJobForm() {
               name="registration"
               value={formData.registration}
               onChange={handleChange}
+              onBlur={lookupRegistrationAndAutofill}
               required
             />
             <FormInput
@@ -167,18 +386,9 @@ export default function CreateJobForm() {
               onChange={handleChange}
               required
             />
-            <FormSelect
-              options={CAR_TYPES}
-              label={<LabelWithStar text="ประเภทรถ" />}
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              placeholder="เลือกประเภทรถ"
-              required
-            />
 
             <FormSelect
-              options={CAR_BRANDS}
+              options={brandOptions}
               label={<LabelWithStar text="ยี่ห้อ/แบรนด์" />}
               name="brand"
               value={formData.brand}
@@ -187,17 +397,35 @@ export default function CreateJobForm() {
               required
             />
             <FormSelect
-              options={CAR_MODELS}
+              options={modelOptions}
               label={<LabelWithStar text="รุ่น" />}
               name="model"
               value={formData.model}
               onChange={handleChange}
-              placeholder="เลือกรุ่นรถ"
+              disabled={!formData.brand || isLoadingModels}
+              placeholder={
+                !formData.brand
+                  ? "เลือกแบรนด์ก่อน"
+                  : isLoadingModels
+                    ? "กำลังโหลดรุ่น..."
+                    : "เลือกรุ่นรถ"
+              }
               required
             />
+            {/* <FormSelect
+
+              options={typeOptions}
+              label={<LabelWithStar text="ประเภทรถ" />}
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              placeholder="เลือกประเภทรถ"
+              
+            /> */}
+            <ReadOnlyValue label="ประเภทรถ" value={formData.type} />
             <div className="grid grid-cols-2 gap-4">
               <FormSelect
-                options={YEARS}
+                options={yearOptions}
                 label={<LabelWithStar text="ปี" />}
                 name="year"
                 value={formData.year}
@@ -383,12 +611,20 @@ export default function CreateJobForm() {
 
             {insuranceRequired && (
               <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                <FormInput
-                  label={<LabelWithStar text="ชื่อบริษัทประกันภัย" />}
-                  name="insuranceCompany"
-                  value={formData.insuranceCompany || ""}
+                <FormSelect
+                  label={<LabelWithStar text="บริษัทประกันภัย" />}
+                  name="insuranceCompanyId"
+                  value={
+                    formData.insuranceCompanyId
+                      ? `${formData.insuranceCompanyId}::${formData.insuranceCompany || ""}`
+                      : ""
+                  }
+                  options={insuranceOptions}
+                  placeholder={
+                    isLoadingInsurances ? "กำลังโหลด..." : "เลือกบริษัทประกัน"
+                  }
+                  disabled={isLoadingInsurances}
                   onChange={handleChange}
-                  placeholder="ระบุบริษัทประกันภัย"
                   required
                 />
               </div>

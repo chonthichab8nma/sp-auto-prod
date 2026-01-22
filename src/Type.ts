@@ -34,6 +34,7 @@ export interface JobFormData {
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
+   insuranceCompanyId?: number | null,
 }
 
 

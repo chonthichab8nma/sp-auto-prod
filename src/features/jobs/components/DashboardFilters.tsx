@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Calendar, ChevronDown, Check, Search } from "lucide-react";
-import { CAR_TYPES } from "../../../data";
+
 import { useNavigate } from "react-router-dom";
 
 export default function DashboardFilters({
@@ -111,7 +111,7 @@ export default function DashboardFilters({
               )}
             </button>
 
-            {CAR_TYPES.map((type) => (
+            {/* {CAR_TYPES.map((type) => (
               <button
                 key={type}
                 onClick={() => {
@@ -125,7 +125,7 @@ export default function DashboardFilters({
                   <Check className="h-4 w-4 text-blue-600" />
                 )}
               </button>
-            ))}
+            ))} */}
           </div>
         )}
       </div>

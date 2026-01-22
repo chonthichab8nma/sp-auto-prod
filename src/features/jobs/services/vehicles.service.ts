@@ -1,16 +1,17 @@
-// src/features/jobs/services/vehicles.service.ts
 import { http } from "../../../shared/lib/http";
 
 export type VehicleApi = {
   id: number;
   registration: string;
-  brand?: string;
-  model?: string;
-  type?: string;
-  year?: string;
-  color?: string;
-  chassisNumber?: string;
-  vinNumber?: string;
+
+  brand?: string | null;
+  model?: string | null;
+  type?: string | null;
+  year?: string | null;
+
+  color?: string | null;
+  chassisNumber?: string | null;
+  vinNumber?: string | null;
 };
 
 export type VehicleCreateInput = {
@@ -24,36 +25,94 @@ export type VehicleCreateInput = {
   vinNumber?: string;
 };
 
-function isHttpNotFound(err: unknown): boolean {
-  // รองรับ axios-style error แบบกว้าง ๆ โดยไม่ใช้ any
-  if (typeof err !== "object" || err === null) return false;
+export type VehicleTypeApi = {
+  id: number;
+  name: string;
+};
 
-  const maybe = err as { response?: { status?: unknown } };
-  return maybe.response?.status === 404;
+export type VehicleTypeRefApi = {
+  id: number;
+  code: string;
+  name: string;
+  nameEn?: string | null;
+};
+
+export type VehicleModelApi = {
+  id: number;
+  name: string;
+  typeId?: number;
+  type?: VehicleTypeRefApi;
+};
+
+export type VehicleBrandApi = {
+  id: number;
+  code: string;
+  name: string;
+  nameEn?: string | null;
+  country?: string | null;
+  logoUrl?: string | null;
+
+  models?: VehicleModelApi[];
+
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type InsuranceCompanyApi = {
+  id: number;
+  name: string;
+  nameEn?: string | null;
+  code?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export function normalizeRegistration(input: string) {
+  return input.trim().replace(/\s+/g, "");
 }
 
 export const vehiclesService = {
-  async findByRegistration(registration: string): Promise<VehicleApi | null> {
-    const reg = registration.trim();
-    if (!reg) return null;
-
-    try {
-      const encoded = encodeURIComponent(reg);
-
-      // แนะนำ endpoint แบบไม่ชน /vehicles/:id
-      const { data } = await http.get<VehicleApi>(
-        `/private/vehicles/by-registration/${encoded}`,
-      );
-
-      return data;
-    } catch (err: unknown) {
-      if (isHttpNotFound(err)) return null;
-      throw err;
-    }
+  async listVehicles(): Promise<VehicleApi[]> {
+    const { data } = await http.get<VehicleApi[]>("/private/vehicles");
+    return data ?? [];
   },
 
-  async create(input: VehicleCreateInput): Promise<VehicleApi> {
+  async listBrands(): Promise<VehicleBrandApi[]> {
+    const { data } = await http.get<VehicleBrandApi[]>(
+      "/private/vehicles/brands",
+    );
+    return data ?? [];
+  },
+  //ดึงรุ่น
+  async getBrandById(id: number): Promise<VehicleBrandApi> {
+    const { data } = await http.get<VehicleBrandApi>(
+      `/private/vehicles/brands/${id}`,
+    );
+    return data as VehicleBrandApi;
+  },
+  async fetchCarType(): Promise<VehicleTypeApi[]> {
+    const { data } = await http.get<VehicleTypeApi[]>(
+      "/private/vehicles/types",
+    );
+    return data ?? [];
+  },
+
+  async createVehicle(input: VehicleCreateInput): Promise<VehicleApi> {
     const { data } = await http.post<VehicleApi>("/private/vehicles", input);
     return data;
+  },
+  async listInsurances(): Promise<{
+    data: InsuranceCompanyApi[];
+  }> {
+    const { data } = await http.get<{
+      data: InsuranceCompanyApi[];
+    }>("/private/insurances");
+    return data ?? []
+  },
+};
+export const insurancesService = {
+  listInsurances: async (): Promise<InsuranceCompanyApi[]> => {
+    const res = await http.get("/private/insurances");
+    return res.data;
   },
 };
