@@ -1,19 +1,16 @@
-import { http } from "../../shared/lib/http";
+// stations/api/jobSteps.api.ts
+import { http } from "../../shared/lib/http"; // ปรับ path ให้ตรงโปรเจกต์คุณ
 import type { StepStatus } from "../../Type";
 
-export type UpdateJobStepPayload = {
-  status: StepStatus;      // "completed" | "skipped"
-  employeeId: number;
-};
-
-export async function updateJobStepProgress(
-  jobStepId: number,
-  payload: UpdateJobStepPayload,
+export async function patchJobStepStatus(
+  stepId: number,
+  body: { status: StepStatus; employeeId?: number },
 ) {
-  const res = await http.post(
-    `/job-steps/${jobStepId}/progress`,
-    payload,
-  );
+  // swagger: employeeId required when completed or in_progress
+  if ((body.status === "completed" || body.status === "in_progress") && !body.employeeId) {
+    throw new Error("employeeId is required when status is completed or in_progress");
+  }
 
+  const res = await http.patch(`/private/jobs/steps/${stepId}`, body);
   return res.data;
 }

@@ -87,6 +87,7 @@ export default function StationProgressPage({
   const stepsVm: StepVM[] = useMemo(() => {
     const steps = sortSteps(currentStage?.jobSteps ?? []);
     return steps.map((s) => ({
+      ...s,
       id: String(s.id),
       name: s.stepTemplate?.name ?? "-",
       status: (s.status ?? "pending") as StepStatus,

@@ -1,54 +1,62 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { StepStatus } from "../../Type";
-import { http } from "../../shared/lib/http";
+import { patchJobStepStatus } from "../api/jobSteps.api";
 
-type SaveStepPayload = {
+export type SaveStepInput = {
   stepId: string;
   status: StepStatus;
   employeeId?: number;
 };
 
-type ApiBody = {
-  status: "pending" | "in_progress" | "completed" | "skipped";
-  employeeId?: number;
+type UseStationProgressMutationResult = {
+  saveStep: (input: SaveStepInput) => Promise<void>;
+  saving: boolean;
+  saveError: string | null;
 };
 
-function assertEmployeeId(payload: SaveStepPayload) {
-  if (
-    (payload.status === "completed" || payload.status === "in_progress") &&
-    !payload.employeeId
-  ) {
-    throw new Error(
-      "employeeId is required when status is completed or in_progress",
-    );
+function toErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return "Unknown error";
   }
 }
 
-export function useStationProgressMutation() {
-  const [saving, setSaving] = useState(false);
+function requireEmployeeId(status: StepStatus): boolean {
+  return status === "completed" || status === "in_progress";
+}
+export function useStationProgressMutation(): UseStationProgressMutationResult {
+  const [saving, setSaving] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const saveStep = async (payload: SaveStepPayload) => {
+  const saveStep = useCallback(async (input: SaveStepInput) => {
     setSaving(true);
-    setSaveError("");
+    setSaveError(null);
 
     try {
-      assertEmployeeId(payload);
-      const body: ApiBody = {
-        status: payload.status,
-        ...(payload.employeeId ? { employeeId: payload.employeeId } : {}),
-      };
+      const stepIdNum = Number(input.stepId);
+      if (!Number.isFinite(stepIdNum) || stepIdNum <= 0) {
+        throw new Error(`Invalid stepId: ${input.stepId}`);
+      }
 
-      await http.patch(`/private/jobs/steps/${payload.stepId}`, body);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "บันทึกสถานะไม่สำเร็จ";
-      setSaveError(message);
+      if (requireEmployeeId(input.status) && input.employeeId == null) {
+        throw new Error("employeeId is required when status is completed or in_progress");
+      }
+
+      await patchJobStepStatus(stepIdNum, {
+        status: input.status,
+        employeeId: input.employeeId,
+      });
+    } catch (err: unknown) {
+      const msg = toErrorMessage(err);
+      setSaveError(msg);
       throw err;
     } finally {
       setSaving(false);
     }
-  };
+  }, []);
 
   return { saveStep, saving, saveError };
 }
