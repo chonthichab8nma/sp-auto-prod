@@ -57,11 +57,11 @@ export default function StationsTable({
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600">
-                  {job.customer.name || "-"}
+                  {job?.customer?.name || "-"}
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600">
-                  {job.customer.phone || "-"}
+                  {job?.customer?.phone || "-"}
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600">

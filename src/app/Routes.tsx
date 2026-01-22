@@ -54,7 +54,7 @@ function StationWrapper({
     stageIdx: number,
     stepId: string,
     status: StepStatus,
-    employeeId: number | null
+    employeeId: number | null,
   ) => void;
 }) {
   const { jobId } = useParams();
@@ -81,11 +81,11 @@ function StationWrapper({
   }
   return (
     <StationProgressPage
-  job={job}
-  onUpdateStep={(stageIdx, stepId, status, employeeId) => {
-    onUpdateStep(stageIdx, stepId, status, employeeId);
-  }}
-/>
+      job={job}
+      onUpdateStep={(stageIdx, stepId, status, employeeId) => {
+        onUpdateStep(stageIdx, stepId, status, employeeId);
+      }}
+    />
   );
 }
 
@@ -130,14 +130,15 @@ function LoginGate() {
 
 export default function AppRoutes() {
   // const navigate = useNavigate();
-  
-const updateStep = ( 
+
+  const updateStep = (
     stageIdx: number,
     stepId: string,
     status: StepStatus,
-    employeeId: number | null) => {
-       console.log({ stageIdx, stepId, status, employeeId });
-    }
+    employeeId: number | null,
+  ) => {
+    console.log({ stageIdx, stepId, status, employeeId });
+  };
   return (
     <Routes>
       <Route path="/login" element={<LoginGate />} />
@@ -147,21 +148,12 @@ const updateStep = (
 
           <Route path="/stations" element={<StationsPage />} />
 
-          <Route
-            path="/create"
-            element={
-              <CreateJobForm
-                
-  
-              />
-            }
-          />
+          <Route path="/create" element={<CreateJobForm />} />
 
           {/* <Route path="/job/:jobId/edit" element={<JobEditWrapper />} /> */}
 
           <Route path="/job/:jobId" element={<JobDetailWrapper />} />
 
-        
           <Route
             path="/stations/:jobId"
             element={<StationWrapper onUpdateStep={updateStep} />}

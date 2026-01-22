@@ -196,7 +196,7 @@ export default function CreateJobForm() {
         setIsLoadingInsurances(true);
 
         const list = await vehiclesService.listInsurances();
-        console.log({list})
+        console.log({ list });
         if (!alive) return;
 
         setInsurances(list.data);
@@ -306,6 +306,19 @@ export default function CreateJobForm() {
       }));
       return;
     }
+
+    // if (name === "startDate" ) {
+    //   const dateString = value;
+    //   const dateObject = new Date(dateString);
+    //   const isoString = dateObject.toISOString();
+
+    //   setFormData((prev) => ({
+    //     ...prev,
+    //     startDate: isoString,
+    //   }));
+    //   return;
+    // }
+
     setFormData((prev) => ({ ...prev, [name]: parseFieldValue(name, value) }));
   };
 
@@ -320,19 +333,27 @@ export default function CreateJobForm() {
       return;
     }
 
-    const test = { ...formData,
+   const isoDateValueStartDate = new Date (formData.startDate).toISOString()
+   const isoDateValueEstimateDate = new Date (formData.estimatedEndDate).toISOString()
+    const test = {
+      ...formData,
+      startDate: isoDateValueStartDate ,
+      estimatedEndDate:isoDateValueEstimateDate,
       vehicle: {
         registration: formData.registration,
         brand: formData.brand,
         model: formData.model,
         color: formData.color,
-        chassisNumber:formData.chassisNumber,
+        chassisNumber: formData.chassisNumber,
       },
       customer: {
         name: formData.customerName,
         phone: formData.customerPhone,
         address: formData.customerAddress,
-      },}
+
+      },
+    };
+    console.log(test)
 
     try {
       setIsSubmitting(true);

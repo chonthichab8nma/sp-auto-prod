@@ -5,7 +5,8 @@ export type JobsQuery = {
   pageSize: number;
 };
 
-export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "FINISHED";
+
+export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 export type JobStepStatusApi = "pending" | "in_progress" | "completed";
 
 export type VehicleApi = {
@@ -125,9 +126,6 @@ export type JobApi = {
   jobPhotos: unknown[];
 };
 
-// -----------------------------
-// List response (รองรับ 2 แบบที่เจอบ่อย)
-// -----------------------------
 export type JobsListApiResponse =
   | {
       data: JobApi[];
@@ -137,6 +135,7 @@ export type JobsListApiResponse =
         pageSize: number;
         totalPages?: number;
       };
+      statusCounts?: StatusCountsApi; 
     }
   | {
       data: JobApi[];
@@ -144,27 +143,27 @@ export type JobsListApiResponse =
       page: number;
       limit: number;
       totalPages: number;
+      statusCounts?: StatusCountsApi;
     };
+export type StatusCountsApi = {
+  all: number;
+  CLAIM: number;
+  REPAIR: number;
+  BILLING: number;
+  DONE: number;
+};
 
-// -----------------------------
-// API: ดึงอย่างเดียว (ไม่ summary ไม่ map)
-// -----------------------------
 export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
   const { data } = await http.get<JobsListApiResponse>("private/jobs", {
     params: {
       page: q.page,
       pageSize: q.pageSize,
-      // ถ้า backend ใช้ limit ให้เปลี่ยนเป็น:
-      // limit: q.pageSize,
     },
   });
 
   return data;
 }
 
-// -----------------------------
-// (Optional) helper: ดึง job by id แบบตรง backend
-// -----------------------------
 export async function getJobByIdApi(jobId: number): Promise<JobApi> {
   const { data } = await http.get<JobApi>(`private/jobs/${jobId}`);
   return data;

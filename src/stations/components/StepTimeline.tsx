@@ -1,4 +1,4 @@
-import { Check, Plus} from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import type { StepStatus } from "../../Type";
 
 export type StepVM = {
@@ -6,6 +6,7 @@ export type StepVM = {
   name: string;
   status: StepStatus;
   timestamp?: string | null;
+  employee? :{name:string}
   isSkippable?: boolean;
 };
 
@@ -90,8 +91,8 @@ export default function StepTimeline({
                             isCompleted
                               ? "text-slate-900"
                               : isActive
-                              ? "text-blue-700"
-                              : "text-slate-600"
+                                ? "text-blue-700"
+                                : "text-slate-600"
                           }`}
                         >
                           {step.name}
@@ -101,6 +102,12 @@ export default function StepTimeline({
 
                       <div className="text-xs text-slate-400 mt-1">
                         {step.timestamp || "-/-/- -, --:-- น."}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        ผู้ดำเนินการ:{" "}
+                        <span className="font-medium text-slate-700">
+                          {step.employee?.name ?? "-"}
+                        </span>
                       </div>
                     </div>
                   </div>
