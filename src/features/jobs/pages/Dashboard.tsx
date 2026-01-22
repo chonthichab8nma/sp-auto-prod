@@ -108,16 +108,7 @@ export default function Dashboard() {
       </div>
 
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col gap-10">
-        <DashboardStats
-          selectedStatus={selectedStatus}
-          onSelectStatus={(s) => {
-            setSelectedStatus(s);
-            setCurrentPage(1);
-          }}
-          values={statsValues}
-        />
-
-        <DashboardFilters
+         <DashboardFilters
           searchTerm={searchTerm}
           selectedCarType={selectedCarType}
           startDate={startDate}
@@ -137,6 +128,16 @@ export default function Dashboard() {
           }}
           onSubmitSearch={() => setCurrentPage(1)}
         />
+        <DashboardStats
+          selectedStatus={selectedStatus}
+          onSelectStatus={(s) => {
+            setSelectedStatus(s);
+            setCurrentPage(1);
+          }}
+          values={statsValues}
+        />
+
+       
 
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-4">

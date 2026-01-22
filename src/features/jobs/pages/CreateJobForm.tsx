@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import type { JobFormData } from "../../../Type";
 import FormInput from "../../../shared/components/form/FormInput";
 import FormSelect from "../../../shared/components/form/FormSelect";
+import { useNavigate } from "react-router-dom";
 // import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../../../data";
 import {
   getDefaultCreateJobFormData,
@@ -22,6 +23,8 @@ import { jobsService } from "../services/jobs.service";
 type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null; // optional
 };
+
+ 
 const LabelWithStar = ({ text }: { text: string }) => (
   <span>
     {text} <span className="text-red-500">*</span>
@@ -60,6 +63,9 @@ function parseInsuranceOption(v: string) {
 }
 
 export default function CreateJobForm() {
+
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<CreateJobFormState>(
     getDefaultCreateJobFormData(),
   );
@@ -369,7 +375,9 @@ export default function CreateJobForm() {
     console.log("submit payload (draft):", formData);
   };
 
-  function onCancel() {}
+  function onCancel() {
+    navigate("/dashboard", { replace: true });
+  }
 
   return (
     <div className="w-full bg-white border border-slate-200 overflow-hidden ">
