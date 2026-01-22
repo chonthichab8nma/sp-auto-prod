@@ -1,5 +1,6 @@
 import { ArrowUpDown, MoreVertical } from "lucide-react";
 import type { JobApi } from "../api/job.api";
+import StatusBadge from "../../../shared/components/ui/StatusBadge";
 
 export default function StationsTable({
   jobs,
@@ -70,7 +71,7 @@ export default function StationsTable({
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600">
-                  {job.status}
+                  <StatusBadge job={job} />
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600">
