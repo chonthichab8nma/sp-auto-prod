@@ -10,13 +10,12 @@ const STATUS_BADGE: Record<string, BadgeConfig> = {
   REPAIR: { label: "ซ่อม", className: "bg-orange-50 text-[#fa731a]" },
   BILLING: { label: "ตั้งเบิก", className: "bg-yellow-50 text-[#f6b51e]" },
 
-  // เผื่อ backend มีสถานะจบงานแบบนี้
   DONE: { label: "เสร็จสิ้น", className: "bg-emerald-50 text-emerald-600" },
   FINISHED: { label: "เสร็จสิ้น", className: "bg-emerald-50 text-emerald-600" },
 };
 
 export default function StatusBadge({ job }: { job: JobApi }) {
-  // ถ้า API มี isFinished ก็ให้เสร็จสิ้นเลย (เหมือนของเดิม) :contentReference[oaicite:2]{index=2}
+
   if (job.isFinished) {
     return (
       <span className="inline-flex items-center px-3 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600">
