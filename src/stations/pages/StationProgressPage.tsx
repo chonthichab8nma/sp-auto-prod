@@ -279,6 +279,7 @@ export default function StationProgressPage({
       <ProgressHeader
         registration={job.vehicle.registration}
         // status={overallStatus}
+        status={job.status}
         onBack={() => navigate(-1)}
       />
 

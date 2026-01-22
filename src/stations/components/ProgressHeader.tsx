@@ -18,6 +18,9 @@ export default function ProgressHeader({
           ? "ตั้งเบิก"
           : "เสร็จสิ้น";
 
+  console.log("ProgressHeader status =", JSON.stringify(status));
+ console.log("status → label =", status, "→", label);
+
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 mb-6 flex items-center gap-4">
       <button
@@ -30,10 +33,10 @@ export default function ProgressHeader({
       <div className="flex items-center flex-wrap gap-2 text-sm sm:text-base">
         <h1 className="text-lg font-bold text-slate-900">สเตชั่น</h1>
 
-        <span className="text-slate-300 mx-1">/</span>
+        {/* <span className="text-slate-300 mx-1">/</span> */}
 
         <span className="text-slate-500">
-          สเตชั่น <span className="text-slate-300 mx-1">/</span> รายละเอียด{" "}
+          <span className="text-slate-300 mx-1">/</span> รายละเอียด{" "}
           {registration}
         </span>
 
