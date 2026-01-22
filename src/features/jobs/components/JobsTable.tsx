@@ -45,7 +45,7 @@ export default function StationsTable({
           {jobs.length === 0 ? (
             <tr>
               <td colSpan={8} className="px-6 py-20 text-center text-slate-400">
-                ไม่มีรายการรถในระบบ
+                กำลังโหลด...
               </td>
             </tr>
           ) : (
