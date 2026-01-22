@@ -18,6 +18,14 @@ function StatusBadge({ status }: { status: StepStatus }) {
       </span>
     );
   }
+
+  if (status === "skipped") {
+    return (
+      <span className="ml-3 text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium">
+        ข้าม
+      </span>
+    );
+  }
   return null;
 }
 

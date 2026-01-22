@@ -74,16 +74,27 @@ export default function StationProgressPage({
   // =========================
   // 1) Stage / Step timeline
   // =========================
+  // const stages = useMemo(
+  //   () => sortStages(job.jobStages ?? []),
+  //   [job.jobStages],
+  // );
+
+  // const stageIdx = useMemo(() => {
+  //   const raw = jobState.currentStageIndex ?? 0;
+  //   if (stages.length === 0) return 0;
+  //   return Math.min(Math.max(raw, 0), stages.length - 1);
+  // }, [jobState.currentStageIndex, stages.length]);
+
   const stages = useMemo(
-    () => sortStages(job.jobStages ?? []),
-    [job.jobStages],
+    () => sortStages(jobState.jobStages ?? []),
+    [jobState.jobStages],
   );
 
   const stageIdx = useMemo(() => {
     const raw = jobState.currentStageIndex ?? 0;
     if (stages.length === 0) return 0;
     return Math.min(Math.max(raw, 0), stages.length - 1);
-  }, [jobState.currentStageIndex, stages.length]);
+  }, [jobState.currentStageIndex, stages.length]);  
 
   const currentStage = stages[stageIdx];
 
@@ -261,7 +272,7 @@ export default function StationProgressPage({
         });
       }, 100);
     }
-  };  
+  };
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] font-sans text-slate-800">
