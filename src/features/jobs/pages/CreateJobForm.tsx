@@ -169,8 +169,6 @@ export default function CreateJobForm() {
 
       try {
         setIsLoadingModels(true);
-
-        // ✅ เรียกเส้น /private/vehicles/brands/:id
         const brandDetail = await vehiclesService.getBrandById(
           selectedBrand.id,
         );

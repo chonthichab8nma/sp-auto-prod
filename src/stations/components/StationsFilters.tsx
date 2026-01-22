@@ -1,13 +1,13 @@
 import { Search, ChevronDown } from "lucide-react";
-import { CAR_TYPES } from "../../data";
+
 
 export default function StationsFilters({
   searchTerm,
-  selectedCarType,
+  // selectedCarType,
   selectedStatus,
   statusOptions,
   onSearchTermChange,
-  onCarTypeChange,
+  // onCarTypeChange,
   onStatusChange,
   onSubmitSearch,
 }: {
@@ -52,7 +52,7 @@ export default function StationsFilters({
 
       <div className="flex gap-3 w-full md:w-auto">
         {/* Car type */}
-        <div className="relative">
+        {/* <div className="relative">
           <select
             value={selectedCarType}
             onChange={(e) => onCarTypeChange(e.target.value)}
@@ -66,7 +66,7 @@ export default function StationsFilters({
             ))}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-        </div>
+        </div> */}
 
         {/* Status */}
         <div className="relative">

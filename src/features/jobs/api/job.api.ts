@@ -1,16 +1,10 @@
 import { http } from "../../../shared/lib/http";
 
-// -----------------------------
-// Query (ตอนนี้ดึงอย่างเดียว: pagination)
-// -----------------------------
 export type JobsQuery = {
   page: number;
   pageSize: number;
 };
 
-// -----------------------------
-// Backend types (ตรงตามที่คุณส่งมา)
-// -----------------------------
 export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "FINISHED";
 export type JobStepStatusApi = "pending" | "in_progress" | "completed";
 
@@ -74,12 +68,10 @@ export type StepTemplateApi = {
   isSkippable: boolean;
 };
 
-export type EmployeeApi =
-  | {
-      id: number;
-      name: string;
-    }
-  | null;
+export type EmployeeApi = {
+  id: number;
+  name: string;
+} | null;
 
 export type JobStepApi = {
   id: number;

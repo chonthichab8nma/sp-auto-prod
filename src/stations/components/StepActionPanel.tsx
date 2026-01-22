@@ -6,7 +6,6 @@ export default function StepActionPanel({
   stepName,
   stepStatus,
 
-  // ✅ autocomplete props
   employeeQuery,
   onEmployeeQueryChange,
   employeeOptions,
@@ -57,14 +56,18 @@ export default function StepActionPanel({
   };
 
   const showDropdown =
-    !!employeeQuery.trim() && !selectedEmployee && (employeeLoading || employeeOptions.length > 0);
+    !!employeeQuery.trim() &&
+    !selectedEmployee &&
+    (employeeLoading || employeeOptions.length > 0);
 
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h3 className="text-sm font-medium text-slate-500 mb-1">เช็กรายการ</h3>
+          <h3 className="text-sm font-medium text-slate-500 mb-1">
+            เช็กรายการ
+          </h3>
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-slate-900">{stepName}</span>
             {getBadge()}
@@ -97,9 +100,13 @@ export default function StepActionPanel({
           {showDropdown && (
             <div className="absolute z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
               {employeeLoading ? (
-                <div className="px-4 py-3 text-sm text-slate-500">กำลังค้นหา...</div>
+                <div className="px-4 py-3 text-sm text-slate-500">
+                  กำลังค้นหา...
+                </div>
               ) : employeeOptions.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-slate-500">ไม่พบพนักงาน</div>
+                <div className="px-4 py-3 text-sm text-slate-500">
+                  ไม่พบพนักงาน
+                </div>
               ) : (
                 <ul className="max-h-64 overflow-auto">
                   {employeeOptions.map((e) => (
@@ -110,7 +117,9 @@ export default function StepActionPanel({
                         className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center justify-between"
                       >
                         <div className="min-w-0">
-                          <div className="text-sm font-medium text-slate-800 truncate">{e.name}</div>
+                          <div className="text-sm font-medium text-slate-800 truncate">
+                            {e.name}
+                          </div>
                           <div className="text-xs text-slate-500 truncate">
                             {e.role} • {e.phone}
                           </div>
@@ -153,7 +162,9 @@ export default function StepActionPanel({
                     : "border-slate-300 bg-white"
                 }`}
               >
-                {selectedAction === "skipped" && <Check size={12} className="text-white" />}
+                {selectedAction === "skipped" && (
+                  <Check size={12} className="text-white" />
+                )}
               </div>
               <span className="text-sm font-medium text-slate-700">ข้าม</span>
             </button>
@@ -175,9 +186,13 @@ export default function StepActionPanel({
                     : "border-slate-300 bg-white"
                 }`}
               >
-                {selectedAction === "completed" && <Check size={12} className="text-white" />}
+                {selectedAction === "completed" && (
+                  <Check size={12} className="text-white" />
+                )}
               </div>
-              <span className="text-sm font-medium text-slate-700">เสร็จสิ้น</span>
+              <span className="text-sm font-medium text-slate-700">
+                เสร็จสิ้น
+              </span>
             </button>
           </div>
         </div>
