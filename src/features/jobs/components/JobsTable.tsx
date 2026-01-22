@@ -1,4 +1,4 @@
-import { ArrowUpDown, MoreVertical } from "lucide-react";
+// import { ArrowUpDown, MoreVertical } from "lucide-react";
 import type { JobApi } from "../api/job.api";
 import StatusBadge from "../../../shared/components/ui/StatusBadge";
 
@@ -22,16 +22,18 @@ export default function StationsTable({
               "สถานะ",
               "วันที่นำรถเข้าจอดซ่อม",
               "วันที่นัดรับรถ",
-            ].map((head, idx) => (
+            ].map((head,) => (
               <th
                 key={head}
                 className="px-2 text-left text-[14px] font-medium text-slate-500"
               >
                 <div className="flex items-center gap-1.5">
                   {head}
-                  {(idx === 1 || idx === 5 || idx === 6) && (
+                  {/* {(idx === 1 || idx === 5 || idx === 6) && 
+                  (
                     <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />
-                  )}
+                  )
+                  } */}
                 </div>
               </th>
             ))}
@@ -91,7 +93,7 @@ export default function StationsTable({
                     onClick={(e) => e.stopPropagation()}
                     className="p-1 text-slate-400 hover:text-slate-600"
                   >
-                    <MoreVertical className="h-4 w-4" />
+                    {/* <MoreVertical className="h-4 w-4" /> */}
                   </button>
                 </td>
               </tr>

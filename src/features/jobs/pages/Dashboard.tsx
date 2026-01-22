@@ -24,6 +24,24 @@ function resolveTotalPages(
   return Math.max(1, res.totalPages);
 }
 
+type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
+
+function mapUiStatusToApi(s: string): JobStatusApi | undefined {
+  switch (s) {
+    case "เคลม":
+      return "CLAIM";
+    case "ซ่อม":
+      return "REPAIR";
+    case "ตั้งเบิก":
+      return "BILLING";
+    case "เสร็จสิ้น":
+      return "DONE";
+    default:
+      return undefined; // "ทั้งหมด"
+  }
+}
+
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const pageSize = 10;
@@ -35,18 +53,35 @@ export default function Dashboard() {
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ✅ query เหลือแค่ pagination
+
+
+  // const limit = 10;
   const query: JobsQuery = useMemo(
-    () => ({
-      page: currentPage,
-      pageSize,
-    }),
-    [currentPage, pageSize],
-  );
+  () => ({
+    page: currentPage,
+    pageSize,
+    // limit,
+
+    search: searchTerm.trim() || undefined,
+    status: mapUiStatusToApi(selectedStatus),
+    startDateFrom: startDate || undefined,
+    startDateTo: endDate || undefined,
+  }),
+  [
+    currentPage,
+    pageSize,
+    // limit,
+    searchTerm,
+    // selectedCarType,
+    selectedStatus,
+    startDate,
+    endDate,
+  ],
+);
 
   const { data, error } = useDashboardQuery(query);
 
-  // ✅ ใช้ data หลังจากได้มาจาก hook แล้ว
+ 
   const items = data?.data ?? [];
   const totalPages = resolveTotalPages(data, pageSize);
 
@@ -63,7 +98,7 @@ export default function Dashboard() {
     claim: counts.CLAIM,
     repair: counts.REPAIR,
     billing: counts.BILLING,
-    finished: counts.DONE, // DashboardStats ใช้ key finished
+    finished: counts.DONE, 
   };
 
   return (

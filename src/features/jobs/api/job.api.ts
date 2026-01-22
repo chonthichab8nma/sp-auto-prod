@@ -3,6 +3,11 @@ import { http } from "../../../shared/lib/http";
 export type JobsQuery = {
   page: number;
   pageSize: number;
+
+  status?: JobStatusApi;     // CLAIM | REPAIR | BILLING | DONE
+  search?: string;           // ค้นหาทั่วไป
+  startDateFrom?: string;    // YYYY-MM-DD
+  startDateTo?: string;      // YYYY-MM-DD
 };
 
 
@@ -158,6 +163,11 @@ export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
     params: {
       page: q.page,
       pageSize: q.pageSize,
+       status: q.status,
+      search: q.search?.trim() || undefined,
+      startDateFrom: q.startDateFrom,
+      startDateTo: q.startDateTo,
+      
     },
   });
 
