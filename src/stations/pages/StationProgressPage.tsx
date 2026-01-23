@@ -7,7 +7,7 @@ import type { StepStatus } from "../../Type";
 import type {
   JobApi,
   JobStageApi,
-  JobStepApi,
+  JobStepStatusApi,
 } from "../../features/jobs/api/job.api";
 
 import StageStepper from "../components/StageStepper";
@@ -22,11 +22,7 @@ function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
 }
 
-function sortSteps(steps: JobStepApi[]) {
-  return steps
-    .slice()
-    .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
-}
+
 
 // type JobOverallStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 
@@ -94,18 +90,15 @@ export default function StationProgressPage({
     const raw = jobState.currentStageIndex ?? 0;
     if (stages.length === 0) return 0;
     return Math.min(Math.max(raw, 0), stages.length - 1);
-  }, [jobState.currentStageIndex, stages.length]);  
-
-  const currentStage = stages[stageIdx];
+  }, [jobState.currentStageIndex, stages.length]);
 
   const stepsVm: StepVM[] = useMemo(() => {
-    const jobStatusMap = {
+    const jobStatusMap: Record<string, number> = {
       CLAIM: 1,
       REPAIR: 2,
       BILLING: 3,
       DONE: 4,
     };
-    // const steps = sortSteps(currentStage?.jobSteps ?? []);
 
     const steps =
       stages.find((s) => s.stageId === jobStatusMap[job.status])?.jobSteps ??
@@ -121,6 +114,7 @@ export default function StationProgressPage({
         status: (s.status ?? "pending") as StepStatus,
         timestamp: s.completedAt,
         isSkippable: Boolean(s.stepTemplate?.isSkippable),
+        employee: s.employee ? { name: s.employee.name } : undefined,
       };
     });
   }, [job.status, stages]);
@@ -217,11 +211,11 @@ export default function StationProgressPage({
         const updatedSteps = (st.jobSteps ?? []).map((s) =>
           String(s.id) === String(activeStepId)
             ? {
-                ...s,
-                status: selectedAction,
-                employeeId: selectedEmployee?.id ?? null,
-                completedAt: new Date().toISOString(),
-              }
+              ...s,
+              status: selectedAction as JobStepStatusApi,
+              employeeId: selectedEmployee?.id ?? null,
+              completedAt: new Date().toISOString(),
+            }
             : s,
         );
 

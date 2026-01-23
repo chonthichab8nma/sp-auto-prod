@@ -12,7 +12,7 @@ export type JobsQuery = {
 
 
 export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
-export type JobStepStatusApi = "pending" | "in_progress" | "completed";
+export type JobStepStatusApi = "pending" | "in_progress" | "completed" | "skipped";
 
 export type VehicleApi = {
   id: number;
@@ -133,23 +133,23 @@ export type JobApi = {
 
 export type JobsListApiResponse =
   | {
-      data: JobApi[];
-      meta: {
-        totalItems: number;
-        page: number;
-        pageSize: number;
-        totalPages?: number;
-      };
-      statusCounts?: StatusCountsApi; 
-    }
-  | {
-      data: JobApi[];
-      total: number;
+    data: JobApi[];
+    meta: {
+      totalItems: number;
       page: number;
-      limit: number;
-      totalPages: number;
-      statusCounts?: StatusCountsApi;
+      pageSize: number;
+      totalPages?: number;
     };
+    statusCounts?: StatusCountsApi;
+  }
+  | {
+    data: JobApi[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    statusCounts?: StatusCountsApi;
+  };
 export type StatusCountsApi = {
   all: number;
   CLAIM: number;
@@ -163,11 +163,11 @@ export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
     params: {
       page: q.page,
       pageSize: q.pageSize,
-       status: q.status,
+      status: q.status,
       search: q.search?.trim() || undefined,
       startDateFrom: q.startDateFrom,
       startDateTo: q.startDateTo,
-      
+
     },
   });
 
