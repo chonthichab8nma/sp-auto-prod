@@ -121,7 +121,7 @@ export default function DashboardFilters({
         </div>
 
         {/* Car type dropdown */}
-        <div className="lg:col-span-3 relative" ref={dropdownRef}>
+        {/* <div className="lg:col-span-3 relative" ref={dropdownRef}>
           <label className="text-sm font-semibold text-slate-700 block mb-2">
             ประเภทรถ
           </label>
@@ -172,7 +172,7 @@ export default function DashboardFilters({
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Date picker */}
         <div className="lg:col-span-3 relative" ref={datePickerRef}>
@@ -233,7 +233,7 @@ export default function DashboardFilters({
           )}
         </div>
 
-        <div className="lg:col-span-3 flex gap-2">
+        <div className="lg:col-span-6 flex gap-2">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${showAdvancedFilters

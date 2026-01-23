@@ -374,7 +374,7 @@ export default function StationProgressPage({
 
           <div className="w-full xl:w-auto xl:text-right border-t xl:border-t-0 border-slate-100 pt-4 xl:pt-0">
             <div className="flex justify-between xl:block items-center mb-4 xl:mb-0">
-              <div className="text-xs text-red-600 mb-1">ทะเบียนรถ</div>
+              <div className="text-xs text-black mb-1">ทะเบียนรถ</div>
               <div className="text-xl font-bold text-slate-900">
                 {job.vehicle.registration}
               </div>
@@ -473,7 +473,7 @@ export default function StationProgressPage({
                   jobState.status !== "CLAIM" &&
                   jobState.status !== "BILLING"
                 }
-                skipLabel={isRepairStage && stepsToSkip.length > 0 ? "ข้ามไปขั้นตอน QC" : "ข้าม"}
+                skipLabel={isRepairStage && stepsToSkip.length > 0 ? "ข้าม" : "ข้าม"}
                 onBulkSkip={isRepairStage && stepsToSkip.length > 0 ? () => setShowBulkSkipConfirm(true) : undefined}
               />
             ) : (

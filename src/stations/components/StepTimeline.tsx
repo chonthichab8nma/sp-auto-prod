@@ -43,7 +43,7 @@ export default function StepTimeline({
 }) {
   return (
     <div className="pb-4">
-      <div className="px-6 py-5 bg-amber-400 border-b border-slate-100 mb-2">
+      <div className="px-6 py-5 bg-white border-b border-slate-100 mb-2">
         <h3 className="text-base font-semibold text-slate-900">{title}</h3>
       </div>
 
@@ -54,7 +54,7 @@ export default function StepTimeline({
           </div>
         ) : (
           <div className="relative">
-            <div className="absolute left-[29px] top-[30px] bottom-[30px] w-0.5 bg-slate-100" />
+            <div className="absolute left-7.25 top-7.5 bottom-7.5 w-0.5 bg-slate-100" />
 
             <div className="space-y-1">
               {steps.map((step) => {
