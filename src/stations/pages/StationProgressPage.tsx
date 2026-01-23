@@ -22,8 +22,6 @@ function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
 }
 
-
-
 // type JobOverallStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 
 // function deriveJobStatusFromStages(job: JobApi): JobOverallStatus {
@@ -102,7 +100,9 @@ export default function StationProgressPage({
       DONE: 3, // เมื่อ DONE ให้โชว์ด่านสุดท้าย (BILLING)
     };
 
-    const currentStage = stages.find((s) => s.stageId === jobStatusMap[jobState.status]);
+    const currentStage = stages.find(
+      (s) => s.stageId === jobStatusMap[jobState.status],
+    );
     const steps = currentStage?.jobSteps ?? [];
 
     console.log("memo", steps);
@@ -141,7 +141,7 @@ export default function StationProgressPage({
     if (shouldAdvance) {
       // หา step ถัดไปที่ยังไม่เสร็จ (status !== "completed" และ !== "skipped")
       const nextPending = stepsVm.find(
-        (s) => s.status !== "completed" && s.status !== "skipped"
+        (s) => s.status !== "completed" && s.status !== "skipped",
       );
       // ถ้าไม่มี pending step เหลือ ให้เลือก step สุดท้าย
       setActiveStepId(nextPending?.id ?? stepsVm[stepsVm.length - 1]?.id ?? "");
@@ -189,7 +189,7 @@ export default function StationProgressPage({
     if (!isRepairStage) return [];
     const allSteps = stepsVm.slice(0, -2); // ไม่รวม 2 step สุดท้าย
     return allSteps.filter(
-      (s) => s.status !== "completed" && s.status !== "skipped"
+      (s) => s.status !== "completed" && s.status !== "skipped",
     );
   }, [isRepairStage, stepsVm]);
 
@@ -277,11 +277,11 @@ export default function StationProgressPage({
         const updatedSteps = (st.jobSteps ?? []).map((s) =>
           String(s.id) === String(activeStepId)
             ? {
-              ...s,
-              status: selectedAction as JobStepStatusApi,
-              employeeId: selectedEmployee?.id ?? null,
-              completedAt: new Date().toISOString(),
-            }
+                ...s,
+                status: selectedAction as JobStepStatusApi,
+                employeeId: selectedEmployee?.id ?? null,
+                completedAt: new Date().toISOString(),
+              }
             : s,
         );
 
@@ -450,18 +450,17 @@ export default function StationProgressPage({
               <StepActionPanel
                 stepName={activeStep.name}
                 stepStatus={activeStep.status}
-                // ✅ ส่งของ autocomplete เข้า panel
                 employeeQuery={employeeQuery}
                 onEmployeeQueryChange={(v) => {
                   setEmployeeQuery(v);
-                  setSelectedEmployee(null); // พิมพ์ใหม่ = ยังไม่เลือกคน
+                  setSelectedEmployee(null);
                 }}
                 employeeOptions={employeeOptions}
                 employeeLoading={employeesLoading}
                 selectedEmployee={selectedEmployee}
                 onSelectEmployee={(emp) => {
                   setSelectedEmployee(emp);
-                  setEmployeeQuery(emp.name); // เลือกแล้ว = โชว์ชื่อในช่อง
+                  setEmployeeQuery(emp.name);
                 }}
                 selectedAction={selectedAction}
                 onSelectAction={setSelectedAction}
@@ -473,8 +472,14 @@ export default function StationProgressPage({
                   jobState.status !== "CLAIM" &&
                   jobState.status !== "BILLING"
                 }
-                skipLabel={isRepairStage && stepsToSkip.length > 0 ? "ข้าม" : "ข้าม"}
-                onBulkSkip={isRepairStage && stepsToSkip.length > 0 ? () => setShowBulkSkipConfirm(true) : undefined}
+                skipLabel={
+                  isRepairStage && stepsToSkip.length > 0 ? "ข้าม" : "ข้าม"
+                }
+                onBulkSkip={
+                  isRepairStage && stepsToSkip.length > 0
+                    ? () => setShowBulkSkipConfirm(true)
+                    : undefined
+                }
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-48 xl:h-100 text-slate-400 text-sm p-6 text-center bg-slate-50">

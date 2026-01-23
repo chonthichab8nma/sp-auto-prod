@@ -3,6 +3,9 @@ import type { JobFormData } from "../../../Type";
 import FormInput from "../../../shared/components/form/FormInput";
 import FormSelect from "../../../shared/components/form/FormSelect";
 import { useNavigate } from "react-router-dom";
+import type { EmployeeApi } from "../../../stations/api/employees.api";
+import { getEmployeesApi } from "../../../stations/api/employees.api";
+
 import {
   getDefaultCreateJobFormData,
   validateCreateJob,
@@ -20,9 +23,17 @@ import { jobsService } from "../services/jobs.service";
 type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null;
   vehicleId?: number | null;
+  receiverId?: number | null;
 
   isExistingVehicle?: boolean;
 };
+
+// type EmployeeApi = {
+//   id: number;
+//   name: string;
+//   role?: string | null;
+//   phone?: string | null;
+// };
 
 const LabelWithStar = ({ text }: { text: string }) => (
   <span>
@@ -256,7 +267,7 @@ export default function CreateJobForm() {
           found.customer?.phone ??
           latestJob?.customer?.phone ??
           prev.customerPhone,
-          
+
         customerAddress:
           found.customer?.address ??
           latestJob?.customer?.address ??
@@ -275,6 +286,71 @@ export default function CreateJobForm() {
       }));
     }
   };
+
+  const [employees, setEmployees] = useState<EmployeeApi[]>([]);
+  const [employeeQuery, setEmployeeQuery] = useState("");
+  const [employeeLoading, setEmployeeLoading] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
+    null,
+  );
+
+  const onEmployeeQueryChange = (v: string) => {
+    setEmployeeQuery(v);
+    setSelectedEmployee(null);
+
+    setFormData((prev) => ({
+      ...prev,
+      receiver: v,
+      receiverId: null, // ถ้าคุณมี field นี้ แนะนำให้เคลียร์ตอนพิมพ์ใหม่
+    }));
+  };
+
+  const onSelectEmployee = (emp: EmployeeApi) => {
+    setSelectedEmployee(emp);
+    setEmployeeQuery("");
+
+    setFormData((prev) => ({
+      ...prev,
+      receiver: emp.name,
+      receiverId: emp.id,
+    }));
+  };
+
+  useEffect(() => {
+  let alive = true;
+
+  (async () => {
+    try {
+      setEmployeeLoading(true);
+      const res = await getEmployeesApi({});
+      const list = Array.isArray(res) ? res : (res?.data ?? []);
+      if (!alive) return;
+      setEmployees(list);
+    } catch (e) {
+      console.error(e);
+      if (alive) setEmployees([]);
+    } finally {
+      if (alive) setEmployeeLoading(false);
+    }
+  })();
+
+  return () => {
+    alive = false;
+  };
+}, []);
+
+  const employeeOptions = useMemo(() => {
+    const q = employeeQuery.trim().toLowerCase();
+    if (!q) return [];
+    return employees
+      .filter((e) => (e.name ?? "").toLowerCase().includes(q))
+      .slice(0, 20);
+  }, [employees, employeeQuery]);
+
+  const showEmployeeDropdown =
+    !!employeeQuery.trim() &&
+    !selectedEmployee &&
+    (employeeLoading || employeeOptions.length > 0);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -347,19 +423,6 @@ export default function CreateJobForm() {
       }));
       return;
     }
-
-    // if (name === "startDate" ) {
-    //   const dateString = value;
-    //   const dateObject = new Date(dateString);
-    //   const isoString = dateObject.toISOString();
-
-    //   setFormData((prev) => ({
-    //     ...prev,
-    //     startDate: isoString,
-    //   }));
-    //   return;
-    // }
-
     setFormData((prev) => ({ ...prev, [name]: parseFieldValue(name, value) }));
   };
 
@@ -586,14 +649,64 @@ export default function CreateJobForm() {
             />
 
             <div className="md:col-span-3 pt-2">
-              <FormInput
-                label={<LabelWithStar text="เจ้าหน้าที่รับรถ" />}
-                name="receiver"
-                value={formData.receiver}
-                onChange={handleChange}
-                type="text"
-                required
-              />
+              <div className="space-y-2 relative">
+                <label className="text-sm font-medium text-slate-800">
+                  <LabelWithStar text="เจ้าหน้าที่รับรถ" />
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="พิมพ์ชื่อพนักงานเพื่อค้นหา"
+                  value={
+                    selectedEmployee ? selectedEmployee.name : employeeQuery
+                  }
+                  onChange={(e) => onEmployeeQueryChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"
+                  required
+                />
+
+                {showEmployeeDropdown && (
+                  <div className="absolute z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
+                    {employeeLoading ? (
+                      <div className="px-4 py-3 text-sm text-slate-500">
+                        กำลังโหลด...
+                      </div>
+                    ) : employeeOptions.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-slate-500">
+                        ไม่พบพนักงาน
+                      </div>
+                    ) : (
+                      <ul className="max-h-64 overflow-auto">
+                        {employeeOptions.map((emp) => (
+                          <li key={emp.id}>
+                            <button
+                              type="button"
+                              onClick={() => onSelectEmployee(emp)}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center justify-between"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-slate-800 truncate">
+                                  {emp.name}
+                                </div>
+                              </div>
+                              <span className="text-xs text-slate-400">
+                                #{emp.id}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {/* เพื่อให้ payload/validate ใช้ค่า receiver จริงเสมอ */}
+                <input
+                  type="hidden"
+                  name="receiver"
+                  value={formData.receiver || ""}
+                />
+              </div>
             </div>
           </div>
         </div>
