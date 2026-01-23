@@ -50,7 +50,7 @@ export default function DashboardFilters({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
+  console.log(isTypeDropdownOpen);
   // API Data State
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [types, setTypes] = useState<VehicleTypeApi[]>([]);
@@ -186,13 +186,15 @@ export default function DashboardFilters({
           >
             <span>
               {startDate || endDate
-                ? `${startDate
-                  ? new Date(startDate).toLocaleDateString("th-TH")
-                  : "..."
-                } - ${endDate
-                  ? new Date(endDate).toLocaleDateString("th-TH")
-                  : "..."
-                }`
+                ? `${
+                    startDate
+                      ? new Date(startDate).toLocaleDateString("th-TH")
+                      : "..."
+                  } - ${
+                    endDate
+                      ? new Date(endDate).toLocaleDateString("th-TH")
+                      : "..."
+                  }`
                 : "เลือกช่วงวันที่"}
             </span>
             <Calendar className="h-4 w-4 text-slate-400" />
@@ -236,10 +238,11 @@ export default function DashboardFilters({
         <div className="lg:col-span-6 flex gap-2">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${showAdvancedFilters
-              ? "bg-blue-50 text-blue-600 border border-blue-200"
-              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
+            className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              showAdvancedFilters
+                ? "bg-blue-50 text-blue-600 border border-blue-200"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
           >
             <Filter className="h-4 w-4" />
             ตัวกรองเพิ่มเติม
@@ -258,13 +261,17 @@ export default function DashboardFilters({
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2">
           {/* Job Number */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">เลขที่ใบงาน</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              เลขที่ใบงาน
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
               placeholder="ระบุเลขที่ใบงาน"
               value={advancedFilters.jobNumber || ""}
-              onChange={(e) => onAdvancedFilterChange("jobNumber", e.target.value)}
+              onChange={(e) =>
+                onAdvancedFilterChange("jobNumber", e.target.value)
+              }
             />
           </div>
           {/* Brand */}
@@ -287,7 +294,9 @@ export default function DashboardFilters({
           </div>
           {/* Model */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">รุ่นรถ</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              รุ่นรถ
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
@@ -298,7 +307,9 @@ export default function DashboardFilters({
           </div>
           {/* Color */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">สีรถ</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              สีรถ
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
@@ -309,46 +320,62 @@ export default function DashboardFilters({
           </div>
           {/* Registration */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">ทะเบียนรถ</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              ทะเบียนรถ
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
               placeholder="ระบุทะเบียน"
               value={advancedFilters.vehicleRegistration || ""}
-              onChange={(e) => onAdvancedFilterChange("vehicleRegistration", e.target.value)}
+              onChange={(e) =>
+                onAdvancedFilterChange("vehicleRegistration", e.target.value)
+              }
             />
           </div>
           {/* Chassis */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">เลขตัวถัง</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              เลขตัวถัง
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
               placeholder="ระบุเลขตัวถัง"
               value={advancedFilters.chassisNumber || ""}
-              onChange={(e) => onAdvancedFilterChange("chassisNumber", e.target.value)}
+              onChange={(e) =>
+                onAdvancedFilterChange("chassisNumber", e.target.value)
+              }
             />
           </div>
           {/* VIN */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">VIN Code</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              VIN Code
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
               placeholder="ระบุ VIN Code"
               value={advancedFilters.vinNumber || ""}
-              onChange={(e) => onAdvancedFilterChange("vinNumber", e.target.value)}
+              onChange={(e) =>
+                onAdvancedFilterChange("vinNumber", e.target.value)
+              }
             />
           </div>
           {/* Customer Name */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">ชื่อลูกค้า</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              ชื่อลูกค้า
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
               placeholder="ระบุชื่อลูกค้า"
               value={advancedFilters.customerName || ""}
-              onChange={(e) => onAdvancedFilterChange("customerName", e.target.value)}
+              onChange={(e) =>
+                onAdvancedFilterChange("customerName", e.target.value)
+              }
             />
           </div>
           {/* Type */}
@@ -371,7 +398,9 @@ export default function DashboardFilters({
           </div>
           {/* Year */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">ปี</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1">
+              ปี
+            </label>
             <input
               type="text"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
@@ -391,7 +420,7 @@ export default function DashboardFilters({
               onChange={(e) =>
                 onAdvancedFilterChange(
                   "insuranceCompanyId",
-                  e.target.value ? Number(e.target.value) : undefined
+                  e.target.value ? Number(e.target.value) : undefined,
                 )
               }
             >
@@ -408,4 +437,3 @@ export default function DashboardFilters({
     </div>
   );
 }
-

@@ -37,6 +37,15 @@ export type VehicleTypeRefApi = {
   nameEn?: string | null;
 };
 
+export type VehicleWithCustomerApi = VehicleApi & {
+  customer?: {
+    id: number;
+    name: string;
+    phone?: string | null;
+    address?: string | null;
+  } | null;
+};
+
 export type VehicleModelApi = {
   id: number;
   name: string;
@@ -71,20 +80,26 @@ export function normalizeRegistration(input: string) {
   return input.trim().replace(/\s+/g, "");
 }
 
-type VehiclesListResponse = VehicleApi[] | { data: VehicleApi[] };
+type VehiclesListResponse =
+  | VehicleWithCustomerApi[]
+  | { data: VehicleWithCustomerApi[] };
 
-function extractVehicleList(res: VehiclesListResponse): VehicleApi[] {
+function extractVehicleList(
+  res: VehiclesListResponse,
+): VehicleWithCustomerApi[] {
   if (Array.isArray(res)) return res;
   return res.data ?? [];
 }
 
 export const vehiclesService = {
-  async listVehicles(): Promise<VehicleApi[]> {
-    const { data } = await http.get<VehicleApi[]>("/private/vehicles");
-    return data ?? [];
+  async listVehicles(): Promise<VehicleWithCustomerApi[]> {
+    const { data } = await http.get<VehiclesListResponse>("/private/vehicles");
+    return extractVehicleList(data);
   },
 
-  async findVehicleByReg(registration: string): Promise<VehicleApi | null> {
+  async findVehicleByReg(
+    registration: string,
+  ): Promise<VehicleWithCustomerApi | null> {
     const reg = normalizeRegistration(registration);
     if (!reg) return null;
 
@@ -127,12 +142,14 @@ export const vehiclesService = {
     const { data } = await http.get<{
       data: InsuranceCompanyApi[];
     }>("/private/insurances");
-    return data ?? {data : []};
+    return data ?? { data: [] };
   },
 };
 export const insurancesService = {
   listInsurances: async (): Promise<InsuranceCompanyApi[]> => {
-    const res = await http.get<{ data: InsuranceCompanyApi[] }>("/private/insurances");
+    const res = await http.get<{ data: InsuranceCompanyApi[] }>(
+      "/private/insurances",
+    );
     return res.data?.data ?? [];
   },
 };

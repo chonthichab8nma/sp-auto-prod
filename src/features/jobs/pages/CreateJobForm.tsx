@@ -207,11 +207,12 @@ export default function CreateJobForm() {
   const lookupRegistrationAndAutofill = async () => {
     console.log("BLUR registration:", formData.registration);
     const reg = normalizeRegistration(formData.registration || "");
+    console.log("LOOKUP reg =", reg);
 
     if (!reg) {
       setFormData((prev) => ({
         ...prev,
-        registration: "",
+        // registration: "",
         vehicleId: null,
         isExistingVehicle: false,
       }));
@@ -222,6 +223,7 @@ export default function CreateJobForm() {
 
     try {
       const found = await vehiclesService.findVehicleByReg(reg);
+      console.log("FOUND vehicle=", found);
 
       if (!found) {
         setFormData((prev) => ({
@@ -231,6 +233,7 @@ export default function CreateJobForm() {
         }));
         return;
       }
+      const latestJob = await jobsService.findLatestByRegistration(reg);
 
       setFormData((prev) => ({
         ...prev,
@@ -243,7 +246,25 @@ export default function CreateJobForm() {
         type: found.type ?? prev.type,
         year: found.year ?? prev.year,
         color: found.color ?? prev.color,
+
+        customerName:
+          found.customer?.name ??
+          latestJob?.customer?.name ??
+          prev.customerName,
+
+        customerPhone:
+          found.customer?.phone ??
+          latestJob?.customer?.phone ??
+          prev.customerPhone,
+          
+        customerAddress:
+          found.customer?.address ??
+          latestJob?.customer?.address ??
+          prev.customerAddress,
       }));
+      console.log("add", formData.customerAddress);
+      console.log("found.customer.address =", found?.customer?.address);
+      console.log("latestJob.customer.address =", latestJob?.customer?.address);
     } catch (err) {
       console.error("Lookup registration failed:", err);
 
@@ -384,6 +405,7 @@ export default function CreateJobForm() {
             model: formData.model,
             color: formData.color,
             chassisNumber: formData.chassisNumber,
+            year: formData.year,
             // ถ้า backend รองรับ year/type ก็เพิ่มได้:
             // year: formData.year,
             // type: formData.type,

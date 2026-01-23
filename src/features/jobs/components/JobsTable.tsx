@@ -37,7 +37,7 @@ export default function StationsTable({
                 </div>
               </th>
             ))}
-            <th className="px-6 py-4 w-[60px]"></th>
+            <th className="px-6 py-4 w-15"></th>
           </tr>
         </thead>
 
@@ -81,7 +81,7 @@ export default function StationsTable({
                   {job.vehicle.registration}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-[220px] truncate" title={job?.customer?.name || "-"}>
+                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-55 truncate" title={job?.customer?.name || "-"}>
                   {job?.customer?.name || "-"}
                 </td>
 
@@ -89,7 +89,7 @@ export default function StationsTable({
                   {job?.customer?.phone || "-"}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-[220px] truncate">
+                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-55 truncate">
                   <div className="flex flex-col">
                     <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>{job.vehicle.brand} {job.vehicle.model}</span>
                     <span className="text-[12px] text-slate-400 truncate" title={job.vehicle.type || ""}>{job.vehicle.type || "-"}</span>
