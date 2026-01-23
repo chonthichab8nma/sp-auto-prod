@@ -53,29 +53,50 @@ export default function Dashboard() {
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Advanced Filters State
+  const [advancedFilters, setAdvancedFilters] = useState({
+    jobNumber: "",
+    insuranceCompanyId: undefined as number | undefined,
+    brand: "",
+    model: "",
+    color: "",
+    type: "",
+    year: "",
+    vehicleRegistration: "",
+    chassisNumber: "",
+    vinNumber: "",
+    customerName: "",
+  });
 
-
-  // const limit = 10;
   const query: JobsQuery = useMemo(
     () => ({
       page: currentPage,
       pageSize,
-      // limit,
-
       search: searchTerm.trim() || undefined,
       status: mapUiStatusToApi(selectedStatus),
       startDateFrom: startDate || undefined,
       startDateTo: endDate || undefined,
+      // Advanced Filters
+      jobNumber: advancedFilters.jobNumber?.trim() || undefined,
+      insuranceCompanyId: advancedFilters.insuranceCompanyId,
+      brand: advancedFilters.brand?.trim() || undefined,
+      model: advancedFilters.model?.trim() || undefined,
+      color: advancedFilters.color?.trim() || undefined,
+      type: advancedFilters.type?.trim() || undefined,
+      year: advancedFilters.year?.trim() || undefined,
+      vehicleRegistration: advancedFilters.vehicleRegistration?.trim() || undefined,
+      chassisNumber: advancedFilters.chassisNumber?.trim() || undefined,
+      vinNumber: advancedFilters.vinNumber?.trim() || undefined,
+      customerName: advancedFilters.customerName?.trim() || undefined,
     }),
     [
       currentPage,
       pageSize,
-      // limit,
       searchTerm,
-      // selectedCarType,
       selectedStatus,
       startDate,
       endDate,
+      advancedFilters,
     ],
   );
 
@@ -113,6 +134,7 @@ export default function Dashboard() {
           selectedCarType={selectedCarType}
           startDate={startDate}
           endDate={endDate}
+          advancedFilters={advancedFilters}
           onSearchTermChange={setSearchTerm}
           onCarTypeChange={(v) => {
             setSelectedCarType(v);
@@ -124,6 +146,10 @@ export default function Dashboard() {
           }}
           onEndDateChange={(v) => {
             setEndDate(v);
+            setCurrentPage(1);
+          }}
+          onAdvancedFilterChange={(key, value) => {
+            setAdvancedFilters((prev) => ({ ...prev, [key]: value }));
             setCurrentPage(1);
           }}
           onSubmitSearch={() => setCurrentPage(1)}

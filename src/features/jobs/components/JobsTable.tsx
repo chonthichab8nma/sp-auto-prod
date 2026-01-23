@@ -19,10 +19,11 @@ export default function StationsTable({
         <thead>
           <tr className="bg-[#F7f7f7] border-b border-slate-100">
             {[
+              { label: "เลขที่ใบงาน", width: "w-[180px]" },
               { label: "ทะเบียนรถ", width: "w-[120px]" },
               { label: "ชื่อ-นามสกุล", width: "w-[220px]" },
               { label: "เบอร์โทรศัพท์", width: "w-[160px]" },
-              { label: "ประเภทรถ", width: "w-[220px]" },
+              { label: "ยี่ห้อ/รุ่น (ประเภท)", width: "w-[220px]" },
               { label: "สถานะ", width: "w-[120px]" },
               { label: "วันที่นำรถเข้าจอดซ่อม", width: "w-[180px]" },
               { label: "วันที่นัดรับรถ", width: "w-[180px]" },
@@ -44,6 +45,7 @@ export default function StationsTable({
           {loading ? (
             [...Array(5)].map((_, i) => (
               <tr key={`skeleton-${i}`} className="border-b border-slate-50">
+                <td className="px-6 py-5"><Skeleton className="h-5 w-32" /></td>
                 <td className="px-6 py-5"><Skeleton className="h-5 w-20" /></td>
                 <td className="px-6 py-5"><Skeleton className="h-5 w-32" /></td>
                 <td className="px-6 py-5"><Skeleton className="h-5 w-28" /></td>
@@ -60,7 +62,7 @@ export default function StationsTable({
             ))
           ) : jobs.length === 0 ? (
             <tr>
-              <td colSpan={8} className="px-6 py-20 text-center text-slate-400">
+              <td colSpan={9} className="px-6 py-20 text-center text-slate-400">
                 ไม่มีข้อมูล
               </td>
             </tr>
@@ -71,6 +73,10 @@ export default function StationsTable({
                 className="hover:bg-slate-50/50 transition-colors cursor-pointer group whitespace-nowrap"
                 onClick={() => onRowClick(job.id)}
               >
+                <td className="px-6 py-5 text-[14px] text-slate-700 font-semibold whitespace-nowrap">
+                  {job.jobNumber}
+                </td>
+
                 <td className="px-6 py-5 text-[14px] text-slate-700 font-medium whitespace-nowrap">
                   {job.vehicle.registration}
                 </td>
@@ -84,8 +90,10 @@ export default function StationsTable({
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
-                  {job.vehicle.type ||
-                    `${job.vehicle.brand} ${job.vehicle.model}`}
+                  <div className="flex flex-col">
+                    <span>{job.vehicle.brand} {job.vehicle.model}</span>
+                    <span className="text-[12px] text-slate-400">{job.vehicle.type || "-"}</span>
+                  </div>
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">

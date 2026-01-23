@@ -8,8 +8,20 @@ export type JobsQuery = {
   search?: string;           // ค้นหาทั่วไป
   startDateFrom?: string;    // YYYY-MM-DD
   startDateTo?: string;      // YYYY-MM-DD
-};
 
+  // Advanced Filters
+  jobNumber?: string;
+  insuranceCompanyId?: number;
+  brand?: string;
+  model?: string;
+  color?: string;
+  type?: string;
+  year?: string;
+  vehicleRegistration?: string;
+  chassisNumber?: string;
+  vinNumber?: string;
+  customerName?: string;
+};
 
 export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 export type JobStepStatusApi = "pending" | "in_progress" | "completed" | "skipped";
@@ -167,7 +179,17 @@ export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
       search: q.search?.trim() || undefined,
       startDateFrom: q.startDateFrom,
       startDateTo: q.startDateTo,
-
+      jobNumber: q.jobNumber?.trim() || undefined,
+      insuranceCompanyId: q.insuranceCompanyId,
+      brand: q.brand?.trim() || undefined,
+      model: q.model?.trim() || undefined,
+      color: q.color?.trim() || undefined,
+      type: q.type?.trim() || undefined,
+      year: q.year?.trim() || undefined,
+      vehicleRegistration: q.vehicleRegistration?.trim() || undefined,
+      chassisNumber: q.chassisNumber?.trim() || undefined,
+      vinNumber: q.vinNumber?.trim() || undefined,
+      customerName: q.customerName?.trim() || undefined,
     },
   });
 
