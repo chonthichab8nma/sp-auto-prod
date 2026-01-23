@@ -3,7 +3,6 @@ import type { JobFormData } from "../../../Type";
 import FormInput from "../../../shared/components/form/FormInput";
 import FormSelect from "../../../shared/components/form/FormSelect";
 import { useNavigate } from "react-router-dom";
-// import { CAR_TYPES, CAR_BRANDS, CAR_MODELS, YEARS } from "../../../data";
 import {
   getDefaultCreateJobFormData,
   validateCreateJob,
@@ -13,16 +12,17 @@ import {
   vehiclesService,
   normalizeRegistration,
   type InsuranceCompanyApi,
-  type VehicleApi,
   type VehicleBrandApi,
   type VehicleModelApi,
 } from "../services/vehicles.service";
 import { jobsService } from "../services/jobs.service";
 
 type CreateJobFormState = JobFormData & {
-  insuranceCompanyId?: number | null; // optional
-};
+  insuranceCompanyId?: number | null;
+  vehicleId?: number | null;
 
+  isExistingVehicle?: boolean;
+};
 
 const LabelWithStar = ({ text }: { text: string }) => (
   <span>
@@ -62,12 +62,13 @@ function parseInsuranceOption(v: string) {
 }
 
 export default function CreateJobForm() {
-
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState<CreateJobFormState>(
-    getDefaultCreateJobFormData(),
-  );
+  const [formData, setFormData] = useState<CreateJobFormState>(() => ({
+    ...getDefaultCreateJobFormData(),
+    vehicleId: null,
+    isExistingVehicle: false,
+  }));
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,7 +76,7 @@ export default function CreateJobForm() {
   const [brandModels, setBrandModels] = useState<VehicleModelApi[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
-  const [vehiclesCache, setVehiclesCache] = useState<VehicleApi[] | null>(null);
+  // const [vehiclesCache, setVehiclesCache] = useState<VehicleApi[] | null>(null);
 
   const [insurances, setInsurances] = useState<InsuranceCompanyApi[]>([]);
   const [isLoadingInsurances, setIsLoadingInsurances] = useState(false);
@@ -203,25 +204,39 @@ export default function CreateJobForm() {
     };
   }, []);
 
-  // optional Step 4: lookup ทะเบียน → autofill
   const lookupRegistrationAndAutofill = async () => {
+    console.log("BLUR registration:", formData.registration);
     const reg = normalizeRegistration(formData.registration || "");
-    if (!reg) return;
+
+    if (!reg) {
+      setFormData((prev) => ({
+        ...prev,
+        registration: "",
+        vehicleId: null,
+        isExistingVehicle: false,
+      }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, registration: reg }));
 
     try {
-      let list = vehiclesCache;
-      if (!list) {
-        list = await vehiclesService.listVehicles();
-        setVehiclesCache(list);
+      const found = await vehiclesService.findVehicleByReg(reg);
+
+      if (!found) {
+        setFormData((prev) => ({
+          ...prev,
+          vehicleId: null,
+          isExistingVehicle: false,
+        }));
+        return;
       }
-
-      const found =
-        list.find((v) => normalizeRegistration(v.registration) === reg) ?? null;
-
-      if (!found) return;
 
       setFormData((prev) => ({
         ...prev,
+        vehicleId: found.id,
+        isExistingVehicle: true,
+
         chassisNumber: found.chassisNumber ?? prev.chassisNumber,
         brand: found.brand ?? prev.brand,
         model: found.model ?? prev.model,
@@ -231,6 +246,12 @@ export default function CreateJobForm() {
       }));
     } catch (err) {
       console.error("Lookup registration failed:", err);
+
+      setFormData((prev) => ({
+        ...prev,
+        vehicleId: null,
+        isExistingVehicle: false,
+      }));
     }
   };
 
@@ -251,6 +272,15 @@ export default function CreateJobForm() {
       return;
     }
 
+    if (name === "registration") {
+      setFormData((prev) => ({
+        ...prev,
+        registration: value,
+        vehicleId: null,
+        isExistingVehicle: false,
+      }));
+      return;
+    }
     if (name === "brand") {
       setFormData((prev) => ({
         ...prev,
@@ -324,21 +354,19 @@ export default function CreateJobForm() {
     }
 
     const isoDateValueStartDate = new Date(formData.startDate).toISOString();
-    const isoDateValueEstimateDate = new Date(formData.estimatedEndDate).toISOString();
+    const isoDateValueEstimateDate = new Date(
+      formData.estimatedEndDate,
+    ).toISOString();
 
+    const normalizedReg = normalizeRegistration(formData.registration || "");
+
+    // payload ส่วนกลาง
     const basePayload = {
       startDate: isoDateValueStartDate,
       estimatedEndDate: isoDateValueEstimateDate,
       receiver: formData.receiver,
       paymentType: formData.paymentType,
       excessFee: formData.excessFee,
-      vehicle: {
-        registration: formData.registration,
-        brand: formData.brand,
-        model: formData.model,
-        color: formData.color,
-        chassisNumber: formData.chassisNumber,
-      },
       customer: {
         name: formData.customerName || "",
         phone: formData.customerPhone || "",
@@ -346,21 +374,42 @@ export default function CreateJobForm() {
       },
     };
 
-    // Only add insuranceCompanyId if payment type is Insurance and ID exists
-    const test =
-      formData.paymentType === "Insurance" && formData.insuranceCompanyId
-        ? { ...basePayload, insuranceCompanyId: formData.insuranceCompanyId }
-        : basePayload;
+    // เลือกส่ง vehicleId หรือส่ง vehicle object
+    const vehiclePart = formData.vehicleId
+      ? { vehicleId: formData.vehicleId }
+      : {
+          vehicle: {
+            registration: normalizedReg || formData.registration,
+            brand: formData.brand,
+            model: formData.model,
+            color: formData.color,
+            chassisNumber: formData.chassisNumber,
+            // ถ้า backend รองรับ year/type ก็เพิ่มได้:
+            // year: formData.year,
+            // type: formData.type,
+          },
+        };
 
-    console.log(test);
+    // Only add insuranceCompanyId if payment type is Insurance and ID exists
+    const payload =
+      formData.paymentType === "Insurance" && formData.insuranceCompanyId
+        ? {
+            ...basePayload,
+            ...vehiclePart,
+            insuranceCompanyId: formData.insuranceCompanyId,
+          }
+        : { ...basePayload, ...vehiclePart };
+
+    console.log(payload);
 
     try {
       setIsSubmitting(true);
-      const res = await jobsService.create(test);
+      const res = await jobsService.create(payload);
       if (!res.ok) {
         alert(res.error);
         return;
       }
+      navigate("/dashboard", { replace: true });
     } finally {
       setIsSubmitting(false);
     }
@@ -402,6 +451,7 @@ export default function CreateJobForm() {
             <FormInput
               label={<LabelWithStar text="เลขตัวถัง" />}
               name="chassisNumber"
+              disabled={!!formData.isExistingVehicle}
               value={formData.chassisNumber}
               onChange={handleChange}
               required
@@ -411,6 +461,7 @@ export default function CreateJobForm() {
               options={brandOptions}
               label={<LabelWithStar text="ยี่ห้อ/แบรนด์" />}
               name="brand"
+              disabled={!!formData.isExistingVehicle}
               value={formData.brand}
               onChange={handleChange}
               placeholder="เลือกยี่ห้อ"
@@ -420,9 +471,13 @@ export default function CreateJobForm() {
               options={modelOptions}
               label={<LabelWithStar text="รุ่น" />}
               name="model"
+              disabled={
+                !!formData.isExistingVehicle ||
+                !formData.brand ||
+                isLoadingModels
+              }
               value={formData.model}
               onChange={handleChange}
-              disabled={!formData.brand || isLoadingModels}
               placeholder={
                 !formData.brand
                   ? "เลือกแบรนด์ก่อน"
@@ -443,11 +498,13 @@ export default function CreateJobForm() {
               
             /> */}
             <ReadOnlyValue label="ประเภทรถ" value={formData.type} />
+
             <div className="grid grid-cols-2 gap-4">
               <FormSelect
                 options={yearOptions}
                 label={<LabelWithStar text="ปี" />}
                 name="year"
+                disabled={!!formData.isExistingVehicle}
                 value={formData.year}
                 onChange={handleChange}
                 placeholder="เลือกปี"
@@ -456,12 +513,18 @@ export default function CreateJobForm() {
               <FormInput
                 label={<LabelWithStar text="สี" />}
                 name="color"
+                disabled={!!formData.isExistingVehicle}
                 value={formData.color}
                 onChange={handleChange}
                 placeholder="ระบุสี"
                 required
               />
             </div>
+            {formData.isExistingVehicle && formData.vehicleId ? (
+              <div className="md:col-span-3 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                พบรถในระบบแล้ว (Vehicle ID: {formData.vehicleId})
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -559,10 +622,11 @@ export default function CreateJobForm() {
           <div className="md:w-3/4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label
-                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${formData.paymentType === "Insurance"
-                  ? "border-blue-600 bg-white ring-1 ring-blue-600"
-                  : "border-slate-200 hover:border-slate-300"
-                  }`}
+                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+                  formData.paymentType === "Insurance"
+                    ? "border-blue-600 bg-white ring-1 ring-blue-600"
+                    : "border-slate-200 hover:border-slate-300"
+                }`}
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-slate-800 text-sm">
@@ -579,10 +643,11 @@ export default function CreateJobForm() {
                   className="sr-only"
                 />
                 <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.paymentType === "Insurance"
-                    ? "border-blue-600"
-                    : "border-slate-300"
-                    }`}
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                    formData.paymentType === "Insurance"
+                      ? "border-blue-600"
+                      : "border-slate-300"
+                  }`}
                 >
                   {formData.paymentType === "Insurance" && (
                     <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />
@@ -591,10 +656,11 @@ export default function CreateJobForm() {
               </label>
 
               <label
-                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${formData.paymentType === "Cash"
-                  ? "border-blue-600 bg-white ring-1 ring-blue-600"
-                  : "border-slate-200 hover:border-slate-300"
-                  }`}
+                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+                  formData.paymentType === "Cash"
+                    ? "border-blue-600 bg-white ring-1 ring-blue-600"
+                    : "border-slate-200 hover:border-slate-300"
+                }`}
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-slate-800 text-sm">
@@ -613,10 +679,11 @@ export default function CreateJobForm() {
                   className="sr-only"
                 />
                 <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.paymentType === "Cash"
-                    ? "border-blue-600"
-                    : "border-slate-300"
-                    }`}
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                    formData.paymentType === "Cash"
+                      ? "border-blue-600"
+                      : "border-slate-300"
+                  }`}
                 >
                   {formData.paymentType === "Cash" && (
                     <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />

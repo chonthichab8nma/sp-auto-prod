@@ -71,10 +71,29 @@ export function normalizeRegistration(input: string) {
   return input.trim().replace(/\s+/g, "");
 }
 
+type VehiclesListResponse = VehicleApi[] | { data: VehicleApi[] };
+
+function extractVehicleList(res: VehiclesListResponse): VehicleApi[] {
+  if (Array.isArray(res)) return res;
+  return res.data ?? [];
+}
+
 export const vehiclesService = {
   async listVehicles(): Promise<VehicleApi[]> {
     const { data } = await http.get<VehicleApi[]>("/private/vehicles");
     return data ?? [];
+  },
+
+  async findVehicleByReg(registration: string): Promise<VehicleApi | null> {
+    const reg = normalizeRegistration(registration);
+    if (!reg) return null;
+
+    const { data } = await http.get<VehiclesListResponse>("/private/vehicles", {
+      params: { reg },
+    });
+
+    const list = extractVehicleList(data);
+    return list[0] ?? null;
   },
 
   async listBrands(): Promise<VehicleBrandApi[]> {
@@ -83,6 +102,7 @@ export const vehiclesService = {
     );
     return data ?? [];
   },
+
   //ดึงรุ่น
   async getBrandById(id: number): Promise<VehicleBrandApi> {
     const { data } = await http.get<VehicleBrandApi>(
@@ -107,12 +127,12 @@ export const vehiclesService = {
     const { data } = await http.get<{
       data: InsuranceCompanyApi[];
     }>("/private/insurances");
-    return data ?? []
+    return data ?? {data : []};
   },
 };
 export const insurancesService = {
   listInsurances: async (): Promise<InsuranceCompanyApi[]> => {
-    const res = await http.get("/private/insurances");
-    return res.data;
+    const res = await http.get<{ data: InsuranceCompanyApi[] }>("/private/insurances");
+    return res.data?.data ?? [];
   },
 };
