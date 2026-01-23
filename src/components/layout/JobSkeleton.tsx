@@ -1,14 +1,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-slate-200 ${className}`}
-      aria-hidden
-    />
-  );
-}
+import Skeleton from "../../shared/components/ui/Skeleton";
 
 export default function JobDetailSkeleton() {
   return (
