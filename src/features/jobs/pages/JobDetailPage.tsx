@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
 
 import type { JobApi } from "../api/job.api";
+import { formatThaiDate } from "../../../shared/lib/date";
 
 const Section = ({
   title,
@@ -15,9 +16,8 @@ const Section = ({
   hasBorder?: boolean;
 }) => (
   <div
-    className={`flex flex-col md:flex-row py-8 ${
-      hasBorder ? "border-b border-gray-100" : ""
-    }`}
+    className={`flex flex-col md:flex-row py-8 ${hasBorder ? "border-b border-gray-100" : ""
+      }`}
   >
     <div className="w-full md:w-1/3 mb-6 md:mb-0">
       <h3 className="font-bold text-slate-800 text-base">{title}</h3>
@@ -96,22 +96,20 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
               return (
                 <div key={stage.id} className="flex items-center gap-2">
                   <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-                      isCompleted
-                        ? "bg-green-500 text-white"
-                        : isActive
-                          ? "bg-blue-600 text-white"
-                          : "border border-gray-300 text-gray-500"
-                    }`}
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${isCompleted
+                      ? "bg-green-500 text-white"
+                      : isActive
+                        ? "bg-blue-600 text-white"
+                        : "border border-gray-300 text-gray-500"
+                      }`}
                   >
                     {isCompleted ? <Check size={12} /> : idx + 1}
                   </span>
                   <span
-                    className={`font-medium ${
-                      isCompleted || isActive
-                        ? "text-slate-900"
-                        : "text-slate-400"
-                    }`}
+                    className={`font-medium ${isCompleted || isActive
+                      ? "text-slate-900"
+                      : "text-slate-400"
+                      }`}
                   >
                     {stage.name}
                   </span>
@@ -172,19 +170,11 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
             <StackItem
               label="วันที่นำรถเข้าจอดซ่อม"
-              value={
-                job?.startDate
-                  ? new Date(job?.startDate).toLocaleDateString("th-TH")
-                  : "ไม่ระบุ"
-              }
+              value={formatThaiDate(job?.startDate)}
             />
             <StackItem
               label="กำหนดซ่อมเสร็จ/นัดรับรถ"
-              value={
-                job?.estimatedEndDate
-                  ? new Date(job?.estimatedEndDate).toLocaleDateString("th-TH")
-                  : "ไม่ระบุ"
-              }
+              value={formatThaiDate(job?.estimatedEndDate)}
             />
             <StackItem
               label="ค่าความเสียหายส่วนแรก"

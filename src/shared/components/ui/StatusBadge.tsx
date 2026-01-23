@@ -18,7 +18,7 @@ export default function StatusBadge({ job }: { job: JobApi }) {
 
   if (job.isFinished) {
     return (
-      <span className="inline-flex items-center px-3 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600">
+      <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600 min-w-[80px]">
         เสร็จสิ้น
       </span>
     );
@@ -31,7 +31,7 @@ export default function StatusBadge({ job }: { job: JobApi }) {
 
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] font-semibold ${config.className}`}
+      className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold min-w-[80px] ${config.className}`}
     >
       {config.label}
     </span>

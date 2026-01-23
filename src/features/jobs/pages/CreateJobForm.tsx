@@ -15,7 +15,6 @@ import {
   type InsuranceCompanyApi,
   type VehicleApi,
   type VehicleBrandApi,
-  type VehicleTypeApi,
   type VehicleModelApi,
 } from "../services/vehicles.service";
 import { jobsService } from "../services/jobs.service";
@@ -24,7 +23,7 @@ type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null; // optional
 };
 
- 
+
 const LabelWithStar = ({ text }: { text: string }) => (
   <span>
     {text} <span className="text-red-500">*</span>
@@ -72,10 +71,7 @@ export default function CreateJobForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [vehicleTypes, setVehicleTypes] = useState<VehicleTypeApi[]>([]);
-
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
-  const [isLoadingVehicleMeta, setIsLoadingVehicleMeta] = useState(false);
   const [brandModels, setBrandModels] = useState<VehicleModelApi[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
@@ -102,21 +98,13 @@ export default function CreateJobForm() {
 
     (async () => {
       try {
-        setIsLoadingVehicleMeta(true);
-
-        const [types, brandList] = await Promise.all([
-          vehiclesService.fetchCarType(),
-          vehiclesService.listBrands(),
-        ]);
+        const brandList = await vehiclesService.listBrands();
 
         if (!alive) return;
 
-        setVehicleTypes(types);
         setBrands(brandList);
       } catch (err) {
         console.error("Fetch vehicle meta failed:", err);
-      } finally {
-        if (alive) setIsLoadingVehicleMeta(false);
       }
     })();
 
@@ -126,10 +114,6 @@ export default function CreateJobForm() {
   }, []);
 
   const yearOptions = useMemo(() => buildYearOptions(), []);
-
-  const typeOptions = useMemo(() => {
-    return vehicleTypes.map((t) => t.name);
-  }, [vehicleTypes]);
 
   const brandOptions = useMemo(
     () => uniqueStrings(brands.map((b) => b.name)),
@@ -339,12 +323,15 @@ export default function CreateJobForm() {
       return;
     }
 
-   const isoDateValueStartDate = new Date (formData.startDate).toISOString()
-   const isoDateValueEstimateDate = new Date (formData.estimatedEndDate).toISOString()
-    const test = {
-      ...formData,
-      startDate: isoDateValueStartDate ,
-      estimatedEndDate:isoDateValueEstimateDate,
+    const isoDateValueStartDate = new Date(formData.startDate).toISOString();
+    const isoDateValueEstimateDate = new Date(formData.estimatedEndDate).toISOString();
+
+    const basePayload = {
+      startDate: isoDateValueStartDate,
+      estimatedEndDate: isoDateValueEstimateDate,
+      receiver: formData.receiver,
+      paymentType: formData.paymentType,
+      excessFee: formData.excessFee,
       vehicle: {
         registration: formData.registration,
         brand: formData.brand,
@@ -353,13 +340,19 @@ export default function CreateJobForm() {
         chassisNumber: formData.chassisNumber,
       },
       customer: {
-        name: formData.customerName,
-        phone: formData.customerPhone,
-        address: formData.customerAddress,
-
+        name: formData.customerName || "",
+        phone: formData.customerPhone || "",
+        address: formData.customerAddress || "",
       },
     };
-    console.log(test)
+
+    // Only add insuranceCompanyId if payment type is Insurance and ID exists
+    const test =
+      formData.paymentType === "Insurance" && formData.insuranceCompanyId
+        ? { ...basePayload, insuranceCompanyId: formData.insuranceCompanyId }
+        : basePayload;
+
+    console.log(test);
 
     try {
       setIsSubmitting(true);
@@ -566,11 +559,10 @@ export default function CreateJobForm() {
           <div className="md:w-3/4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label
-                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
-                  formData.paymentType === "Insurance"
-                    ? "border-blue-600 bg-white ring-1 ring-blue-600"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
+                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${formData.paymentType === "Insurance"
+                  ? "border-blue-600 bg-white ring-1 ring-blue-600"
+                  : "border-slate-200 hover:border-slate-300"
+                  }`}
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-slate-800 text-sm">
@@ -587,11 +579,10 @@ export default function CreateJobForm() {
                   className="sr-only"
                 />
                 <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                    formData.paymentType === "Insurance"
-                      ? "border-blue-600"
-                      : "border-slate-300"
-                  }`}
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.paymentType === "Insurance"
+                    ? "border-blue-600"
+                    : "border-slate-300"
+                    }`}
                 >
                   {formData.paymentType === "Insurance" && (
                     <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />
@@ -600,11 +591,10 @@ export default function CreateJobForm() {
               </label>
 
               <label
-                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
-                  formData.paymentType === "Cash"
-                    ? "border-blue-600 bg-white ring-1 ring-blue-600"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
+                className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${formData.paymentType === "Cash"
+                  ? "border-blue-600 bg-white ring-1 ring-blue-600"
+                  : "border-slate-200 hover:border-slate-300"
+                  }`}
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-slate-800 text-sm">
@@ -623,11 +613,10 @@ export default function CreateJobForm() {
                   className="sr-only"
                 />
                 <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                    formData.paymentType === "Cash"
-                      ? "border-blue-600"
-                      : "border-slate-300"
-                  }`}
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.paymentType === "Cash"
+                    ? "border-blue-600"
+                    : "border-slate-300"
+                    }`}
                 >
                   {formData.paymentType === "Cash" && (
                     <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />

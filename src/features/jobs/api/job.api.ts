@@ -8,11 +8,23 @@ export type JobsQuery = {
   search?: string;           // ค้นหาทั่วไป
   startDateFrom?: string;    // YYYY-MM-DD
   startDateTo?: string;      // YYYY-MM-DD
+
+  // Advanced Filters
+  jobNumber?: string;
+  insuranceCompanyId?: number;
+  brand?: string;
+  model?: string;
+  color?: string;
+  type?: string;
+  year?: string;
+  vehicleRegistration?: string;
+  chassisNumber?: string;
+  vinNumber?: string;
+  customerName?: string;
 };
 
-
 export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
-export type JobStepStatusApi = "pending" | "in_progress" | "completed";
+export type JobStepStatusApi = "pending" | "in_progress" | "completed" | "skipped";
 
 export type VehicleApi = {
   id: number;
@@ -133,23 +145,23 @@ export type JobApi = {
 
 export type JobsListApiResponse =
   | {
-      data: JobApi[];
-      meta: {
-        totalItems: number;
-        page: number;
-        pageSize: number;
-        totalPages?: number;
-      };
-      statusCounts?: StatusCountsApi; 
-    }
-  | {
-      data: JobApi[];
-      total: number;
+    data: JobApi[];
+    meta: {
+      totalItems: number;
       page: number;
-      limit: number;
-      totalPages: number;
-      statusCounts?: StatusCountsApi;
+      pageSize: number;
+      totalPages?: number;
     };
+    statusCounts?: StatusCountsApi;
+  }
+  | {
+    data: JobApi[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    statusCounts?: StatusCountsApi;
+  };
 export type StatusCountsApi = {
   all: number;
   CLAIM: number;
@@ -163,11 +175,21 @@ export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
     params: {
       page: q.page,
       pageSize: q.pageSize,
-       status: q.status,
+      status: q.status,
       search: q.search?.trim() || undefined,
       startDateFrom: q.startDateFrom,
       startDateTo: q.startDateTo,
-      
+      jobNumber: q.jobNumber?.trim() || undefined,
+      insuranceCompanyId: q.insuranceCompanyId,
+      brand: q.brand?.trim() || undefined,
+      model: q.model?.trim() || undefined,
+      color: q.color?.trim() || undefined,
+      type: q.type?.trim() || undefined,
+      year: q.year?.trim() || undefined,
+      vehicleRegistration: q.vehicleRegistration?.trim() || undefined,
+      chassisNumber: q.chassisNumber?.trim() || undefined,
+      vinNumber: q.vinNumber?.trim() || undefined,
+      customerName: q.customerName?.trim() || undefined,
     },
   });
 

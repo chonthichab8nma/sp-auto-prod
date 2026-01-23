@@ -18,6 +18,9 @@ export default function StepActionPanel({
   error,
   onSave,
   saving,
+  canSkip = true,
+  skipLabel = "ข้าม",
+  onBulkSkip,
 }: {
   stepName: string;
   stepStatus: StepStatus;
@@ -34,6 +37,9 @@ export default function StepActionPanel({
   error: string | null;
   onSave: () => void;
   saving?: boolean;
+  canSkip?: boolean;
+  skipLabel?: string;
+  onBulkSkip?: () => void;
 }) {
   const getBadge = () => {
     if (stepStatus === "completed")
@@ -88,10 +94,9 @@ export default function StepActionPanel({
             value={selectedEmployee ? selectedEmployee.name : employeeQuery}
             onChange={(e) => onEmployeeQueryChange(e.target.value)}
             className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all
-              ${
-                error
-                  ? "border-red-300 bg-red-50 focus:border-red-500"
-                  : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"
+              ${error
+                ? "border-red-300 bg-red-50 focus:border-red-500"
+                : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"
               }
             `}
           />
@@ -145,46 +150,50 @@ export default function StepActionPanel({
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">สถานะ</label>
           <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => onSelectAction("skipped")}
-              className={`flex items-center gap-3 p-4 rounded-xl border transition-all text-left
-                 ${
-                   selectedAction === "skipped"
-                     ? "border-slate-500 bg-slate-50 ring-1 ring-slate-500"
-                     : "border-slate-200 hover:border-slate-300"
-                 }
-               `}
-            >
-              <div
-                className={`w-5 h-5 rounded border flex items-center justify-center ${
-                  selectedAction === "skipped"
+            {canSkip && (
+              <button
+                onClick={() => {
+                  if (onBulkSkip) {
+                    onBulkSkip();
+                  } else {
+                    onSelectAction("skipped");
+                  }
+                }}
+                className={`flex items-center gap-3 p-4 rounded-xl border transition-all text-left
+                   ${selectedAction === "skipped"
+                    ? "border-slate-500 bg-slate-50 ring-1 ring-slate-500"
+                    : "border-slate-200 hover:border-slate-300"
+                  }
+                 `}
+              >
+                <div
+                  className={`w-5 h-5 rounded border flex items-center justify-center ${selectedAction === "skipped"
                     ? "bg-slate-600 border-slate-600"
                     : "border-slate-300 bg-white"
-                }`}
-              >
-                {selectedAction === "skipped" && (
-                  <Check size={12} className="text-white" />
-                )}
-              </div>
-              <span className="text-sm font-medium text-slate-700">ข้าม</span>
-            </button>
+                    }`}
+                >
+                  {selectedAction === "skipped" && (
+                    <Check size={12} className="text-white" />
+                  )}
+                </div>
+                <span className="text-sm font-medium text-slate-700">{skipLabel}</span>
+              </button>
+            )}
 
             <button
               onClick={() => onSelectAction("completed")}
               className={`flex items-center gap-3 p-4 rounded-xl border transition-all text-left
-                 ${
-                   selectedAction === "completed"
-                     ? "border-green-500 bg-green-50 ring-1 ring-green-500"
-                     : "border-slate-200 hover:border-slate-300"
-                 }
+                 ${selectedAction === "completed"
+                  ? "border-green-500 bg-green-50 ring-1 ring-green-500"
+                  : "border-slate-200 hover:border-slate-300"
+                }
                `}
             >
               <div
-                className={`w-5 h-5 rounded border flex items-center justify-center ${
-                  selectedAction === "completed"
-                    ? "bg-green-500 border-green-500"
-                    : "border-slate-300 bg-white"
-                }`}
+                className={`w-5 h-5 rounded border flex items-center justify-center ${selectedAction === "completed"
+                  ? "bg-green-500 border-green-500"
+                  : "border-slate-300 bg-white"
+                  }`}
               >
                 {selectedAction === "completed" && (
                   <Check size={12} className="text-white" />
