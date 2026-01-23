@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import StationsFilters from "../components/StationsFilters";
-import StationsTable from "../components/StationsTable";
+
 import Pagination from "../../shared/components/ui/Pagination";
+
+// import JobsTable from "../../features/jobs/components/JobsTable";
 
 import type {
   JobsQuery,
@@ -11,6 +13,7 @@ import type {
 } from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
 import type { JobApi } from "../../features/jobs/api/job.api";
+import StationsTable from "../../features/jobs/components/JobsTable";
 
 function resolveTotalPages(
   res: JobsListApiResponse | null,
@@ -58,11 +61,12 @@ export default function StationsPage() {
       pageSize,
       search: searchTerm.trim() || undefined,
       status: mapUiStatusToApi(selectedStatus),
+      
     }),
     [currentPage, pageSize, searchTerm, selectedStatus],
   );
 
-  const { data, error } = useDashboardQuery(query);
+  const { data, error, loading } = useDashboardQuery(query);
 
   const apiJobs: JobApi[] = data?.data ?? [];
   const totalPages = resolveTotalPages(data, pageSize);
@@ -98,9 +102,14 @@ export default function StationsPage() {
       )}
 
       <div className="mt-4">
-        <StationsTable
+        {/* <StationsTable
           station="ALL"
           jobs={apiJobs}
+          onRowClick={(id) => navigate(`/stations/${id}`)}
+        /> */}
+        <StationsTable
+          jobs={apiJobs}
+          loading={loading}
           onRowClick={(id) => navigate(`/stations/${id}`)}
         />
       </div>
