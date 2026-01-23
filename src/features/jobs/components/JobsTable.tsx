@@ -15,11 +15,11 @@ export default function StationsTable({
 }) {
   return (
     <div className="w-full bg-white overflow-hidden overflow-x-auto">
-      <table className="min-w-full border-collapse min-w-[1200px]">
+      <table className="min-w-full border-collapse ">
         <thead>
           <tr className="bg-[#F7f7f7] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
             {[
-              { label: "เลขที่ใบงาน", width: "w-[180px]" },
+              // { label: "เลขที่ใบงาน", width: "w-[180px]" },   
               { label: "ทะเบียนรถ", width: "w-[120px]" },
               { label: "ชื่อ-นามสกุล", width: "w-[220px]" },
               { label: "เบอร์โทรศัพท์", width: "w-[160px]" },
@@ -73,9 +73,9 @@ export default function StationsTable({
                 className="hover:bg-slate-50/50 transition-colors cursor-pointer group whitespace-nowrap"
                 onClick={() => onRowClick(job.id)}
               >
-                <td className="px-6 py-5 text-[14px] text-slate-700 font-semibold whitespace-nowrap">
+                {/* <td className="px-6 py-5 text-[14px] text-slate-700 font-semibold whitespace-nowrap">
                   {job.jobNumber}
-                </td>
+                </td> */}
 
                 <td className="px-6 py-5 text-[14px] text-slate-700 font-medium whitespace-nowrap">
                   {job.vehicle.registration}
