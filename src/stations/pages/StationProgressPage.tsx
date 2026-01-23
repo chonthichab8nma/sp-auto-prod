@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car } from "lucide-react";
+import { Car, Check } from "lucide-react";
 import toast from "react-hot-toast";
 
 import type { StepStatus } from "../../Type";
@@ -47,9 +47,11 @@ function sortStages(stages: JobStageApi[]) {
 
 export default function StationProgressPage({
   job,
+  isRefetching = false,
   onUpdateStep,
 }: {
   job: JobApi;
+  isRefetching?: boolean;
   onUpdateStep: (
     stageIdx: number,
     stepId: string,
@@ -97,12 +99,11 @@ export default function StationProgressPage({
       CLAIM: 1,
       REPAIR: 2,
       BILLING: 3,
-      DONE: 4,
+      DONE: 3, // เมื่อ DONE ให้โชว์ด่านสุดท้าย (BILLING)
     };
 
-    const steps =
-      stages.find((s) => s.stageId === jobStatusMap[job.status])?.jobSteps ??
-      [];
+    const currentStage = stages.find((s) => s.stageId === jobStatusMap[jobState.status]);
+    const steps = currentStage?.jobSteps ?? [];
 
     console.log("memo", steps);
 
@@ -127,10 +128,23 @@ export default function StationProgressPage({
       return;
     }
 
-    // ถ้า activeStepId ยังว่าง หรือ step เดิมหายไป -> ตั้งค่าใหม่
-    if (!activeStepId || !stepsVm.some((s) => s.id === activeStepId)) {
-      const first = stepsVm.find((s) => s.status !== "completed") ?? stepsVm[0];
-      setActiveStepId(first?.id ?? "");
+    // หา step ปัจจุบัน
+    const currentStep = stepsVm.find((s) => s.id === activeStepId);
+
+    // ถ้า activeStepId ยังว่าง หรือ step เดิมหายไป หรือ step ปัจจุบันถูก completed/skipped แล้ว -> ตั้งค่าใหม่
+    const shouldAdvance =
+      !activeStepId ||
+      !currentStep ||
+      currentStep.status === "completed" ||
+      currentStep.status === "skipped";
+
+    if (shouldAdvance) {
+      // หา step ถัดไปที่ยังไม่เสร็จ (status !== "completed" และ !== "skipped")
+      const nextPending = stepsVm.find(
+        (s) => s.status !== "completed" && s.status !== "skipped"
+      );
+      // ถ้าไม่มี pending step เหลือ ให้เลือก step สุดท้าย
+      setActiveStepId(nextPending?.id ?? stepsVm[stepsVm.length - 1]?.id ?? "");
     }
   }, [stepsVm, activeStepId]);
 
@@ -162,6 +176,58 @@ export default function StationProgressPage({
   useEffect(() => {
     if (saveError) toast.error(`บันทึกไม่สำเร็จ: ${saveError}`);
   }, [saveError]);
+
+  // =========================
+  // 4) Bulk Skip (REPAIR stage only)
+  // =========================
+  const [showBulkSkipConfirm, setShowBulkSkipConfirm] = useState(false);
+
+  const isRepairStage = jobState.status === "REPAIR";
+
+  // ดึง step ที่ต้อง skip (ไม่รวม 2 step สุดท้าย และไม่รวมที่ completed/skipped แล้ว)
+  const stepsToSkip = useMemo(() => {
+    if (!isRepairStage) return [];
+    const allSteps = stepsVm.slice(0, -2); // ไม่รวม 2 step สุดท้าย
+    return allSteps.filter(
+      (s) => s.status !== "completed" && s.status !== "skipped"
+    );
+  }, [isRepairStage, stepsVm]);
+
+  const handleBulkSkip = async () => {
+    if (stepsToSkip.length === 0) {
+      toast.error("ไม่มีขั้นตอนที่ต้องข้าม");
+      setShowBulkSkipConfirm(false);
+      return;
+    }
+
+    const tId = toast.loading("กำลังข้ามขั้นตอน...");
+
+    try {
+      // Patch ทีละ step
+      for (const step of stepsToSkip) {
+        await saveStep({
+          stepId: step.id,
+          status: "skipped",
+        });
+      }
+
+      // Refetch จะถูก trigger จาก Routes.tsx
+      onUpdateStep(stageIdx, stepsToSkip[0].id, "skipped", null);
+
+      toast.dismiss(tId);
+      toast.success(`ข้าม ${stepsToSkip.length} ขั้นตอนสำเร็จ`);
+      setShowBulkSkipConfirm(false);
+
+      // เลื่อนไปที่ QC step (step แรกใน 2 step สุดท้าย)
+      const qcStep = stepsVm[stepsVm.length - 2];
+      if (qcStep) {
+        setActiveStepId(qcStep.id);
+      }
+    } catch {
+      toast.dismiss(tId);
+      toast.error("ข้ามขั้นตอนไม่สำเร็จ");
+    }
+  };
 
   const handleSave = async () => {
     setError(null);
@@ -277,6 +343,14 @@ export default function StationProgressPage({
         onBack={() => navigate(-1)}
       />
 
+      {/* Inline Refetching Indicator */}
+      {isRefetching && (
+        <div className="fixed top-4 right-4 z-50 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-lg flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-slate-600">กำลังโหลด...</span>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
           <div className="flex gap-4 w-full xl:w-auto min-w-0">
@@ -331,7 +405,18 @@ export default function StationProgressPage({
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <div className="xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <StepTimeline
-            title={"Hello world"}
+            title={
+              stages.find(
+                (s) =>
+                  s.stageId ===
+                  ({
+                    CLAIM: 1,
+                    REPAIR: 2,
+                    BILLING: 3,
+                    DONE: 3,
+                  }[jobState.status] ?? 1),
+              )?.stage.name ?? "รายการ"
+            }
             steps={stepsVm}
             activeStepId={activeStepId}
             onSelectStep={handleSelectStep}
@@ -343,7 +428,25 @@ export default function StationProgressPage({
           className="xl:col-span-1 xl:sticky xl:top-6"
         >
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            {activeStep ? (
+            {jobState.status === "DONE" ? (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-green-100">
+                  <Check size={40} className="text-green-500" strokeWidth={3} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                  ซ่อมเสร็จสมบูรณ์
+                </h3>
+                <p className="text-slate-500 text-sm max-w-[240px]">
+                  งานนี้ได้รับการบันทึกข้อมูลทุกขั้นตอนเรียบร้อยแล้ว
+                </p>
+                <button
+                  onClick={() => navigate("/")}
+                  className="mt-8 px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-colors"
+                >
+                  กลับไปหน้าแดชบอร์ด
+                </button>
+              </div>
+            ) : activeStep ? (
               <StepActionPanel
                 stepName={activeStep.name}
                 stepStatus={activeStep.status}
@@ -365,6 +468,13 @@ export default function StationProgressPage({
                 error={error}
                 onSave={handleSave}
                 saving={saving}
+                canSkip={
+                  activeStep.isSkippable &&
+                  jobState.status !== "CLAIM" &&
+                  jobState.status !== "BILLING"
+                }
+                skipLabel={isRepairStage && stepsToSkip.length > 0 ? "ข้ามไปขั้นตอน QC" : "ข้าม"}
+                onBulkSkip={isRepairStage && stepsToSkip.length > 0 ? () => setShowBulkSkipConfirm(true) : undefined}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-48 xl:h-100 text-slate-400 text-sm p-6 text-center bg-slate-50">
@@ -381,6 +491,36 @@ export default function StationProgressPage({
           </div>
         </div>
       </div>
+
+      {/* Bulk Skip Confirmation Dialog */}
+      {showBulkSkipConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">
+              ยืนยันข้ามขั้นตอน
+            </h3>
+            <p className="text-slate-500 text-sm mb-6">
+              ระบบจะข้าม {stepsToSkip.length} ขั้นตอน และไปยังขั้นตอน QC โดยตรง
+              <br />
+              ขั้นตอนที่เสร็จสิ้นแล้วจะไม่ถูกเปลี่ยนแปลง
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkSkipConfirm(false)}
+                className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleBulkSkip}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                ยืนยัน
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

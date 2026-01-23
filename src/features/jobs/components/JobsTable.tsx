@@ -2,6 +2,7 @@
 import type { JobApi } from "../api/job.api";
 import StatusBadge from "../../../shared/components/ui/StatusBadge";
 import Skeleton from "../../../shared/components/ui/Skeleton";
+import { formatThaiDate } from "../../../shared/lib/date";
 
 export default function StationsTable({
   jobs,
@@ -92,15 +93,11 @@ export default function StationsTable({
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
-                  {job.startDate
-                    ? new Date(job.startDate).toLocaleDateString("en-GB")
-                    : "-"}
+                  {formatThaiDate(job.startDate)}
                 </td>
 
                 <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
-                  {job.estimatedEndDate
-                    ? new Date(job.estimatedEndDate).toLocaleDateString("en-GB")
-                    : "-"}
+                  {formatThaiDate(job.estimatedEndDate)}
                 </td>
 
                 <td className="px-6 py-5 text-right whitespace-nowrap">

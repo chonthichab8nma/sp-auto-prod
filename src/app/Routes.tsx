@@ -60,9 +60,10 @@ function StationWrapper({
   const { jobId } = useParams();
   const navigate = useNavigate();
 
-  const { data: job, loading, error } = useJobQuery(jobId);
+  const { data: job, loading, isRefetching, error, refetch } = useJobQuery(jobId);
 
-  if (loading) return <JobDetailSkeleton />;
+  // แสดง skeleton เฉพาะตอน initial load เท่านั้น
+  if (loading && !job) return <JobDetailSkeleton />;
 
   if (error || !job) {
     return (
@@ -82,8 +83,10 @@ function StationWrapper({
   return (
     <StationProgressPage
       job={job}
+      isRefetching={isRefetching}
       onUpdateStep={(stageIdx, stepId, status, employeeId) => {
         onUpdateStep(stageIdx, stepId, status, employeeId);
+        refetch();
       }}
     />
   );
