@@ -90,7 +90,7 @@ export default function StepActionPanel({
 
           <input
             type="text"
-            placeholder="พิมพ์ชื่อพนักงานเพื่อค้นหา"
+            placeholder="กรุณากรอกชื่อพนักงาน"
             value={selectedEmployee ? selectedEmployee.name : employeeQuery}
             onChange={(e) => onEmployeeQueryChange(e.target.value)}
             className={`w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all

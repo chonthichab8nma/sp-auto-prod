@@ -4,10 +4,10 @@ export type JobsQuery = {
   page: number;
   pageSize: number;
 
-  status?: JobStatusApi;     // CLAIM | REPAIR | BILLING | DONE
-  search?: string;           // ค้นหาทั่วไป
-  startDateFrom?: string;    // YYYY-MM-DD
-  startDateTo?: string;      // YYYY-MM-DD
+  status?: JobStatusApi; // CLAIM | REPAIR | BILLING | DONE
+  search?: string; // ค้นหาทั่วไป
+  startDateFrom?: string; // YYYY-MM-DD
+  startDateTo?: string; // YYYY-MM-DD
 
   // Advanced Filters
   jobNumber?: string;
@@ -24,7 +24,11 @@ export type JobsQuery = {
 };
 
 export type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
-export type JobStepStatusApi = "pending" | "in_progress" | "completed" | "skipped";
+export type JobStepStatusApi =
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "skipped";
 
 export type VehicleApi = {
   id: number;
@@ -141,27 +145,31 @@ export type JobApi = {
 
   jobStages: JobStageApi[];
   jobPhotos: unknown[];
+
+  receiver: {
+    name: string;
+  };
 };
 
 export type JobsListApiResponse =
   | {
-    data: JobApi[];
-    meta: {
-      totalItems: number;
-      page: number;
-      pageSize: number;
-      totalPages?: number;
-    };
-    statusCounts?: StatusCountsApi;
-  }
+      data: JobApi[];
+      meta: {
+        totalItems: number;
+        page: number;
+        pageSize: number;
+        totalPages?: number;
+      };
+      statusCounts?: StatusCountsApi;
+    }
   | {
-    data: JobApi[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    statusCounts?: StatusCountsApi;
-  };
+      data: JobApi[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+      statusCounts?: StatusCountsApi;
+    };
 export type StatusCountsApi = {
   all: number;
   CLAIM: number;

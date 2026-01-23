@@ -451,14 +451,16 @@ export default function CreateJobForm() {
       receiver: formData.receiver,
       paymentType: formData.paymentType,
       excessFee: formData.excessFee,
+      // receiverId: formData.receiverId,
       customer: {
         name: formData.customerName || "",
         phone: formData.customerPhone || "",
         address: formData.customerAddress || "",
       },
     };
+    console.log("SUBMIT PAYLOAD =", basePayload);
 
-    // เลือกส่ง vehicleId หรือส่ง vehicle object
+
     const vehiclePart = formData.vehicleId
       ? { vehicleId: formData.vehicleId }
       : {
@@ -469,13 +471,11 @@ export default function CreateJobForm() {
             color: formData.color,
             chassisNumber: formData.chassisNumber,
             year: formData.year,
-            // ถ้า backend รองรับ year/type ก็เพิ่มได้:
-            // year: formData.year,
-            // type: formData.type,
+   
           },
         };
 
-    // Only add insuranceCompanyId if payment type is Insurance and ID exists
+
     const payload =
       formData.paymentType === "Insurance" && formData.insuranceCompanyId
         ? {
@@ -490,6 +490,7 @@ export default function CreateJobForm() {
     try {
       setIsSubmitting(true);
       const res = await jobsService.create(payload);
+      console.log("CREATE JOB RESPONSE =", res);
       if (!res.ok) {
         alert(res.error);
         return;
@@ -656,7 +657,7 @@ export default function CreateJobForm() {
 
                 <input
                   type="text"
-                  placeholder="พิมพ์ชื่อพนักงานเพื่อค้นหา"
+                  placeholder="กรุณากรอกชื่อพนักงาน"
                   value={
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }

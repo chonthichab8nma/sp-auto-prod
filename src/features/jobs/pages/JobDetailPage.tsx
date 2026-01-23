@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
 
+
 import type { JobApi } from "../api/job.api";
 import { formatThaiDate } from "../../../shared/lib/date";
 
@@ -71,11 +72,14 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
 
   const handleBack = () => navigate(-1);
 
-  // if (!job) return <div className="p-6">ไม่พบข้อมูล</div>;
+
 
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
 
   const stages = buildTimelineStages(job!);
+  console.log({
+    job
+  })
 
   return (
     <div className="p-6 min-h-screen bg-white">
@@ -180,7 +184,7 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
               label="ค่าความเสียหายส่วนแรก"
               value={`฿ ${Number(job?.excessFee ?? 0).toLocaleString("th-TH")}`}
             />
-            <StackItem label="เจ้าหน้าที่รับรถ" value={"-"} />
+            <StackItem label="เจ้าหน้าที่รับรถ" value={job?.receiver.name ?? "-"} />
           </div>
         </Section>
 
