@@ -17,7 +17,7 @@ export default function StationsTable({
     <div className="w-full bg-white overflow-hidden overflow-x-auto">
       <table className="min-w-full border-collapse min-w-[1200px]">
         <thead>
-          <tr className="bg-[#F7f7f7] border-b border-slate-100">
+          <tr className="bg-[#F7f7f7] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
             {[
               { label: "เลขที่ใบงาน", width: "w-[180px]" },
               { label: "ทะเบียนรถ", width: "w-[120px]" },
@@ -81,7 +81,7 @@ export default function StationsTable({
                   {job.vehicle.registration}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
+                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-[220px] truncate" title={job?.customer?.name || "-"}>
                   {job?.customer?.name || "-"}
                 </td>
 
@@ -89,10 +89,10 @@ export default function StationsTable({
                   {job?.customer?.phone || "-"}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
+                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-[220px] truncate">
                   <div className="flex flex-col">
-                    <span>{job.vehicle.brand} {job.vehicle.model}</span>
-                    <span className="text-[12px] text-slate-400">{job.vehicle.type || "-"}</span>
+                    <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>{job.vehicle.brand} {job.vehicle.model}</span>
+                    <span className="text-[12px] text-slate-400 truncate" title={job.vehicle.type || ""}>{job.vehicle.type || "-"}</span>
                   </div>
                 </td>
 
