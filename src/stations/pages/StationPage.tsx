@@ -5,11 +5,17 @@ import StationsFilters from "../components/StationsFilters";
 import StationsTable from "../components/StationsTable";
 import Pagination from "../../shared/components/ui/Pagination";
 
-import type { JobsQuery, JobsListApiResponse } from "../../features/jobs/api/job.api";
+import type {
+  JobsQuery,
+  JobsListApiResponse,
+} from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
 import type { JobApi } from "../../features/jobs/api/job.api";
 
-function resolveTotalPages(res: JobsListApiResponse | null, pageSize: number): number {
+function resolveTotalPages(
+  res: JobsListApiResponse | null,
+  pageSize: number,
+): number {
   if (!res) return 1;
 
   if ("meta" in res) {
@@ -34,7 +40,7 @@ function mapUiStatusToApi(s: string): JobStatusApi | undefined {
     case "เสร็จสิ้น":
       return "DONE";
     default:
-      return undefined; 
+      return undefined;
   }
 }
 
@@ -43,10 +49,8 @@ export default function StationsPage() {
   const pageSize = 10;
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCarType, setSelectedCarType] = useState("ประเภทรถ");
   const [selectedStatus, setSelectedStatus] = useState("สถานะ");
   const [currentPage, setCurrentPage] = useState(1);
-
 
   const query: JobsQuery = useMemo(
     () => ({
@@ -54,7 +58,6 @@ export default function StationsPage() {
       pageSize,
       search: searchTerm.trim() || undefined,
       status: mapUiStatusToApi(selectedStatus),
- 
     }),
     [currentPage, pageSize, searchTerm, selectedStatus],
   );
@@ -64,26 +67,10 @@ export default function StationsPage() {
   const apiJobs: JobApi[] = data?.data ?? [];
   const totalPages = resolveTotalPages(data, pageSize);
 
-
-  const carTypeOptions = useMemo(() => {
-    const types = Array.from(
-      new Set(apiJobs.map((j) => j.vehicle?.type).filter(Boolean)),
-    ) as string[];
-
-    return ["ประเภทรถ", ...types];
-  }, [apiJobs]);
-
   const statusOptions = useMemo(
     () => ["สถานะ", "เคลม", "ซ่อม", "ตั้งเบิก", "เสร็จสิ้น"],
     [],
   );
-
-
-  const jobsForTable = useMemo(() => {
-    if (selectedCarType === "ประเภทรถ") return apiJobs;
-
-    return apiJobs.filter((j) => (j.vehicle?.type ?? "") === selectedCarType);
-  }, [apiJobs, selectedCarType]);
 
   return (
     <div className="bg-white min-h-screen p-6">
@@ -92,18 +79,11 @@ export default function StationsPage() {
         <p className="text-slate-500 text-sm">งานที่อยู่ในแต่ละสถานะ</p>
       </div>
 
-
       <StationsFilters
         searchTerm={searchTerm}
-        selectedCarType={selectedCarType}
         selectedStatus={selectedStatus}
-        carTypeOptions={carTypeOptions}
         statusOptions={statusOptions}
         onSearchTermChange={setSearchTerm}
-        onCarTypeChange={(v) => {
-          setSelectedCarType(v);
-          setCurrentPage(1);
-        }}
         onStatusChange={(v) => {
           setSelectedStatus(v);
           setCurrentPage(1);
@@ -120,7 +100,7 @@ export default function StationsPage() {
       <div className="mt-4">
         <StationsTable
           station="ALL"
-          jobs={jobsForTable}
+          jobs={apiJobs}
           onRowClick={(id) => navigate(`/stations/${id}`)}
         />
       </div>
@@ -132,7 +112,9 @@ export default function StationsPage() {
           onGoTo={(p) => setCurrentPage(p)}
           onFirst={() => setCurrentPage(1)}
           onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          onNext={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
           onLast={() => setCurrentPage(totalPages)}
         />
       </div>

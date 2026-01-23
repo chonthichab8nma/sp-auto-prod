@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Calendar, ChevronDown, Check, Search, Filter } from "lucide-react";
+import { Calendar, Search, Filter } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,12 +11,12 @@ import {
 
 export default function DashboardFilters({
   searchTerm,
-  selectedCarType,
+
   startDate,
   endDate,
   advancedFilters,
   onSearchTermChange,
-  onCarTypeChange,
+
   onStartDateChange,
   onEndDateChange,
   onAdvancedFilterChange,
