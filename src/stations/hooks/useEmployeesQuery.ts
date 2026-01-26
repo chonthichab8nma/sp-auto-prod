@@ -1,7 +1,5 @@
-// src/stations/hooks/useEmployeesQuery.ts
 import { useEffect, useState } from "react";
 import { getEmployeesApi, type EmployeeApi } from "../api/employees.api";
-
 
 export function useEmployeesQuery(search: string) {
   const [employees, setEmployees] = useState<EmployeeApi[]>([]);
@@ -25,10 +23,10 @@ export function useEmployeesQuery(search: string) {
       } finally {
         setLoading(false);
       }
-    }, 300); // debounce
+    }, 300);
 
     return () => clearTimeout(t);
   }, [search]);
-console.log(employees)
+  console.log(employees);
   return { employees, loading };
 }

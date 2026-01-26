@@ -1,49 +1,18 @@
+
+ @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=Bai+Jamjuree:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');;
 @import "tailwindcss";
-/* @import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
+
+
 
 @theme {
-    --font-sans: "Itim", cursive;
+  --font-sans: "Sarabun", "LINE Seed Sans TH", sans-serif;
 }
 
-@layer base {
+:root {
+  font-family: "Sarabun", "LINE Seed Sans TH", sans-serif;
+}
 
-    html,
-    body {
-        font-family: var(--font-sans);
-        -webkit-font-smoothing: antialiased;
-    }
-
-
-    *,
-    ::before,
-    ::after {
-        font-family: inherit;
-    }
-
-
-    code,
-    kbd,
-    samp,
-    pre {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    b,
-    strong {
-        font-weight: 400;
-    }
-
-    input,
-    textarea,
-    select,
-    button {
-        font-family: var(--font-sans) !important;
-      
-    }
-} */
+body {
+  font-family: "Sarabun", "LINE Seed Sans TH", sans-serif;
+}

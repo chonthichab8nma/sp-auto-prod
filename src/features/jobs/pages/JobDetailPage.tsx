@@ -184,7 +184,7 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
               label="ค่าความเสียหายส่วนแรก"
               value={`฿ ${Number(job?.excessFee ?? 0).toLocaleString("th-TH")}`}
             />
-            <StackItem label="เจ้าหน้าที่รับรถ" value={job?.receiver.name ?? "-"} />
+            <StackItem label="เจ้าหน้าที่รับรถ" value={job?.receiver?.name ?? "-"} />
           </div>
         </Section>
 

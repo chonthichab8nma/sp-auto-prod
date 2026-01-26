@@ -5,8 +5,6 @@ import StationsFilters from "../components/StationsFilters";
 
 import Pagination from "../../shared/components/ui/Pagination";
 
-// import JobsTable from "../../features/jobs/components/JobsTable";
-
 import type {
   JobsQuery,
   JobsListApiResponse,
@@ -61,7 +59,6 @@ export default function StationsPage() {
       pageSize,
       search: searchTerm.trim() || undefined,
       status: mapUiStatusToApi(selectedStatus),
-      
     }),
     [currentPage, pageSize, searchTerm, selectedStatus],
   );
