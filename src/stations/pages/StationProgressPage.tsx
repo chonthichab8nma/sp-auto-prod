@@ -22,27 +22,6 @@ function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
 }
 
-// type JobOverallStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
-
-// function deriveJobStatusFromStages(job: JobApi): JobOverallStatus {
-//   const stages = (job.jobStages ?? [])
-//     .slice()
-//     .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
-
-//   // ถ้าไม่มี stage ใช้ status จาก backend
-//   if (stages.length === 0) return (job.status as JobOverallStatus) ?? "CLAIM";
-
-//   if (stages.every((s) => s.isCompleted)) return "DONE";
-
-//   // หา stage แรกที่ยังไม่ completed แล้ว map เป็น status
-//   const firstNotDoneIdx = stages.findIndex((s) => !s.isCompleted);
-
-//   // สมมติ stage order: 0=CLAIM, 1=REPAIR, 2=BILLING
-//   if (firstNotDoneIdx <= 0) return "CLAIM";
-//   if (firstNotDoneIdx === 1) return "REPAIR";
-//   return "BILLING";
-// }
-
 export default function StationProgressPage({
   job,
   isRefetching = false,
@@ -65,22 +44,6 @@ export default function StationProgressPage({
     setJobState(job);
   }, [job]);
 
-  // const overallStatus = useMemo(() => deriveJobStatusFromStages(job), [job]);
-
-  // =========================
-  // 1) Stage / Step timeline
-  // =========================
-  // const stages = useMemo(
-  //   () => sortStages(job.jobStages ?? []),
-  //   [job.jobStages],
-  // );
-
-  // const stageIdx = useMemo(() => {
-  //   const raw = jobState.currentStageIndex ?? 0;
-  //   if (stages.length === 0) return 0;
-  //   return Math.min(Math.max(raw, 0), stages.length - 1);
-  // }, [jobState.currentStageIndex, stages.length]);
-
   const stages = useMemo(
     () => sortStages(jobState.jobStages ?? []),
     [jobState.jobStages],
@@ -92,33 +55,27 @@ export default function StationProgressPage({
     return Math.min(Math.max(raw, 0), stages.length - 1);
   }, [jobState.currentStageIndex, stages.length]);
 
+  const [checkpointIndex, setCheckpointIndex] = useState(stageIdx);
+
+  useEffect(() => {
+    setCheckpointIndex(stageIdx);
+  }, [stageIdx]);
   const stepsVm: StepVM[] = useMemo(() => {
-    const jobStatusMap: Record<string, number> = {
-      CLAIM: 1,
-      REPAIR: 2,
-      BILLING: 3,
-      DONE: 3, // เมื่อ DONE ให้โชว์ด่านสุดท้าย (BILLING)
-    };
+    const viewingStage = stages[checkpointIndex];
+    const steps = (viewingStage?.jobSteps ?? [])
+      .slice()
+      .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
 
-    const currentStage = stages.find(
-      (s) => s.stageId === jobStatusMap[jobState.status],
-    );
-    const steps = currentStage?.jobSteps ?? [];
-
-    console.log("memo", steps);
-
-    return steps.map((s) => {
-      return {
-        ...s,
-        id: String(s.id),
-        name: s.stepTemplate?.name ?? "-",
-        status: (s.status ?? "pending") as StepStatus,
-        timestamp: s.completedAt,
-        isSkippable: Boolean(s.stepTemplate?.isSkippable),
-        employee: s.employee ? { name: s.employee.name } : undefined,
-      };
-    });
-  }, [job.status, stages]);
+    return steps.map((s) => ({
+      ...s,
+      id: String(s.id),
+      name: s.stepTemplate?.name ?? "-",
+      status: (s.status ?? "pending") as StepStatus,
+      timestamp: s.completedAt,
+      isSkippable: Boolean(s.stepTemplate?.isSkippable),
+      employee: s.employee ? { name: s.employee.name } : undefined,
+    }));
+  }, [stages, checkpointIndex]);
 
   const [activeStepId, setActiveStepId] = useState<string>("");
 
@@ -128,46 +85,25 @@ export default function StationProgressPage({
       return;
     }
 
-    // หา step ปัจจุบัน
-    const currentStep = stepsVm.find((s) => s.id === activeStepId);
+    const nextPending = stepsVm.find(
+      (s) => s.status !== "completed" && s.status !== "skipped",
+    );
 
-    // ถ้า activeStepId ยังว่าง หรือ step เดิมหายไป หรือ step ปัจจุบันถูก completed/skipped แล้ว -> ตั้งค่าใหม่
-    const shouldAdvance =
-      !activeStepId ||
-      !currentStep ||
-      currentStep.status === "completed" ||
-      currentStep.status === "skipped";
-
-    if (shouldAdvance) {
-      // หา step ถัดไปที่ยังไม่เสร็จ (status !== "completed" และ !== "skipped")
-      const nextPending = stepsVm.find(
-        (s) => s.status !== "completed" && s.status !== "skipped",
-      );
-      // ถ้าไม่มี pending step เหลือ ให้เลือก step สุดท้าย
-      setActiveStepId(nextPending?.id ?? stepsVm[stepsVm.length - 1]?.id ?? "");
-    }
-  }, [stepsVm, activeStepId]);
+    setActiveStepId(nextPending?.id ?? stepsVm[stepsVm.length - 1]?.id ?? "");
+  }, [checkpointIndex, stepsVm]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
 
-  // =========================
-  // 2) Employee autocomplete (ใช้ useEmployeesQuery)
-  // =========================
-  const [employeeQuery, setEmployeeQuery] = useState<string>(""); // สิ่งที่ user พิมพ์
+  const [employeeQuery, setEmployeeQuery] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
     null,
-  ); // คนที่เลือกแล้ว
+  );
 
-  // เรียก hook ด้วยคำค้น
   const { employees, loading: employeesLoading } =
     useEmployeesQuery(employeeQuery);
 
-  // ถ้าจะจำกัดจำนวนตัวเลือก ทำที่นี่ (hook ส่งมาเป็น list ที่ match แล้ว)
   const employeeOptions = useMemo(() => employees.slice(0, 8), [employees]);
 
-  // =========================
-  // 3) Action + save
-  // =========================
   const [selectedAction, setSelectedAction] = useState<StepStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,17 +113,13 @@ export default function StationProgressPage({
     if (saveError) toast.error(`บันทึกไม่สำเร็จ: ${saveError}`);
   }, [saveError]);
 
-  // =========================
-  // 4) Bulk Skip (REPAIR stage only)
-  // =========================
   const [showBulkSkipConfirm, setShowBulkSkipConfirm] = useState(false);
 
   const isRepairStage = jobState.status === "REPAIR";
 
-  // ดึง step ที่ต้อง skip (ไม่รวม 2 step สุดท้าย และไม่รวมที่ completed/skipped แล้ว)
   const stepsToSkip = useMemo(() => {
     if (!isRepairStage) return [];
-    const allSteps = stepsVm.slice(0, -2); // ไม่รวม 2 step สุดท้าย
+    const allSteps = stepsVm.slice(0, -2);
     return allSteps.filter(
       (s) => s.status !== "completed" && s.status !== "skipped",
     );
@@ -203,7 +135,6 @@ export default function StationProgressPage({
     const tId = toast.loading("กำลังข้ามขั้นตอน...");
 
     try {
-      // Patch ทีละ step
       for (const step of stepsToSkip) {
         await saveStep({
           stepId: step.id,
@@ -211,14 +142,12 @@ export default function StationProgressPage({
         });
       }
 
-      // Refetch จะถูก trigger จาก Routes.tsx
       onUpdateStep(stageIdx, stepsToSkip[0].id, "skipped", null);
 
       toast.dismiss(tId);
       toast.success(`ข้าม ${stepsToSkip.length} ขั้นตอนสำเร็จ`);
       setShowBulkSkipConfirm(false);
 
-      // เลื่อนไปที่ QC step (step แรกใน 2 step สุดท้าย)
       const qcStep = stepsVm[stepsVm.length - 2];
       if (qcStep) {
         setActiveStepId(qcStep.id);
@@ -256,7 +185,6 @@ export default function StationProgressPage({
       await saveStep({
         stepId: activeStepId,
         status: selectedAction,
-        //  ส่งเป็น number (id) เท่านั้น
         employeeId: selectedEmployee?.id,
       });
 
@@ -304,7 +232,6 @@ export default function StationProgressPage({
         };
       });
 
-      // รีเซ็ทช่องชื่อพนักงานหลังบันทึก
       setSelectedEmployee(null);
       setEmployeeQuery("");
 
@@ -318,9 +245,6 @@ export default function StationProgressPage({
   const handleSelectStep = (id: string) => {
     setActiveStepId(id);
 
-    // เปลี่ยน step -> ล้างค่าฝั่ง action panel
-    // setSelectedEmployee(null);
-    // setEmployeeQuery("");
     setSelectedAction(null);
     setError(null);
 
@@ -338,12 +262,9 @@ export default function StationProgressPage({
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] font-sans text-slate-800">
       <ProgressHeader
         registration={job.vehicle.registration}
-        // status={overallStatus}
         status={job.status}
         onBack={() => navigate(-1)}
       />
-
-      {/* Inline Refetching Indicator */}
       {isRefetching && (
         <div className="fixed top-4 right-4 z-50 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-lg flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -367,7 +288,7 @@ export default function StationProgressPage({
               </p>
 
               <div className="mt-4 xl:mt-6 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar">
-                <StageStepper job={job} />
+                <StageStepper job={job} checkpointIndex={checkpointIndex} />
               </div>
             </div>
           </div>
@@ -382,18 +303,18 @@ export default function StationProgressPage({
 
             <div className="mt-4 xl:mt-8 flex gap-3 w-full xl:w-auto">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => setCheckpointIndex((i) => Math.max(0, i - 1))}
+                disabled={checkpointIndex <= 0}
                 className="flex-1 xl:flex-none px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
               >
                 ย้อนกลับ
               </button>
               <button
-                onClick={() => {
-                  const idx = stepsVm.findIndex((s) => s.id === activeStepId);
-                  const next = stepsVm[idx + 1];
-                  if (next) handleSelectStep(next.id);
-                }}
-                className="flex-1 xl:flex-none px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors"
+                onClick={() =>
+                  setCheckpointIndex((i) => Math.min(stages.length - 1, i + 1))
+                }
+                disabled={checkpointIndex >= stages.length - 1}
+                className="flex-1 xl:flex-none px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ถัดไป
               </button>
@@ -405,18 +326,7 @@ export default function StationProgressPage({
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <div className="xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <StepTimeline
-            title={
-              stages.find(
-                (s) =>
-                  s.stageId ===
-                  ({
-                    CLAIM: 1,
-                    REPAIR: 2,
-                    BILLING: 3,
-                    DONE: 3,
-                  }[jobState.status] ?? 1),
-              )?.stage.name ?? "รายการ"
-            }
+            title={stages[checkpointIndex]?.stage.name ?? "รายการ"}
             steps={stepsVm}
             activeStepId={activeStepId}
             onSelectStep={handleSelectStep}
@@ -436,7 +346,7 @@ export default function StationProgressPage({
                 <h3 className="text-xl font-bold text-slate-900 mb-2">
                   ซ่อมเสร็จสมบูรณ์
                 </h3>
-                <p className="text-slate-500 text-sm max-w-[240px]">
+                <p className="text-slate-500 text-sm max-w-60">
                   งานนี้ได้รับการบันทึกข้อมูลทุกขั้นตอนเรียบร้อยแล้ว
                 </p>
                 <button
@@ -497,7 +407,6 @@ export default function StationProgressPage({
         </div>
       </div>
 
-      {/* Bulk Skip Confirmation Dialog */}
       {showBulkSkipConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
