@@ -4,6 +4,53 @@ import StatusBadge from "../../../shared/components/ui/StatusBadge";
 import Skeleton from "../../../shared/components/ui/Skeleton";
 import { formatThaiDate } from "../../../shared/lib/date";
 
+const columns = [
+  { key: "reg", label: "ทะเบียนรถ", width: 140, align: "left" },
+  { key: "name", label: "ชื่อ-นามสกุล", width: 220, align: "left" },
+  { key: "phone", label: "เบอร์โทรศัพท์", width: 160, align: "left" },
+  { key: "brandModel", label: "ยี่ห้อ/รุ่น (ประเภท)", width: 240, align: "left" },
+  { key: "status", label: "สถานะ", width: 120, align: "center" },
+  { key: "start", label: "วันที่นำรถเข้าจอดซ่อม", width: 180, align: "left" },
+  { key: "end", label: "วันที่นัดรับรถ", width: 250, align: "left" },
+  // { key: "actions", label: "", width: 56, align: "right" },
+] as const;
+
+const tableWidth = columns.reduce((sum, c) => sum + c.width, 0);
+
+const alignClass = (a: string) =>
+  a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
+
+function SkeletonCell({ colKey }: { colKey: (typeof columns)[number]["key"] }) {
+
+  // if (colKey === "actions") {
+  //   return (
+  //     <div className="flex justify-end">
+  //       <Skeleton className="h-5 w-5 rounded" />
+  //     </div>
+  //   );
+  // }
+
+  if (colKey === "status") {
+    return (
+      <div className="flex justify-center">
+        <Skeleton className="h-7 w-20 rounded-full" />
+      </div>
+    );
+  }
+
+  if (colKey === "brandModel") {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    );
+  }
+
+  // default
+  return <Skeleton className="h-5 w-36" />;
+}
+
 export default function StationsTable({
   jobs,
   loading,
@@ -14,55 +61,52 @@ export default function StationsTable({
   onRowClick: (id: number) => void;
 }) {
   return (
-    <div className="w-full bg-white overflow-hidden overflow-x-auto">
-      <table className="min-w-full border-collapse ">
+    <div className="w-full bg-white overflow-x-auto">
+      <table
+        className="inline-table table-fixed border-collapse"
+        style={{ width: tableWidth }}
+      >
+        <colgroup>
+          {columns.map((c) => (
+            <col key={c.key} style={{ width: c.width }} />
+          ))}
+        </colgroup>
+
         <thead>
-          <tr className="bg-[#F7f7f7] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-            {[
-              // { label: "เลขที่ใบงาน", width: "w-[180px]" },   
-              { label: "ทะเบียนรถ", width: "w-[120px]" },
-              { label: "ชื่อ-นามสกุล", width: "w-[220px]" },
-              { label: "เบอร์โทรศัพท์", width: "w-[160px]" },
-              { label: "ยี่ห้อ/รุ่น (ประเภท)", width: "w-[220px]" },
-              { label: "สถานะ", width: "w-[120px]" },
-              { label: "วันที่นำรถเข้าจอดซ่อม", width: "w-[180px]" },
-              { label: "วันที่นัดรับรถ", width: "w-[180px]" },
-            ].map((col) => (
+          <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+            {columns.map((c) => (
               <th
-                key={col.label}
-                className={`px-6 py-4 text-left text-[14px] font-medium text-slate-500 ${col.width}`}
+                key={c.key}
+                className={`box-border px-6 py-4 text-[13px] font-medium text-slate-500 whitespace-nowrap ${alignClass(
+                  c.align,
+                )}`}
               >
-                <div className="flex items-center gap-1.5">
-                  {col.label}
-                </div>
+                {c.label}
               </th>
             ))}
-            <th className="px-6 py-4 w-15"></th>
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-slate-50">
+        <tbody className="divide-y divide-slate-100">
           {loading ? (
-            [...Array(5)].map((_, i) => (
-              <tr key={`skeleton-${i}`} className="border-b border-slate-50">
-                <td className="px-6 py-5"><Skeleton className="h-5 w-32" /></td>
-                <td className="px-6 py-5"><Skeleton className="h-5 w-20" /></td>
-                <td className="px-6 py-5"><Skeleton className="h-5 w-32" /></td>
-                <td className="px-6 py-5"><Skeleton className="h-5 w-28" /></td>
-                <td className="px-6 py-5"><Skeleton className="h-5 w-32" /></td>
-                <td className="px-6 py-5">
-                  <div className="flex justify-center">
-                    <Skeleton className="h-7 w-20 rounded-full" />
-                  </div>
-                </td>
-                <td className="px-6 py-5"><Skeleton className="h-5 w-24" /></td>
-                <td className="px-6 py-5"><Skeleton className="h-5 w-24" /></td>
-                <td className="px-6 py-5 text-right"><Skeleton className="h-5 w-4 ml-auto" /></td>
+            [...Array(6)].map((_, i) => (
+              <tr key={`sk-${i}`} className="h-15">
+                {columns.map((c) => (
+                  <td
+                    key={c.key}
+                    className={`box-border px-6 py-4 ${alignClass(c.align)}`}
+                  >
+                    <SkeletonCell colKey={c.key} />
+                  </td>
+                ))}
               </tr>
             ))
           ) : jobs.length === 0 ? (
             <tr>
-              <td colSpan={9} className="px-6 py-20 text-center text-slate-400">
+              <td
+                colSpan={columns.length}
+                className="px-6 py-20 text-center text-slate-400"
+              >
                 ไม่มีข้อมูล
               </td>
             </tr>
@@ -70,51 +114,52 @@ export default function StationsTable({
             jobs.map((job) => (
               <tr
                 key={job.id}
-                className="hover:bg-slate-50/50 transition-colors cursor-pointer group whitespace-nowrap"
+                className="h-15 hover:bg-slate-50/50 transition-colors cursor-pointer"
                 onClick={() => onRowClick(job.id)}
               >
-                {/* <td className="px-6 py-5 text-[14px] text-slate-700 font-semibold whitespace-nowrap">
-                  {job.jobNumber}
-                </td> */}
-
-                <td className="px-6 py-5 text-[14px] text-slate-700 font-medium whitespace-nowrap">
+                <td className="box-border px-6 py-4 font-medium text-slate-700">
                   {job.vehicle.registration}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-55 truncate" title={job?.customer?.name || "-"}>
-                  {job?.customer?.name || "-"}
+                <td
+                  className="box-border px-6 py-4 text-slate-600 truncate"
+                  title={job.customer?.name || "-"}
+                >
+                  {job.customer?.name || "-"}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
-                  {job?.customer?.phone || "-"}
+                <td className="box-border px-6 py-4 text-slate-600">
+                  {job.customer?.phone || "-"}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap max-w-55 truncate">
-                  <div className="flex flex-col">
-                    <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>{job.vehicle.brand} {job.vehicle.model}</span>
-                    <span className="text-[12px] text-slate-400 truncate" title={job.vehicle.type || ""}>{job.vehicle.type || "-"}</span>
+                <td className="box-border px-6 py-4 text-slate-600">
+                  <div className="flex flex-col leading-tight">
+                    <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>
+                      {job.vehicle.brand} {job.vehicle.model}
+                    </span>
+                    <span className="text-[12px] text-slate-400 truncate">
+                      {job.vehicle.type || "-"}
+                    </span>
                   </div>
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
+                <td className="box-border px-6 py-4 text-center">
                   <StatusBadge job={job} />
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
+                <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
                   {formatThaiDate(job.startDate)}
                 </td>
 
-                <td className="px-6 py-5 text-[14px] text-slate-600 whitespace-nowrap">
+                <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
                   {formatThaiDate(job.estimatedEndDate)}
                 </td>
 
-                <td className="px-6 py-5 text-right whitespace-nowrap">
+                <td className="box-border px-6 py-4 text-right">
                   <button
                     onClick={(e) => e.stopPropagation()}
-                    className="p-1 text-slate-400 hover:text-slate-600"
-                  >
-                    {/* <MoreVertical className="h-4 w-4" /> */}
-                  </button>
+                    className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                  />
                 </td>
               </tr>
             ))
@@ -124,3 +169,4 @@ export default function StationsTable({
     </div>
   );
 }
+

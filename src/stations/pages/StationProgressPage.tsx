@@ -24,7 +24,7 @@ function sortStages(stages: JobStageApi[]) {
 
 export default function StationProgressPage({
   job,
-  isRefetching = false,
+  // isRefetching = false,
   onUpdateStep,
 }: {
   job: JobApi;
@@ -358,12 +358,12 @@ export default function StationProgressPage({
         status={jobState.status}
         onBack={() => navigate(-1)}
       />
-      {isRefetching && (
+      {/* {isRefetching && (
         <div className="fixed top-4 right-4 z-50 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-lg flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <span className="text-sm text-slate-600">กำลังโหลด...</span>
         </div>
-      )}
+      )} */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
           <div className="flex gap-4 w-full xl:w-auto min-w-0">

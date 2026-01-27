@@ -4,6 +4,7 @@ interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> 
   label?: React.ReactNode;
   options: string[];
   placeholder?: string;
+  error?: string;
 }
 
 const FormSelect = ({
@@ -12,6 +13,7 @@ const FormSelect = ({
   placeholder = "กรุณาเลือก",
   className = "",
   value,
+  error,
   ...props
 }: FormSelectProps) => {
   return (
@@ -33,7 +35,13 @@ const FormSelect = ({
 
             hover:bg-slate-50 hover:border-slate-300
 
-              border-slate-200 focus:border-blue-600"
+            ${
+              error
+                ? "border-red-500 focus:border-red-500"
+                : "border-slate-200 focus:border-blue-600"
+            }
+
+            border-slate-200 focus:border-blue-600"
             disabled:bg-slate-50 disabled:text-slate-400
             ${value === "" ? "text-slate-400" : ""} 
             ${className}
@@ -66,6 +74,7 @@ const FormSelect = ({
           </svg>
         </div>
       </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
 };

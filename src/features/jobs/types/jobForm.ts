@@ -201,6 +201,8 @@ export function normalizeCreateJobPayload(
   };
 }
 
+export type FieldError = { field: keyof JobFormData; message: string };
+
 export function validateCreateJob(
   form: JobFormData,
   opts?: {
@@ -209,31 +211,45 @@ export function validateCreateJob(
     lookup?: RegistrationLookupResult | null;
   },
 ) {
-  const errors: string[] = [];
+  const errors: FieldError[] = [];
   const hasExistingVehicle = !!opts?.hasExistingVehicle;
   const hasExistingCustomer = !!opts?.hasExistingCustomer;
   const lookup = opts?.lookup ?? null;
 
-  if (!form.registration?.trim()) errors.push("กรุณากรอกทะเบียนรถ");
+  const req = (field: keyof JobFormData, message: string) => {
+    const v = form[field] as unknown;
+    if (v === null || v === undefined) {
+      errors.push({ field, message });
+      return;
+    }
+    if (typeof v === "string" && !v.trim()) {
+      errors.push({ field, message });
+      return;
+    }
+    if (v === "") {
+      errors.push({ field, message });
+    }
+  };
+
+  req("registration", "กรุณากรอกทะเบียนรถ");
 
   if (!hasExistingVehicle) {
-    if (!form.chassisNumber?.trim()) errors.push("กรุณากรอกเลขตัวถัง");
-    if (!form.type?.trim()) errors.push("กรุณาเลือกประเภทรถ");
-    if (!form.brand?.trim()) errors.push("กรุณาเลือกยี่ห้อ/แบรนด์");
-    if (!form.model?.trim()) errors.push("กรุณาเลือกรุ่น");
-    if (!form.year?.trim()) errors.push("กรุณาเลือกปี");
-    if (!form.color?.trim()) errors.push("กรุณากรอกสี");
+    req("chassisNumber", "กรุณากรอกเลขตัวถัง");
+    req("brand", "กรุณาเลือกยี่ห้อ/แบรนด์");
+    req("model", "กรุณาเลือกรุ่น");
+    req("year", "กรุณาเลือกปี");
+    req("color", "กรุณากรอกสี");
   }
 
   if (!hasExistingCustomer) {
-    if (!form.customerName?.trim()) errors.push("กรุณากรอกชื่อ-นามสกุลลูกค้า");
-    if (!form.customerPhone?.trim())
-      errors.push("กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
+    req("customerName", "กรุณากรอกชื่อ-นามสกุลลูกค้า");
+    req("customerPhone", "กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
+    req("customerAddress", "กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
   }
 
-  if (!form.startDate) errors.push("กรุณาเลือกวันที่นำรถเข้าจอดซ่อม");
-  if (!form.estimatedEndDate) errors.push("กรุณาเลือกกำหนดซ่อมเสร็จ/นัดรับรถ");
-  if (!form.receiver?.trim()) errors.push("กรุณากรอกเจ้าหน้าที่รับรถ");
+  req("startDate", "กรุณาเลือกวันที่นำรถเข้าจอดซ่อม");
+  req("estimatedEndDate", "กรุณาเลือกกำหนดซ่อมเสร็จ/นัดรับรถ");
+  req("receiver", "กรุณากรอกเจ้าหน้าที่รับรถ");
 
   const insuranceCompanyIdFromForm = readOptionalNumberField(
     form,
@@ -244,7 +260,10 @@ export function validateCreateJob(
     typeof lookup?.insuranceCompanyId === "number";
 
   if (form.paymentType === "Insurance" && !hasInsuranceId) {
-    errors.push("กรุณาเลือกบริษัทประกันภัย");
+    errors.push({
+      field: "insuranceCompanyId",
+      message: "กรุณาเลือกบริษัทประกันภัย",
+    });
   }
 
   return { ok: errors.length === 0, errors };

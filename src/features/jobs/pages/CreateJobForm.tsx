@@ -5,6 +5,7 @@ import FormSelect from "../../../shared/components/form/FormSelect";
 import { useNavigate } from "react-router-dom";
 import type { EmployeeApi } from "../../../stations/api/employees.api";
 import { getEmployeesApi } from "../../../stations/api/employees.api";
+import toast from "react-hot-toast";
 
 import {
   getDefaultCreateJobFormData,
@@ -74,6 +75,7 @@ function parseInsuranceOption(v: string) {
 
 export default function CreateJobForm() {
   const navigate = useNavigate();
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<CreateJobFormState>(() => ({
     ...getDefaultCreateJobFormData(),
@@ -104,7 +106,7 @@ export default function CreateJobForm() {
     [formData.paymentType],
   );
 
-  // Step 1: fetch dropdown meta (types + brands/models)
+  //fetch dropdown meta (types + brands/models)
   useEffect(() => {
     let alive = true;
 
@@ -298,6 +300,10 @@ export default function CreateJobForm() {
     setEmployeeQuery(v);
     setSelectedEmployee(null);
 
+    if (errors.receiver) {
+    setErrors((prev) => ({ ...prev, receiver: "" }));
+  }
+
     setFormData((prev) => ({
       ...prev,
       receiver: v,
@@ -307,7 +313,12 @@ export default function CreateJobForm() {
 
   const onSelectEmployee = (emp: EmployeeApi) => {
     setSelectedEmployee(emp);
-    setEmployeeQuery("");
+    // setEmployeeQuery("");
+    setEmployeeQuery(emp.name);
+
+    if (errors.receiver) {
+    setErrors((prev) => ({ ...prev, receiver: "" }));
+  }
 
     setFormData((prev) => ({
       ...prev,
@@ -317,27 +328,27 @@ export default function CreateJobForm() {
   };
 
   useEffect(() => {
-  let alive = true;
+    let alive = true;
 
-  (async () => {
-    try {
-      setEmployeeLoading(true);
-      const res = await getEmployeesApi({});
-      const list = Array.isArray(res) ? res : (res?.data ?? []);
-      if (!alive) return;
-      setEmployees(list);
-    } catch (e) {
-      console.error(e);
-      if (alive) setEmployees([]);
-    } finally {
-      if (alive) setEmployeeLoading(false);
-    }
-  })();
+    (async () => {
+      try {
+        setEmployeeLoading(true);
+        const res = await getEmployeesApi({});
+        const list = Array.isArray(res) ? res : (res?.data ?? []);
+        if (!alive) return;
+        setEmployees(list);
+      } catch (e) {
+        console.error(e);
+        if (alive) setEmployees([]);
+      } finally {
+        if (alive) setEmployeeLoading(false);
+      }
+    })();
 
-  return () => {
-    alive = false;
-  };
-}, []);
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const employeeOptions = useMemo(() => {
     const q = employeeQuery.trim().toLowerCase();
@@ -356,6 +367,10 @@ export default function CreateJobForm() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
 
     if (name === "customerPhone") {
       let digits = value.replace(/\D/g, "");
@@ -433,7 +448,18 @@ export default function CreateJobForm() {
     const v = validateCreateJob(formData);
 
     if (!v.ok) {
-      alert(v.errors[0]);
+      const fieldErrors: Record<string, string> = {};
+
+      v.errors.forEach((err) => {
+        fieldErrors[err.field] = err.message;
+      });
+
+      setErrors(fieldErrors);
+
+      const firstKey = Object.keys(fieldErrors)[0];
+      const el = document.querySelector(`[name="${firstKey}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+
       return;
     }
 
@@ -460,7 +486,6 @@ export default function CreateJobForm() {
     };
     console.log("SUBMIT PAYLOAD =", basePayload);
 
-
     const vehiclePart = formData.vehicleId
       ? { vehicleId: formData.vehicleId }
       : {
@@ -471,10 +496,8 @@ export default function CreateJobForm() {
             color: formData.color,
             chassisNumber: formData.chassisNumber,
             year: formData.year,
-   
           },
         };
-
 
     const payload =
       formData.paymentType === "Insurance" && formData.insuranceCompanyId
@@ -492,14 +515,13 @@ export default function CreateJobForm() {
       const res = await jobsService.create(payload);
       console.log("CREATE JOB RESPONSE =", res);
       if (!res.ok) {
-        alert(res.error);
+        toast.error(res.error || "บันทึกไม่สำเร็จ");
         return;
       }
       navigate("/dashboard", { replace: true });
     } finally {
       setIsSubmitting(false);
     }
-    // NOTE: คุณยังคอมเมนต์ flow create job อยู่ เลยยังไม่แตะตรงนี้
     console.log("submit payload (draft):", formData);
   };
 
@@ -532,7 +554,9 @@ export default function CreateJobForm() {
               value={formData.registration}
               onChange={handleChange}
               onBlur={lookupRegistrationAndAutofill}
-              required
+              error={errors.registration}
+
+              // required
             />
             <FormInput
               label={<LabelWithStar text="เลขตัวถัง" />}
@@ -540,7 +564,8 @@ export default function CreateJobForm() {
               disabled={!!formData.isExistingVehicle}
               value={formData.chassisNumber}
               onChange={handleChange}
-              required
+              error={errors.chassisNumber}
+              // required
             />
 
             <FormSelect
@@ -551,7 +576,8 @@ export default function CreateJobForm() {
               value={formData.brand}
               onChange={handleChange}
               placeholder="เลือกยี่ห้อ"
-              required
+              error={errors.brand}
+              // required
             />
             <FormSelect
               options={modelOptions}
@@ -571,7 +597,8 @@ export default function CreateJobForm() {
                     ? "กำลังโหลดรุ่น..."
                     : "เลือกรุ่นรถ"
               }
-              required
+              error={errors.model}
+              // required
             />
             {/* <FormSelect
 
@@ -594,7 +621,8 @@ export default function CreateJobForm() {
                 value={formData.year}
                 onChange={handleChange}
                 placeholder="เลือกปี"
-                required
+                error={errors.year}
+                // required
               />
               <FormInput
                 label={<LabelWithStar text="สี" />}
@@ -603,7 +631,8 @@ export default function CreateJobForm() {
                 value={formData.color}
                 onChange={handleChange}
                 placeholder="ระบุสี"
-                required
+                error={errors.color}
+                // required
               />
             </div>
             {formData.isExistingVehicle && formData.vehicleId ? (
@@ -629,7 +658,8 @@ export default function CreateJobForm() {
               value={formData.startDate}
               onChange={handleChange}
               type="date"
-              required
+              error={errors.startDate}
+              // required
             />
             <FormInput
               label={<LabelWithStar text="กำหนดซ่อมเสร็จ/นัดรับรถ" />}
@@ -637,7 +667,8 @@ export default function CreateJobForm() {
               value={formData.estimatedEndDate}
               onChange={handleChange}
               type="date"
-              required
+              error={errors.estimatedEndDate}
+              // required
             />
             <FormInput
               label={<LabelWithStar text="ค่าความเสียหายส่วนแรก" />}
@@ -646,7 +677,8 @@ export default function CreateJobForm() {
               onChange={handleChange}
               type="number"
               onFocus={(e) => e.target.select()}
-              required
+              error={errors.excessFee}
+              // required
             />
 
             <div className="md:col-span-3 pt-2">
@@ -656,15 +688,20 @@ export default function CreateJobForm() {
                 </label>
 
                 <input
+                  name="receiver"
                   type="text"
                   placeholder="กรุณากรอกชื่อพนักงาน"
                   value={
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }
                   onChange={(e) => onEmployeeQueryChange(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border text-sm outline-none transition-all border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"
-                  required
+                  className={`w-full px-4 py-2 rounded-lg border text-sm outline-none transition-all
+      ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"}
+    `}
                 />
+                {errors.receiver && (
+                  <p className="text-xs text-red-500">{errors.receiver}</p>
+                )}
 
                 {showEmployeeDropdown && (
                   <div className="absolute z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
@@ -702,11 +739,11 @@ export default function CreateJobForm() {
                 )}
 
                 {/* เพื่อให้ payload/validate ใช้ค่า receiver จริงเสมอ */}
-                <input
+                {/* <input
                   type="hidden"
                   name="receiver"
                   value={formData.receiver || ""}
-                />
+                /> */}
               </div>
             </div>
           </div>
@@ -727,6 +764,7 @@ export default function CreateJobForm() {
               value={formData.customerName}
               onChange={handleChange}
               placeholder="ระบุชื่อ-นามสกุลลูกค้า"
+              error={errors.customerName}
             />
             <FormInput
               label="เบอร์โทรศัพท์"
@@ -734,6 +772,7 @@ export default function CreateJobForm() {
               value={formData.customerPhone}
               onChange={handleChange}
               placeholder="ระบุเบอร์โทรศัพท์"
+              error={errors.customerPhone}
             />
             <FormInput
               label="ที่อยู่"
@@ -741,6 +780,7 @@ export default function CreateJobForm() {
               value={formData.customerAddress}
               onChange={handleChange}
               placeholder="ระบุที่อยู่"
+              error={errors.customerAddress}
             />
           </div>
         </div>
@@ -844,7 +884,7 @@ export default function CreateJobForm() {
                   }
                   disabled={isLoadingInsurances}
                   onChange={handleChange}
-                  required
+                  error={errors.insuranceCompanyId}
                 />
               </div>
             )}
