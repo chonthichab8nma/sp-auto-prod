@@ -14,13 +14,6 @@ createRoot(document.getElementById("root")!).render(
         <AppToaster />
         <App />
       </AuthProvider>
-
-      {/* <Sidebar
-      activePath=''
-      onLogout={() => {}}
-      
-      /> */}
-    </BrowserRouter>
-    {" "}
+    </BrowserRouter>{" "}
   </StrictMode>,
 );

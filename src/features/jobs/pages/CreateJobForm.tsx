@@ -662,7 +662,7 @@ export default function CreateJobForm() {
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }
                   onChange={(e) => onEmployeeQueryChange(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border text-sm outline-none transition-all border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"
                   required
                 />
 
@@ -760,7 +760,7 @@ export default function CreateJobForm() {
               <label
                 className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
                   formData.paymentType === "Insurance"
-                    ? "border-blue-600 bg-white ring-1 ring-blue-600"
+                    ? "border-blue-600 bg-white ring-blue-600"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -794,7 +794,7 @@ export default function CreateJobForm() {
               <label
                 className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
                   formData.paymentType === "Cash"
-                    ? "border-blue-600 bg-white ring-1 ring-blue-600"
+                    ? "border-blue-600 bg-white ring-blue-600"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >

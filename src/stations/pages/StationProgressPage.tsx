@@ -53,7 +53,6 @@ export default function StationProgressPage({
    * ตำแหน่งสถานีจริง
    */
 
-  //stageIdx = สถานีจริง (ในระบบนี้ status = CLAIM/REPAIR/BILLING/DONE 1:1 กับ stage.code)
   const stageIdx = useMemo(() => {
     if (stages.length === 0) return 0;
     const raw = jobState.currentStageIndex ?? 0;
@@ -353,7 +352,7 @@ export default function StationProgressPage({
   };
 
   return (
-    <div className="w-full max-w-full min-h-screen bg-[#ebebeb] font-sans text-slate-800">
+    <div className="w-full max-w-full min-h-screen bg-[#ebebeb] text-slate-800">
       <ProgressHeader
         registration={jobState.vehicle.registration}
         status={jobState.status}

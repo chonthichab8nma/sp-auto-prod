@@ -1,7 +1,6 @@
 import React from "react";
 
-interface FormSelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: React.ReactNode;
   options: string[];
   placeholder?: string;
@@ -26,12 +25,16 @@ const FormSelect = ({
           {...props}
           value={value}
           className={`
-            font-sans w-full px-4 py-2 bg-white border border-slate-200 rounded-lg 
-            text-sm text-slate-800 
-            outline-none appearance-none
-            focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 
-            disabled:bg-slate-50 disabled:text-slate-400 
-            transition-all cursor-pointer
+             w-full px-4 py-2 bg-white
+              border rounded-lg
+              text-sm text-slate-800
+              outline-none appearance-none
+              transition-all cursor-pointer
+
+            hover:bg-slate-50 hover:border-slate-300
+
+              border-slate-200 focus:border-blue-600"
+            disabled:bg-slate-50 disabled:text-slate-400
             ${value === "" ? "text-slate-400" : ""} 
             ${className}
           `.trim()}

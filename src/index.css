@@ -5,14 +5,14 @@
 
 
 
-@theme {
+/* @theme {
   --font-sans: "Sarabun", "LINE Seed Sans TH", sans-serif;
-}
+} */
 
 :root {
   font-family: "Sarabun", "LINE Seed Sans TH", sans-serif;
 }
 
-body {
+/* body {
   font-family: "Sarabun", "LINE Seed Sans TH", sans-serif;
-}
+} */

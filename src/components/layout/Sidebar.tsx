@@ -26,7 +26,7 @@ export default function Sidebar({
     <>
       <aside
         className={`bg-white border-r border-gray-200 flex flex-col h-screen transition-all duration-300 ease-in-out shrink-0 ${
-          isCollapsed ? "w-20" : "w-64"
+          isCollapsed ? "w-18" : "w-64"
         }`}
       >
         {/* Header */}

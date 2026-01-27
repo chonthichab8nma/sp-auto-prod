@@ -111,7 +111,7 @@ export default function DashboardFilters({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all hover:bg-slate-50"
               placeholder="ค้นหาทะเบียนรถ / ชื่อลูกค้า"
               value={searchTerm}
               onChange={(e) => onSearchTermChange(e.target.value)}
@@ -119,60 +119,6 @@ export default function DashboardFilters({
             />
           </div>
         </div>
-
-        {/* Car type dropdown */}
-        {/* <div className="lg:col-span-3 relative" ref={dropdownRef}>
-          <label className="text-sm font-semibold text-slate-700 block mb-2">
-            ประเภทรถ
-          </label>
-
-          <button
-            onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-            className={`w-full flex items-center justify-between border rounded-xl px-4 py-2.5 text-sm transition-colors ${isTypeDropdownOpen
-              ? "border-blue-500 bg-blue-50/50 text-blue-700"
-              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-          >
-            <span>{selectedCarType}</span>
-            <ChevronDown
-              className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isTypeDropdownOpen ? "rotate-180" : ""
-                }`}
-            />
-          </button>
-
-          {isTypeDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-lg z-50 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-200">
-              <button
-                onClick={() => {
-                  onCarTypeChange("ทั้งหมด");
-                  setIsTypeDropdownOpen(false);
-                }}
-                className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-600 flex items-center justify-between"
-              >
-                <span>ทั้งหมด</span>
-                {selectedCarType === "ทั้งหมด" && (
-                  <Check className="h-4 w-4 text-blue-600" />
-                )}
-              </button>
-
-              {types.map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => {
-                    onCarTypeChange(type.name);
-                    setIsTypeDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-600 flex items-center justify-between"
-                >
-                  <span>{type.name}</span>
-                  {selectedCarType === type.name && (
-                    <Check className="h-4 w-4 text-blue-600" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div> */}
 
         {/* Date picker */}
         <div className="lg:col-span-3 relative" ref={datePickerRef}>
@@ -252,7 +198,7 @@ export default function DashboardFilters({
             onClick={() => navigate("/create")}
             className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            + รับรถ
+            รับรถ
           </button>
         </div>
       </div>
