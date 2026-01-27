@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  PanelLeft,
-  LayoutDashboard,
-  RadioTower,
-  LogOut,
-} from "lucide-react";
+import { PanelLeft, LayoutDashboard, RadioTower, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface SidebarProps {
@@ -12,6 +7,7 @@ interface SidebarProps {
   activePath: string;
   isCollapsed: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }
 
 export default function Sidebar({
@@ -19,6 +15,7 @@ export default function Sidebar({
   isCollapsed,
   onToggle,
   onLogout,
+  onNavigate,
 }: SidebarProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -68,6 +65,7 @@ export default function Sidebar({
 
           <Link
             to="/stations"
+            onClick={onNavigate}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               isCollapsed ? "justify-center" : ""
             } ${
@@ -77,9 +75,7 @@ export default function Sidebar({
             }`}
           >
             <RadioTower size={18} />
-            {!isCollapsed && (
-              <span className="whitespace-nowrap">สเตชั่น</span>
-            )}
+            {!isCollapsed && <span className="whitespace-nowrap">สเตชั่น</span>}
           </Link>
         </nav>
 

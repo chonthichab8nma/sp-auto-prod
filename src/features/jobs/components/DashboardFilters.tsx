@@ -154,7 +154,7 @@ export default function DashboardFilters({
                   type="date"
                   value={startDate}
                   onChange={(e) => onStartDateChange(e.target.value)}
-                  className="border rounded-lg p-2 text-sm"
+                  className="border border-slate-200 rounded-lg p-2 text-sm"
                 />
               </div>
 
@@ -164,7 +164,7 @@ export default function DashboardFilters({
                   type="date"
                   value={endDate}
                   onChange={(e) => onEndDateChange(e.target.value)}
-                  className="border rounded-lg p-2 text-sm"
+                  className="border border-slate-200 rounded-lg p-2 text-sm"
                 />
               </div>
 
