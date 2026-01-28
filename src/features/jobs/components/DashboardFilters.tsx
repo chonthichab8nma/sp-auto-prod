@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState,useMemo } from "react";
 import { Calendar, Search, Filter } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import {
   type VehicleTypeApi,
   type InsuranceCompanyApi,
 } from "../services/vehicles.service";
+import FormSelect from "../../../shared/components/form/FormSelect";
 
 export default function DashboardFilters({
   searchTerm,
@@ -58,6 +59,11 @@ export default function DashboardFilters({
 
   const datePickerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const insuranceOptions = useMemo(
+  () => insurances.map((i) => i.name),
+  [insurances],
+);
 
   useEffect(() => {
     // Fetch dropdown data
@@ -372,28 +378,22 @@ export default function DashboardFilters({
             />
           </div>
           {/* Insurance Company ID */}
-          <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">
-              บริษัทประกัน
-            </label>
-            <select
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
-              value={advancedFilters.insuranceCompanyId || ""}
-              onChange={(e) =>
-                onAdvancedFilterChange(
-                  "insuranceCompanyId",
-                  e.target.value ? Number(e.target.value) : undefined,
-                )
-              }
-            >
-              <option value="">ทั้งหมด</option>
-              {insurances.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FormSelect
+  label={<span className="text-xs font-semibold text-slate-500">บริษัทประกัน</span>}
+  options={insuranceOptions}
+  placeholder="ทั้งหมด"
+  value={
+    advancedFilters.insuranceCompanyId
+      ? insurances.find((i) => i.id === advancedFilters.insuranceCompanyId)?.name ?? ""
+      : ""
+  }
+  onChange={(e) => {
+    const name = e.target.value; // ชื่อบริษัท
+    const found = insurances.find((i) => i.name === name);
+
+    onAdvancedFilterChange("insuranceCompanyId", found?.id);
+  }}
+/>
         </div>
       )}
     </div>
