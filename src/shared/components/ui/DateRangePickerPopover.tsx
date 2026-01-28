@@ -141,7 +141,7 @@ export default function DatePickerPopover(props: Props) {
   return (
     <div className={className}>
       {label && (
-        <label className="text-sm font-medium text-slate-800 block leading-5 mb-2 min-h-[20px] md:min-h-[44px] lg:min-h-[20px]">
+        <label className="text-sm font-medium text-slate-800 block leading-5 mb-2 min-h-5 md:min-h-11 lg:min-h-5">
           {label}
         </label>
       )}
