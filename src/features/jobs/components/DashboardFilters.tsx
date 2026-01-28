@@ -140,37 +140,38 @@ export default function DashboardFilters({
           />
         </div>
 
-        <div className="lg:col-span-6 flex flex-col gap-2 lg:flex-row">
+        <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className={`
-      relative h-11 w-full lg:flex-1
-      pl-10 pr-4
-      rounded-xl border
-      text-sm font-medium text-left
-      transition-colors
-      ${
-        showAdvancedFilters
-          ? "bg-blue-50 text-blue-600 border-blue-200"
-          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-      }
-    `}
+            relative h-11 w-full lg:flex-1
+            pl-10 pr-4
+            rounded-xl border
+            text-sm font-medium text-left
+            transition-colors
+            ${
+              showAdvancedFilters
+                ? "bg-blue-50 text-blue-600 border-blue-200"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            }
+            `}
           >
-            <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 " />
             ตัวกรองเพิ่มเติม
           </button>
-
+        </div>
+        <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row">
           <button
             type="button"
             onClick={() => navigate("/create")}
             className="
-      h-11 w-full lg:flex-1
-      bg-blue-600 text-white
-      rounded-xl
-      text-sm font-medium
-      hover:bg-blue-700
-      transition-colors
-    "
+            h-11 w-full lg:flex-1
+           bg-blue-600 text-white
+            rounded-xl
+            text-sm font-medium
+           hover:bg-blue-700
+             transition-colors
+              "
           >
             รับรถ
           </button>

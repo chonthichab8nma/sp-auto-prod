@@ -695,7 +695,7 @@ export default function CreateJobForm() {
 
             <div className="md:col-span-3 pt-2">
               <div className="space-y-2 relative">
-                <label className="text-sm font-medium text-slate-800">
+                <label className="text-sm font-medium text-slate-800 bloack mb-2">
                   <LabelWithStar text="เจ้าหน้าที่รับรถ" />
                 </label>
 
