@@ -27,8 +27,8 @@ export default function AppShell() {
   const mobileTitle = getMobileSectionTitleTH(location.pathname);
 
   return (
-    <div className="flex h-screen bg-[#ebebeb] overflow-hidden">
-      <div className="hidden md:flex">
+    <div className="flex h-full min-h-screen bg-[#ebebeb] items-stretch">
+      <div className="hidden md:flex shrink-0 sticky top-0 h-screen">
         <Sidebar
           isCollapsed={isCollapsed}
           onToggle={() => setIsCollapsed(!isCollapsed)}
@@ -60,7 +60,7 @@ export default function AppShell() {
       )}
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto">
+      <main className="flex-1 min-w-0 ">
         <div className="md:hidden sticky top-0 z-40 bg-[#ebebeb]/75 backdrop-blur border-b border-slate-200">
           <div className="px-3 h-14 flex items-center gap-3">
             <button
