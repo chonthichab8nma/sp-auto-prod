@@ -21,6 +21,7 @@ import {
 } from "../services/vehicles.service";
 import { jobsService } from "../services/jobs.service";
 import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
+import { CalendarIcon } from "lucide-react";
 
 type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null;
@@ -38,8 +39,9 @@ type CreateJobFormState = JobFormData & {
 // };
 
 const LabelWithStar = ({ text }: { text: string }) => (
-  <span>
-    {text} <span className="text-red-500">*</span>
+  <span className="inline-flex items-center gap-1">
+    {text}
+    <span className="text-red-500">*</span>
   </span>
 );
 
@@ -548,7 +550,7 @@ export default function CreateJobForm() {
             <p className="text-sm text-slate-500 mt-1">ข้อมูลรถ</p>
           </div>
 
-          <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-5">
+          <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
             <FormInput
               label={<LabelWithStar text="ทะเบียนรถ" />}
               name="registration"
@@ -621,7 +623,7 @@ export default function CreateJobForm() {
                 disabled={!!formData.isExistingVehicle}
                 value={formData.year}
                 onChange={handleChange}
-                placeholder="เลือกปี"
+                placeholder="ปี"
                 error={errors.year}
                 // required
               />
@@ -652,27 +654,21 @@ export default function CreateJobForm() {
             <p className="text-sm text-slate-500 mt-1">ข้อมูลการซ่อม</p>
           </div>
 
-          <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-5">
-            {/* <FormInput
-              label={<LabelWithStar text="วันที่นำรถเข้าจอดซ่อม" />}
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              type="date"
-              error={errors.startDate}
-              // required
-            /> */}
+          <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
             <DatePickerPopover
+            className="lg:col-span-1"
               mode="single"
               label={<LabelWithStar text="วันที่รับรถ" />}
-              value={formData.estimatedEndDate}
-              error={errors.estimatedEndDate}
+              value={formData.startDate}
+              error={errors.startDate}
               onChange={(v) =>
-                setFormData((p) => ({ ...p, estimatedEndDate: v }))
+                setFormData((p) => ({ ...p, startDate: v }))
               }
-              triggerClassName="h-9.5 rounded-lg"
+              triggerClassName="h-9.5! rounded-lg!"
+              icon={<CalendarIcon className="h-4 w-4" />}
             />
             <DatePickerPopover
+            className="lg:col-span-1"
               mode="single"
               label={<LabelWithStar text="กำหนดซ่อมเสร็จ/นัดรับรถ" />}
               value={formData.estimatedEndDate}
@@ -680,22 +676,23 @@ export default function CreateJobForm() {
               onChange={(v) =>
                 setFormData((p) => ({ ...p, estimatedEndDate: v }))
               }
-              triggerClassName="h-9.5 rounded-lg"
+              triggerClassName="h-9.5! rounded-lg!"
+              icon={<CalendarIcon className="h-4 w-4" />}
             />
             <FormInput
+             className="lg:col-span-1"
               label={<LabelWithStar text="ค่าความเสียหายส่วนแรก" />}
               name="excessFee"
               value={formData.excessFee}
               onChange={handleChange}
               type="number"
               onFocus={(e) => e.target.select()}
-              error={errors.excessFee}
-              // required
+              // error={errors.excessFee}
             />
 
-            <div className="md:col-span-3 pt-2">
-              <div className="space-y-2 relative">
-                <label className="text-sm font-medium text-slate-800 bloack mb-2">
+            <div className="sm:col-span-2 lg:col-span-3 pt-2">
+              <div className="flex flex-col gap-2 relative ">
+                <label className="text-sm font-medium text-slate-800 bloack ">
                   <LabelWithStar text="เจ้าหน้าที่รับรถ" />
                 </label>
 
@@ -707,8 +704,8 @@ export default function CreateJobForm() {
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }
                   onChange={(e) => onEmployeeQueryChange(e.target.value)}
-                  className={`placeholder:py-2 w-full px-4 py-2 rounded-lg border text-sm leading-relaxed outline-none transition-all 
-                  ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"}
+                  className={`placeholder:py-2 w-full px-4 py-2 rounded-lg border text-sm leading-relaxed outline-none transition-all  placeholder:text-slate-400 
+                  ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200  focus:bg-white focus:border-blue-500"}
                   `}
                 />
                 {errors.receiver && (
@@ -716,7 +713,7 @@ export default function CreateJobForm() {
                 )}
 
                 {showEmployeeDropdown && (
-                  <div className="absolute z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
+                  <div className="absolute top-16 z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
                     {employeeLoading ? (
                       <div className="px-4 py-3 text-sm text-slate-500">
                         กำลังโหลด...
@@ -749,13 +746,6 @@ export default function CreateJobForm() {
                     )}
                   </div>
                 )}
-
-                {/* เพื่อให้ payload/validate ใช้ค่า receiver จริงเสมอ */}
-                {/* <input
-                  type="hidden"
-                  name="receiver"
-                  value={formData.receiver || ""}
-                /> */}
               </div>
             </div>
           </div>

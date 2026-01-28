@@ -11,6 +11,7 @@ type BaseProps = {
   className?: string;
   error?: string;
   triggerClassName?: string;
+  icon?: React.ReactNode;
 };
 
 type SingleProps = BaseProps & {
@@ -46,6 +47,7 @@ export default function DatePickerPopover(props: Props) {
     className,
     error,
     triggerClassName,
+    icon,
   } = props;
 
   const [open, setOpen] = useState(false);
@@ -104,9 +106,9 @@ export default function DatePickerPopover(props: Props) {
   return (
     <div className={className}>
       {label && (
-        <label className="text-sm font-semibold text-slate-700 block mb-2">
-          {label}
-        </label>
+        <label className="text-sm font-medium text-slate-800 block leading-5 mb-2 min-h-[20px] md:min-h-[44px] lg:min-h-[20px]">
+  {label}
+</label>
       )}
 
       <div className="relative">
@@ -115,18 +117,25 @@ export default function DatePickerPopover(props: Props) {
           disabled={disabled}
           onClick={() => setOpen((v) => !v)}
           className={[
+            "relative", 
             "w-full h-11 px-4 rounded-xl border text-sm font-medium transition-colors",
             "flex items-center justify-between",
+            icon ? "pl-10 pr-4" : "px-4",
             error
-              ? "border-red-500 text-red-600 bg-white"
-              : "border-slate-200 text-slate-700 bg-white hover:bg-slate-50",
+              ? "border-red-500 text-slate-400 bg-white"
+              : "border-slate-200 text-slate-400 bg-white hover:bg-slate-50",
             disabled ? "opacity-60 cursor-not-allowed" : "",
             triggerClassName ?? "",
           ].join(" ")}
           aria-invalid={!!error}
         >
+          {icon && (
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              {icon}
+            </span>
+          )}
           <span className="truncate">{buttonText}</span>
-          <span className="text-slate-400">▾</span>
+          {/* <span className="text-slate-400">▾</span> */}
         </button>
 
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}

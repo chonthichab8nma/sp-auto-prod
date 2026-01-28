@@ -244,10 +244,11 @@ export function validateCreateJob(
   if (!hasExistingCustomer) {
     req("customerName", "กรุณากรอกชื่อ-นามสกุลลูกค้า");
     req("customerPhone", "กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
+    req("excessFee", "กรุณากรอกค่าความเสียหายส่วนแรก");
     req("customerAddress", "กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
   }
 
-  req("startDate", "กรุณาเลือกวันที่นำรถเข้าจอดซ่อม");
+  req("startDate", "กรุณาเลือกวันที่รับรถ");
   req("estimatedEndDate", "กรุณาเลือกกำหนดซ่อมเสร็จ/นัดรับรถ");
   req("receiver", "กรุณากรอกเจ้าหน้าที่รับรถ");
 

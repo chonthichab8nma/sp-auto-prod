@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter,CalendarIcon } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -132,6 +132,7 @@ export default function DashboardFilters({
           <DatePickerPopover
             mode="range"
             label="เลือกวันที่"
+             icon={<CalendarIcon className="h-4 w-4" />}
             value={{ startDate, endDate }}
             onChange={({ startDate, endDate }) => {
               onStartDateChange(startDate);
@@ -160,6 +161,7 @@ export default function DashboardFilters({
             ตัวกรองเพิ่มเติม
           </button>
         </div>
+
         <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row">
           <button
             type="button"

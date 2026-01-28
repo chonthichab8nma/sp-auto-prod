@@ -15,7 +15,9 @@ export default function FormInput({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label className="text-sm font-medium text-slate-800">{label}</label>
+        <label className="text-sm font-medium text-slate-800 block leading-5 min-h-[20px] md:min-h-[44px] lg:min-h-[20px]">
+  {label}
+</label>
       )}
 
       <input
@@ -28,6 +30,7 @@ export default function FormInput({
           text-sm text-slate-800
           outline-none
           transition-all
+          placeholder:text-slate-400
 
           hover:bg-slate-50 hover:border-slate-300
 
