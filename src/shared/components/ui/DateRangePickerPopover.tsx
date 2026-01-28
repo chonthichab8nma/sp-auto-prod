@@ -118,7 +118,7 @@ export default function DatePickerPopover(props: Props) {
           onClick={() => setOpen((v) => !v)}
           className={[
             "relative", 
-            "w-full h-11 px-4 rounded-xl border text-sm font-medium transition-colors",
+            "w-full h-11 px-4 rounded-xl border text-sm font-normal transition-colors",
             "flex items-center justify-between",
             icon ? "pl-10 pr-4" : "px-4",
             error
@@ -135,7 +135,6 @@ export default function DatePickerPopover(props: Props) {
             </span>
           )}
           <span className="truncate">{buttonText}</span>
-          {/* <span className="text-slate-400">▾</span> */}
         </button>
 
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}

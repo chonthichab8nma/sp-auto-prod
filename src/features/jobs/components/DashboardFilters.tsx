@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Search, Filter,CalendarIcon } from "lucide-react";
+import { Search, Filter, CalendarIcon } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -66,6 +66,9 @@ export default function DashboardFilters({
     [insurances],
   );
 
+  const brandOptions = useMemo(() => brands.map((b) => b.name), [brands]);
+  const typeOptions = useMemo(() => types.map((t) => t.name), [types]);
+
   useEffect(() => {
     // Fetch dropdown data
     const fetchMetadata = async () => {
@@ -118,7 +121,13 @@ export default function DashboardFilters({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              className="placeholder:py-2 w-full h-11 pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all hover:bg-slate-50"
+              className="placeholder:py-2 w-full h-11 pl-10 pr-4 py-2.5
+              border border-slate-200 rounded-xl
+              text-sm text-slate-700
+            placeholder:text-slate-400
+            focus:border-blue-500
+              outline-none transition-all
+            hover:bg-slate-50"
               placeholder="ค้นหาทะเบียนรถ / ชื่อลูกค้า"
               value={searchTerm}
               onChange={(e) => onSearchTermChange(e.target.value)}
@@ -132,7 +141,7 @@ export default function DashboardFilters({
           <DatePickerPopover
             mode="range"
             label="เลือกวันที่"
-             icon={<CalendarIcon className="h-4 w-4" />}
+            icon={<CalendarIcon className="h-4 w-4" />}
             value={{ startDate, endDate }}
             onChange={({ startDate, endDate }) => {
               onStartDateChange(startDate);
@@ -141,7 +150,7 @@ export default function DashboardFilters({
           />
         </div>
 
-        <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row">
+        <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row ">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className={`
@@ -181,7 +190,7 @@ export default function DashboardFilters({
       </div>
 
       {showAdvancedFilters && onAdvancedFilterChange && advancedFilters && (
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2">
+        <div className=" bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2">
           {/* Job Number */}
           <div>
             <label className="text-xs font-semibold text-slate-500 block mb-1">
@@ -189,7 +198,7 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500 outline-none"
               placeholder="ระบุเลขที่ใบงาน"
               value={advancedFilters.jobNumber || ""}
               onChange={(e) =>
@@ -202,18 +211,14 @@ export default function DashboardFilters({
             <label className="text-xs font-semibold text-slate-500 block mb-1">
               ยี่ห้อรถ
             </label>
-            <select
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
-              value={advancedFilters.brand || ""}
+
+            <FormSelect
+              options={brandOptions}
+              placeholder="ทั้งหมด"
+              value={advancedFilters.brand ?? ""}
               onChange={(e) => onAdvancedFilterChange("brand", e.target.value)}
-            >
-              <option value="">ทั้งหมด</option>
-              {brands.map((b) => (
-                <option key={b.id} value={b.name}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+              className="w-full"
+            />
           </div>
           {/* Model */}
           <div>
@@ -222,8 +227,8 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
-              placeholder="ระบุรุ่น (e.g. Camry)"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
+              placeholder="ระบุรุ่นรถ"
               value={advancedFilters.model || ""}
               onChange={(e) => onAdvancedFilterChange("model", e.target.value)}
             />
@@ -235,7 +240,7 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
               placeholder="ระบุสี"
               value={advancedFilters.color || ""}
               onChange={(e) => onAdvancedFilterChange("color", e.target.value)}
@@ -248,7 +253,7 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
               placeholder="ระบุทะเบียน"
               value={advancedFilters.vehicleRegistration || ""}
               onChange={(e) =>
@@ -263,7 +268,7 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
               placeholder="ระบุเลขตัวถัง"
               value={advancedFilters.chassisNumber || ""}
               onChange={(e) =>
@@ -278,7 +283,7 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
               placeholder="ระบุ VIN Code"
               value={advancedFilters.vinNumber || ""}
               onChange={(e) =>
@@ -293,7 +298,7 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
               placeholder="ระบุชื่อลูกค้า"
               value={advancedFilters.customerName || ""}
               onChange={(e) =>
@@ -303,21 +308,15 @@ export default function DashboardFilters({
           </div>
           {/* Type */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">
-              ประเภท
-            </label>
-            <select
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
-              value={advancedFilters.type || ""}
+            <span className="text-xs font-semibold text-slate-500 block mb-1">
+              ประเภทรถ
+            </span>
+            <FormSelect
+              options={typeOptions}
+              placeholder="ทั้งหมด"
+              value={advancedFilters.type ?? ""}
               onChange={(e) => onAdvancedFilterChange("type", e.target.value)}
-            >
-              <option value="">ทั้งหมด</option>
-              {types.map((t) => (
-                <option key={t.id} value={t.name}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           {/* Year */}
           <div>
@@ -326,35 +325,35 @@ export default function DashboardFilters({
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"
-              placeholder="ระบุปี (e.g. 2024)"
+              className="placeholder:text-slate-400 placeholder:py-2 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring focus:ring-blue-500  outline-none"
+              placeholder="ระบุปี เช่น 2024"
               value={advancedFilters.year || ""}
               onChange={(e) => onAdvancedFilterChange("year", e.target.value)}
             />
           </div>
           {/* Insurance Company ID */}
-          <FormSelect
-            label={
-              <span className="text-xs font-semibold text-slate-500">
-                บริษัทประกัน
-              </span>
-            }
-            options={insuranceOptions}
-            placeholder="ทั้งหมด"
-            value={
-              advancedFilters.insuranceCompanyId
-                ? (insurances.find(
-                    (i) => i.id === advancedFilters.insuranceCompanyId,
-                  )?.name ?? "")
-                : ""
-            }
-            onChange={(e) => {
-              const name = e.target.value; // ชื่อบริษัท
-              const found = insurances.find((i) => i.name === name);
+          <div>
+            <span className="text-xs font-semibold text-slate-500 block mb-1">
+              บริษัทประกัน
+            </span>
+            <FormSelect
+              options={insuranceOptions}
+              placeholder="ทั้งหมด"
+              value={
+                advancedFilters.insuranceCompanyId
+                  ? (insurances.find(
+                      (i) => i.id === advancedFilters.insuranceCompanyId,
+                    )?.name ?? "")
+                  : ""
+              }
+              onChange={(e) => {
+                const name = e.target.value;
+                const found = insurances.find((i) => i.name === name);
 
-              onAdvancedFilterChange("insuranceCompanyId", found?.id);
-            }}
-          />
+                onAdvancedFilterChange("insuranceCompanyId", found?.id);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
