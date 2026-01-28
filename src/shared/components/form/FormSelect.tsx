@@ -87,6 +87,7 @@ const FormSelect = ({
           disabled={disabled}
           onClick={() => !disabled && setOpen((v) => !v)}
           className={`
+            placeholder:py-2
     w-full h-9.75 px-4 pr-10 text-left
     bg-white border rounded-lg
     text-sm leading-normal text-slate-800

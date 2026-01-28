@@ -20,6 +20,7 @@ import {
   type VehicleModelApi,
 } from "../services/vehicles.service";
 import { jobsService } from "../services/jobs.service";
+import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
 
 type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null;
@@ -652,7 +653,7 @@ export default function CreateJobForm() {
           </div>
 
           <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-5">
-            <FormInput
+            {/* <FormInput
               label={<LabelWithStar text="วันที่นำรถเข้าจอดซ่อม" />}
               name="startDate"
               value={formData.startDate}
@@ -660,15 +661,26 @@ export default function CreateJobForm() {
               type="date"
               error={errors.startDate}
               // required
-            />
-            <FormInput
-              label={<LabelWithStar text="กำหนดซ่อมเสร็จ/นัดรับรถ" />}
-              name="estimatedEndDate"
+            /> */}
+            <DatePickerPopover
+              mode="single"
+              label={<LabelWithStar text="วันที่รับรถ" />}
               value={formData.estimatedEndDate}
-              onChange={handleChange}
-              type="date"
               error={errors.estimatedEndDate}
-              // required
+              onChange={(v) =>
+                setFormData((p) => ({ ...p, estimatedEndDate: v }))
+              }
+              triggerClassName="h-9.5 rounded-lg"
+            />
+            <DatePickerPopover
+              mode="single"
+              label={<LabelWithStar text="กำหนดซ่อมเสร็จ/นัดรับรถ" />}
+              value={formData.estimatedEndDate}
+              error={errors.estimatedEndDate}
+              onChange={(v) =>
+                setFormData((p) => ({ ...p, estimatedEndDate: v }))
+              }
+              triggerClassName="h-9.5 rounded-lg"
             />
             <FormInput
               label={<LabelWithStar text="ค่าความเสียหายส่วนแรก" />}
@@ -695,7 +707,7 @@ export default function CreateJobForm() {
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }
                   onChange={(e) => onEmployeeQueryChange(e.target.value)}
-                  className={` w-full px-4 py-2 rounded-lg border text-sm leading-relaxed outline-none transition-all 
+                  className={`placeholder:py-2 w-full px-4 py-2 rounded-lg border text-sm leading-relaxed outline-none transition-all 
                   ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"}
                   `}
                 />

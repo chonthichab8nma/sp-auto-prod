@@ -22,6 +22,7 @@ export default function FormInput({
         type={type}
         {...props}
         className={`
+          placeholder:py-2
           w-full px-4 py-2 bg-white 
           border rounded-lg 
           text-sm text-slate-800

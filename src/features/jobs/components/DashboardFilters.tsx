@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState,useMemo } from "react";
-import { Calendar, Search, Filter } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Search, Filter } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,6 +9,7 @@ import {
   type InsuranceCompanyApi,
 } from "../services/vehicles.service";
 import FormSelect from "../../../shared/components/form/FormSelect";
+import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
 
 export default function DashboardFilters({
   searchTerm,
@@ -48,7 +49,7 @@ export default function DashboardFilters({
   onSubmitSearch: () => void;
 }) {
   const navigate = useNavigate();
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  // const [showDatePicker, setShowDatePicker] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   console.log(isTypeDropdownOpen);
@@ -57,13 +58,13 @@ export default function DashboardFilters({
   const [types, setTypes] = useState<VehicleTypeApi[]>([]);
   const [insurances, setInsurances] = useState<InsuranceCompanyApi[]>([]);
 
-  const datePickerRef = useRef<HTMLDivElement>(null);
+  // const datePickerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const insuranceOptions = useMemo(
-  () => insurances.map((i) => i.name),
-  [insurances],
-);
+    () => insurances.map((i) => i.name),
+    [insurances],
+  );
 
   useEffect(() => {
     // Fetch dropdown data
@@ -90,12 +91,12 @@ export default function DashboardFilters({
       ) {
         setIsTypeDropdownOpen(false);
       }
-      if (
-        datePickerRef.current &&
-        !datePickerRef.current.contains(event.target as Node)
-      ) {
-        setShowDatePicker(false);
-      }
+      // if (
+      //   datePickerRef.current &&
+      //   !datePickerRef.current.contains(event.target as Node)
+      // ) {
+      //   setShowDatePicker(false);
+      // }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -110,14 +111,14 @@ export default function DashboardFilters({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
         {/* Search */}
         <div className="lg:col-span-3">
-          <label className="text-sm font-semibold text-slate-700 block mb-2">
+          <label className=" text-sm font-semibold text-slate-700 block mb-2">
             ค้นหา
           </label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all hover:bg-slate-50"
+              className="placeholder:py-2 w-full h-11 pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all hover:bg-slate-50"
               placeholder="ค้นหาทะเบียนรถ / ชื่อลูกค้า"
               value={searchTerm}
               onChange={(e) => onSearchTermChange(e.target.value)}
@@ -127,98 +128,49 @@ export default function DashboardFilters({
         </div>
 
         {/* Date picker */}
-        <div className="lg:col-span-3 relative" ref={datePickerRef}>
-          <label className="text-sm font-semibold text-slate-700 block mb-2">
-            เลือกวันที่
-          </label>
-
-          <button
-            onClick={() => setShowDatePicker(!showDatePicker)}
-            className="
-      w-full h-11
-      text-left
-      pl-10 pr-4
-      border border-slate-200 rounded-xl
-      text-sm text-slate-700 bg-white
-      hover:bg-slate-50
-      focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500
-      transition
-    "
-          >
-            <Calendar className="absolute left-3 top-10.75 h-4 w-4 text-slate-400" />
-            <span className="block truncate text-slate-600">
-              {startDate || endDate
-                ? `${
-                    startDate
-                      ? new Date(startDate).toLocaleDateString("th-TH")
-                      : "..."
-                  } - ${
-                    endDate
-                      ? new Date(endDate).toLocaleDateString("th-TH")
-                      : "..."
-                  }`
-                : "เลือกช่วงวันที่"}
-            </span>
-          </button>
-
-          {showDatePicker && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-slate-500">เริ่มวันที่</span>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => onStartDateChange(e.target.value)}
-                  className="border border-slate-200 rounded-lg p-2 text-sm"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-slate-500">ถึงวันที่</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => onEndDateChange(e.target.value)}
-                  className="border border-slate-200 rounded-lg p-2 text-sm"
-                />
-              </div>
-
-              <button
-                onClick={() => {
-                  onStartDateChange("");
-                  onEndDateChange("");
-                }}
-                className="text-xs text-blue-600 hover:underline self-end"
-              >
-                ล้างค่าวันที่
-              </button>
-            </div>
-          )}
+        <div className="lg:col-span-3">
+          <DatePickerPopover
+            mode="range"
+            label="เลือกวันที่"
+            value={{ startDate, endDate }}
+            onChange={({ startDate, endDate }) => {
+              onStartDateChange(startDate);
+              onEndDateChange(endDate);
+            }}
+          />
         </div>
 
-        <div className="lg:col-span-6 flex gap-2">
+        <div className="lg:col-span-6 flex flex-col gap-2 lg:flex-row">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className={`
-    relative flex-1 h-11
-    pl-10 pr-4
-    rounded-xl border
-    text-sm font-medium text-left
-    transition-colors
-    ${
-      showAdvancedFilters
-        ? "bg-blue-50 text-blue-600 border-blue-200"
-        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-    }
-  `}
+      relative h-11 w-full lg:flex-1
+      pl-10 pr-4
+      rounded-xl border
+      text-sm font-medium text-left
+      transition-colors
+      ${
+        showAdvancedFilters
+          ? "bg-blue-50 text-blue-600 border-blue-200"
+          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+      }
+    `}
           >
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" />
+            <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             ตัวกรองเพิ่มเติม
           </button>
+
           <button
             type="button"
             onClick={() => navigate("/create")}
-            className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="
+      h-11 w-full lg:flex-1
+      bg-blue-600 text-white
+      rounded-xl
+      text-sm font-medium
+      hover:bg-blue-700
+      transition-colors
+    "
           >
             รับรถ
           </button>
@@ -379,21 +331,27 @@ export default function DashboardFilters({
           </div>
           {/* Insurance Company ID */}
           <FormSelect
-  label={<span className="text-xs font-semibold text-slate-500">บริษัทประกัน</span>}
-  options={insuranceOptions}
-  placeholder="ทั้งหมด"
-  value={
-    advancedFilters.insuranceCompanyId
-      ? insurances.find((i) => i.id === advancedFilters.insuranceCompanyId)?.name ?? ""
-      : ""
-  }
-  onChange={(e) => {
-    const name = e.target.value; // ชื่อบริษัท
-    const found = insurances.find((i) => i.name === name);
+            label={
+              <span className="text-xs font-semibold text-slate-500">
+                บริษัทประกัน
+              </span>
+            }
+            options={insuranceOptions}
+            placeholder="ทั้งหมด"
+            value={
+              advancedFilters.insuranceCompanyId
+                ? (insurances.find(
+                    (i) => i.id === advancedFilters.insuranceCompanyId,
+                  )?.name ?? "")
+                : ""
+            }
+            onChange={(e) => {
+              const name = e.target.value; // ชื่อบริษัท
+              const found = insurances.find((i) => i.name === name);
 
-    onAdvancedFilterChange("insuranceCompanyId", found?.id);
-  }}
-/>
+              onAdvancedFilterChange("insuranceCompanyId", found?.id);
+            }}
+          />
         </div>
       )}
     </div>
