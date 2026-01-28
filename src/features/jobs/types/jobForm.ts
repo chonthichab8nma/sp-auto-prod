@@ -248,7 +248,7 @@ export function validateCreateJob(
     req("customerAddress", "กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
   }
 
-  req("startDate", "กรุณาเลือกวันที่รับรถ");
+  req("startDate", "กรุณาเลือกวันที่นำรถเข้าจอดซ่อม");
   req("estimatedEndDate", "กรุณาเลือกกำหนดซ่อมเสร็จ/นัดรับรถ");
   req("receiver", "กรุณากรอกเจ้าหน้าที่รับรถ");
 

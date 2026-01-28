@@ -554,6 +554,7 @@ export default function CreateJobForm() {
             <FormInput
               label={<LabelWithStar text="ทะเบียนรถ" />}
               name="registration"
+              placeholder="ระบุทะเบียนรถ"
               value={formData.registration}
               onChange={handleChange}
               onBlur={lookupRegistrationAndAutofill}
@@ -563,6 +564,7 @@ export default function CreateJobForm() {
             />
             <FormInput
               label={<LabelWithStar text="เลขตัวถัง" />}
+              placeholder="ระบุเลขตัวถัง"
               name="chassisNumber"
               disabled={!!formData.isExistingVehicle}
               value={formData.chassisNumber}
@@ -578,7 +580,7 @@ export default function CreateJobForm() {
               disabled={!!formData.isExistingVehicle}
               value={formData.brand}
               onChange={handleChange}
-              placeholder="เลือกยี่ห้อ"
+              placeholder="เลือกยี่ห้อ/แบรนด์รถ"
               error={errors.brand}
               // required
             />
@@ -595,7 +597,7 @@ export default function CreateJobForm() {
               onChange={handleChange}
               placeholder={
                 !formData.brand
-                  ? "เลือกแบรนด์ก่อน"
+                  ? "เลือกรุ่นรถ"
                   : isLoadingModels
                     ? "กำลังโหลดรุ่น..."
                     : "เลือกรุ่นรถ"
@@ -658,7 +660,7 @@ export default function CreateJobForm() {
             <DatePickerPopover
             className="lg:col-span-1"
               mode="single"
-              label={<LabelWithStar text="วันที่รับรถ" />}
+              label={<LabelWithStar text="วันที่นำรถเข้าจอดซ่อม" />}
               value={formData.startDate}
               error={errors.startDate}
               onChange={(v) =>
@@ -699,7 +701,7 @@ export default function CreateJobForm() {
                 <input
                   name="receiver"
                   type="text"
-                  placeholder="กรุณากรอกชื่อพนักงาน"
+                  placeholder="เลือกพนักงาน"
                   value={
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }
