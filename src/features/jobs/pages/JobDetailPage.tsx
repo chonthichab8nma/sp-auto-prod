@@ -16,15 +16,14 @@ const Section = ({
   children: React.ReactNode;
   hasBorder?: boolean;
 }) => (
-  <div
-    className={`flex flex-col md:flex-row py-8 ${hasBorder ? "border-b border-gray-100" : ""
-      }`}
-  >
+  <div className={`flex flex-col md:flex-row py-8 ${hasBorder ? "border-b border-gray-100" : ""}`}>
     <div className="w-full md:w-1/3 mb-6 md:mb-0">
       <h3 className="font-bold text-slate-800 text-base">{title}</h3>
       <p className="text-slate-400 text-sm mt-1">{subtitle}</p>
     </div>
-    <div className="w-full md:w-2/3">{children}</div>
+    <div className="w-full md:w-2/3">
+      <div className="w-full md:max-w-xl md:mx-auto">{children}</div>
+    </div>
   </div>
 );
 
@@ -35,12 +34,12 @@ const RowItem = ({
   label: string;
   value?: React.ReactNode;
 }) => (
-  <div className="flex items-start py-1">
-    <span className="w-40 text-slate-400 font-light text-sm">{label}</span>
-    <span className="flex-1 text-slate-900 font-medium text-sm">
+  <>
+    <span className="text-slate-400 text-sm leading-5">{label}</span>
+    <span className="text-slate-900 font-medium text-sm leading-5">
       {value || "-"}
     </span>
-  </div>
+  </>
 );
 
 const StackItem = ({
@@ -51,8 +50,12 @@ const StackItem = ({
   value?: React.ReactNode;
 }) => (
   <div className="flex flex-col gap-1">
-    <span className="text-slate-400 font-light text-sm">{label}</span>
-    <span className="text-slate-900 font-medium text-base">{value || "-"}</span>
+    <span className="text-slate-400 font-light text-sm leading-5">
+      {label}
+    </span>
+    <span className="text-slate-900 font-medium text-sm leading-5">
+      {value || "-"}
+    </span>
   </div>
 );
 
@@ -157,17 +160,14 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <RowItem label="ทะเบียนรถ" value={job?.vehicle.registration} />
-            <RowItem
-              label="เลขตัวถัง"
-              value={job?.vehicle.chassisNumber ?? "-"}
-            />
-            <RowItem label="ยี่ห้อ/แบรนด์" value={job?.vehicle.brand} />
-            <RowItem label="รุ่น" value={job?.vehicle.model} />
-            <RowItem label="ปี" value={job?.vehicle.year} />
-            <RowItem label="สี" value={job?.vehicle.color} />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8">
+  <RowItem label="ทะเบียนรถ" value={job?.vehicle.registration} />
+  <RowItem label="เลขตัวถัง" value={job?.vehicle.chassisNumber ?? "-"} />
+  <RowItem label="ยี่ห้อ/แบรนด์" value={job?.vehicle.brand} />
+  <RowItem label="รุ่น" value={job?.vehicle.model} />
+  <RowItem label="ปี" value={job?.vehicle.year} />
+  <RowItem label="สี" value={job?.vehicle.color} />
+</div>
         </Section>
 
         <Section title="รายละเอียดการซ่อม" subtitle="ข้อมูลการซ่อม">
