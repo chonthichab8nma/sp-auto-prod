@@ -80,7 +80,7 @@ export default function DashboardStats({
               <Icon className={`h-6 w-6 ${card.iconColor}`} />
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-medium text-slate-500 truncate">
+              <p className="text-[13px] font-medium text-slate-500 truncate leading-6 py-px">
                 {card.label}
               </p>
               <p className="text-[20px] font-bold text-slate-800 leading-none mt-1">
