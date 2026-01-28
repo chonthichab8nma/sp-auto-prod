@@ -4,8 +4,6 @@ import "react-day-picker/dist/style.css";
 import { format, parseISO, isValid } from "date-fns";
 import { th } from "date-fns/locale";
 
-type Mode = "single" | "range";
-
 type BaseProps = {
   label?: React.ReactNode;
   placeholder?: string;
