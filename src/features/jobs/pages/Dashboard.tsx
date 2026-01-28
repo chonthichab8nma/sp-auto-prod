@@ -124,7 +124,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="bg-white p-8 rounded-xl flex flex-col gap-1">
+      <div className="bg-white p-8 rounded-xl flex-col gap-1 hidden md:flex">
         <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
       </div>
 
