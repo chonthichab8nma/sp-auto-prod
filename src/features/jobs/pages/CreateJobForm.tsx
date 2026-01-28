@@ -301,8 +301,8 @@ export default function CreateJobForm() {
     setSelectedEmployee(null);
 
     if (errors.receiver) {
-    setErrors((prev) => ({ ...prev, receiver: "" }));
-  }
+      setErrors((prev) => ({ ...prev, receiver: "" }));
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -317,8 +317,8 @@ export default function CreateJobForm() {
     setEmployeeQuery(emp.name);
 
     if (errors.receiver) {
-    setErrors((prev) => ({ ...prev, receiver: "" }));
-  }
+      setErrors((prev) => ({ ...prev, receiver: "" }));
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -695,9 +695,9 @@ export default function CreateJobForm() {
                     selectedEmployee ? selectedEmployee.name : employeeQuery
                   }
                   onChange={(e) => onEmployeeQueryChange(e.target.value)}
-                  className={`w-full px-4 py-2 rounded-lg border text-sm outline-none transition-all
-      ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"}
-    `}
+                  className={` w-full px-4 py-2 rounded-lg border text-sm leading-relaxed outline-none transition-all 
+                  ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500"}
+                  `}
                 />
                 {errors.receiver && (
                   <p className="text-xs text-red-500">{errors.receiver}</p>

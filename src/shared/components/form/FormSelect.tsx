@@ -1,91 +1,9 @@
-// import React from "react";
-
-// interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-//   label?: React.ReactNode;
-//   options: string[];
-//   placeholder?: string;
-//   error?: string;
-// }
-
-// const FormSelect = ({
-//   label,
-//   options,
-//   placeholder = "กรุณาเลือก",
-//   className = "",
-//   value,
-//   error,
-//   ...props
-// }: FormSelectProps) => {
-//   return (
-//     <div className="flex flex-col gap-2">
-//       {label && (
-//         <label className="text-sm font-medium text-slate-800">{label}</label>
-//       )}
-
-//       <div className="relative">
-//         <select
-//           {...props}
-          
-//           value={value}
-//           className={`
-//              w-full px-4 py-2 bg-white
-//               border rounded-lg
-//               text-sm text-slate-800
-//               outline-none appearance-none
-//               transition-all cursor-pointer
-
-//             hover:bg-slate-50 hover:border-slate-300
-
-//             ${
-//               error
-//                 ? "border-red-500 focus:border-red-500"
-//                 : "border-slate-200 focus:border-blue-600"
-//             }
-
-//             border-slate-200 focus:border-blue-600"
-//             disabled:bg-slate-50 disabled:text-slate-400
-//             ${value === "" ? "text-slate-400" : ""} 
-//             ${className}
-//           `.trim()}
-//         >
-//           <option value="" disabled>
-//             {placeholder}
-//           </option>
-
-//           {options.map((option, index) => (
-//             <option key={index} value={option} className="text-slate-800">
-//               {option}
-//             </option>
-//           ))}
-//         </select>
-
-//         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-//           <svg
-//             xmlns="http://www.w3.org/2000/svg"
-//             width="16"
-//             height="16"
-//             viewBox="0 0 24 24"
-//             fill="none"
-//             stroke="currentColor"
-//             strokeWidth="2"
-//             strokeLinecap="round"
-//             strokeLinejoin="round"
-//           >
-//             <path d="m6 9 6 6 6-6" />
-//           </svg>
-//         </div>
-//       </div>
-//       {error && <p className="text-xs text-red-500">{error}</p>}
-//     </div>
-//   );
-// };
-
-// export default FormSelect;
-
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-interface FormSelectProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children"> {
+interface FormSelectProps extends Omit<
+  React.SelectHTMLAttributes<HTMLSelectElement>,
+  "children"
+> {
   label?: React.ReactNode;
   options: string[];
   placeholder?: string;
@@ -140,7 +58,7 @@ const FormSelect = ({
         <label className="text-sm font-medium text-slate-800">{label}</label>
       )}
 
-      {/* hidden native select เพื่อให้ name/required/validation ยังทำงาน */}
+      {/* hidden native select */}
       <select
         {...props}
         name={name}
@@ -169,14 +87,20 @@ const FormSelect = ({
           disabled={disabled}
           onClick={() => !disabled && setOpen((v) => !v)}
           className={`
-            w-full h-11 px-4 pr-10 text-left
-            bg-white border rounded-lg text-sm outline-none transition-all
-            hover:border-slate-300
-            focus:ring-2 focus:ring-blue-200
-            ${error ? "border-red-500 focus:border-red-500" : "border-slate-200 focus:border-blue-600"}
-            ${disabled ? "bg-slate-50 text-slate-400 cursor-not-allowed" : "text-slate-800"}
-            ${className}
-          `.trim()}
+    w-full h-9.75 px-4 pr-10 text-left
+    bg-white border rounded-lg
+    text-sm leading-normal text-slate-800
+    outline-none transition-all
+
+    flex items-center
+
+    hover:bg-slate-50 hover:border-slate-300
+
+    ${error ? "border-red-500 focus:border-red-500" : "border-slate-200 focus:border-blue-600"}
+
+    disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed
+    ${className}
+  `.trim()}
         >
           <span className={selectedLabel ? "" : "text-slate-400"}>
             {selectedLabel || placeholder}
@@ -231,4 +155,3 @@ const FormSelect = ({
 };
 
 export default FormSelect;
-

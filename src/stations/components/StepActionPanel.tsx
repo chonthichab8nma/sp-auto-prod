@@ -81,11 +81,11 @@ export default function StepActionPanel({
         </div>
       </div>
 
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-6 ">
         {/* Operator autocomplete */}
-        <div className="space-y-2 relative">
-          <label className="text-sm font-medium text-slate-700">
-            ผู้ดำเนินการ <span className="text-red-500">*</span>
+        <div className="space-y-4 relative">
+          <label className=" block mb-2 text-sm font-medium text-slate-700">
+            ผู้ดำเนินการ <span className="text-red-500 ">*</span>
           </label>
 
           <input
@@ -148,7 +148,7 @@ export default function StepActionPanel({
 
         {/* Status */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">สถานะ</label>
+          <label className="block mb-2 text-sm font-medium text-slate-700">สถานะ</label>
           <div className="grid grid-cols-2 gap-4">
             {canSkip && (
               <button
