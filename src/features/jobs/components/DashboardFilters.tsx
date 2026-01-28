@@ -128,9 +128,19 @@ export default function DashboardFilters({
 
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className="w-full flex items-center justify-between border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-600 bg-white hover:bg-slate-50 transition-colors"
+            className="
+      w-full h-11
+      text-left
+      pl-10 pr-4
+      border border-slate-200 rounded-xl
+      text-sm text-slate-700 bg-white
+      hover:bg-slate-50
+      focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500
+      transition
+    "
           >
-            <span>
+            <Calendar className="absolute left-3 top-10.75 h-4 w-4 text-slate-400" />
+            <span className="block truncate text-slate-600">
               {startDate || endDate
                 ? `${
                     startDate
@@ -143,7 +153,6 @@ export default function DashboardFilters({
                   }`
                 : "เลือกช่วงวันที่"}
             </span>
-            <Calendar className="h-4 w-4 text-slate-400" />
           </button>
 
           {showDatePicker && (
@@ -184,13 +193,20 @@ export default function DashboardFilters({
         <div className="lg:col-span-6 flex gap-2">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              showAdvancedFilters
-                ? "bg-blue-50 text-blue-600 border border-blue-200"
-                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-            }`}
+            className={`
+    relative flex-1 h-11
+    pl-10 pr-4
+    rounded-xl border
+    text-sm font-medium text-left
+    transition-colors
+    ${
+      showAdvancedFilters
+        ? "bg-blue-50 text-blue-600 border-blue-200"
+        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+    }
+  `}
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" />
             ตัวกรองเพิ่มเติม
           </button>
           <button
