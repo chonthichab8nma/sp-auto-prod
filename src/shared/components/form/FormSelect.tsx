@@ -33,6 +33,8 @@ const FormSelect = ({
 }: FormSelectProps) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const selectRef = useRef<HTMLSelectElement | null>(null); // (optional ถ้าจะ dispatch event)
 
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<Pos | null>(null);
@@ -45,23 +47,55 @@ const FormSelect = ({
 
   useEffect(() => {
     const onDocDown = (e: MouseEvent) => {
-      if (!rootRef.current) return;
-      if (!rootRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+
+      setOpen(false);
     };
     document.addEventListener("mousedown", onDocDown);
     return () => document.removeEventListener("mousedown", onDocDown);
   }, []);
 
+  // const commit = (next: string) => {
+
+  //   console.log(next)
+  //   onChange?.({
+  //     target: { name: name ?? "", value: next } as any,
+  //     currentTarget: { name: name ?? "", value: next } as any,
+  //   } as React.ChangeEvent<HTMLSelectElement>);
+
+  //   setOpen(false);
+  //   requestAnimationFrame(() => btnRef.current?.focus());
+  // };
+
   const commit = (next: string) => {
-    onChange?.({
-      target: { name: name ?? "", value: next } as any,
-      currentTarget: { name: name ?? "", value: next } as any,
-    } as React.ChangeEvent<HTMLSelectElement>);
+    // ✅ วิธีที่ชัวร์: ยิง change event จริงจาก <select>
+    const el = selectRef.current;
+    if (el) {
+      // set value แบบ native แล้ว dispatch change (ให้ React จับได้เป็น synthetic event)
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLSelectElement.prototype,
+        "value",
+      )?.set;
+      setter?.call(el, next);
+
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    } else {
+      // fallback: เรียก callback ตรง ๆ (ถ้าไม่ได้ใช้ ref)
+      onChange?.({
+        target: { name: name ?? "", value: next } as unknown as EventTarget &
+          HTMLSelectElement,
+        currentTarget: {
+          name: name ?? "",
+          value: next,
+        } as unknown as EventTarget & HTMLSelectElement,
+      } as unknown as React.ChangeEvent<HTMLSelectElement>);
+    }
 
     setOpen(false);
     requestAnimationFrame(() => btnRef.current?.focus());
   };
-
   const updatePos = () => {
     const el = btnRef.current;
     if (!el) return;
@@ -104,6 +138,8 @@ const FormSelect = ({
     open && !disabled && pos
       ? createPortal(
           <div
+            ref={menuRef}
+            onMouseDown={(e) => e.stopPropagation()}
             className="fixed z-[9999]"
             style={{ top: pos.top, left: pos.left, width: pos.width }}
           >
@@ -120,7 +156,9 @@ const FormSelect = ({
                     <li key={o}>
                       <button
                         type="button"
-                        onClick={() => commit(o)}
+                        onClick={() => {
+                          commit(o);
+                        }}
                         className={[
                           "w-full text-left px-4 py-2 text-sm leading-normal",
                           "hover:bg-blue-50 hover:text-blue-700",
@@ -148,12 +186,16 @@ const FormSelect = ({
       )}
 
       <select
+       ref={selectRef} 
         {...props}
         name={name}
         value={stringValue}
         required={required}
         disabled={disabled}
-        onChange={onChange}
+        onChange={(e) => {
+          console.log(e);
+          onChange?.(e);
+        }}
         className="sr-only"
         tabIndex={-1}
         aria-hidden="true"

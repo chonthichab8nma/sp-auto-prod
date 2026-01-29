@@ -163,6 +163,11 @@ export default function Dashboard() {
           values={statsValues}
         />
 
+        <pre>{
+
+          JSON.stringify(advancedFilters,null,2)
+          }</pre>
+
 
 
         {error && (
