@@ -163,10 +163,10 @@ export default function Dashboard() {
           values={statsValues}
         />
 
-        <pre>{
+        {/* <pre>{
 
           JSON.stringify(advancedFilters,null,2)
-          }</pre>
+          }</pre> */}
 
 
 
