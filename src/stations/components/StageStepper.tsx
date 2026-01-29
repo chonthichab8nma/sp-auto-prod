@@ -16,7 +16,6 @@ export default function StageStepper({
   checkpointIndex,
 }: {
   job: JobApi;
-  /** ใช้สำหรับ “สถานีที่กำลังดู (ย้อนดูได้)” ถ้าไม่ส่งมา จะยึดตาม job.status */
   checkpointIndex?: number;
 }) {
   const stages = (job.jobStages ?? [])

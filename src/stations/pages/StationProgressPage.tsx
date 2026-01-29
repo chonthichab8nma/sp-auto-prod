@@ -15,7 +15,6 @@ import StepTimeline, { type StepVM } from "../components/StepTimeline";
 import StepActionPanel from "../components/StepActionPanel";
 import { useStationProgressMutation } from "../hooks/useStationProgressMutation";
 import ProgressHeader from "../components/ProgressHeader";
-import { useEmployeesQuery } from "../hooks/useEmployeesQuery";
 import type { EmployeeApi } from "../api/employees.api";
 
 function sortStages(stages: JobStageApi[]) {
@@ -24,7 +23,6 @@ function sortStages(stages: JobStageApi[]) {
 
 export default function StationProgressPage({
   job,
-  // isRefetching = false,
   onUpdateStep,
 }: {
   job: JobApi;
@@ -48,10 +46,6 @@ export default function StationProgressPage({
     () => sortStages(jobState.jobStages ?? []),
     [jobState.jobStages],
   );
-
-  /**
-   * ตำแหน่งสถานีจริง
-   */
 
   const stageIdx = useMemo(() => {
     if (stages.length === 0) return 0;
@@ -130,15 +124,9 @@ export default function StationProgressPage({
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
 
-  const [employeeQuery, setEmployeeQuery] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
     null,
   );
-
-  const { employees, loading: employeesLoading } =
-    useEmployeesQuery(employeeQuery);
-
-  const employeeOptions = useMemo(() => employees.slice(0, 8), [employees]);
 
   const [selectedAction, setSelectedAction] = useState<StepStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -326,7 +314,6 @@ export default function StationProgressPage({
       }
 
       setSelectedEmployee(null);
-      setEmployeeQuery("");
 
       toast.dismiss(tId);
       toast.success("บันทึกสำเร็จ");
@@ -358,12 +345,6 @@ export default function StationProgressPage({
         status={jobState.status}
         onBack={() => navigate(-1)}
       />
-      {/* {isRefetching && (
-        <div className="fixed top-4 right-4 z-50 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-lg flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-slate-600">กำลังโหลด...</span>
-        </div>
-      )} */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
           <div className="flex gap-4 w-full xl:w-auto min-w-0">
@@ -419,20 +400,11 @@ export default function StationProgressPage({
                 }}
                 disabled={checkpointIndex >= stages.length - 1 || !isStageDone}
                 className="flex-1 xl:flex-none px-6 py-2 bg-blue-600 text-white rounded-lg
-      text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-200
-      transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-200
+                transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ถัดไป
               </button>
-              {/* <button
-  onClick={() => {
-    setFollowMode(true);
-    setCheckpointIndex(stageIdx);
-  }}
-  className="flex-1 xl:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
->
-  กลับมาสถานีปัจจุบัน
-</button> */}
             </div>
           </div>
         </div>
@@ -475,17 +447,9 @@ export default function StationProgressPage({
               <StepActionPanel
                 stepName={activeStep.name}
                 stepStatus={activeStep.status}
-                employeeQuery={employeeQuery}
-                onEmployeeQueryChange={(v) => {
-                  setEmployeeQuery(v);
-                  setSelectedEmployee(null);
-                }}
-                employeeOptions={employeeOptions}
-                employeeLoading={employeesLoading}
                 selectedEmployee={selectedEmployee}
-                onSelectEmployee={(emp) => {
+                onSelectEmployee={(emp: EmployeeApi | null) => {
                   setSelectedEmployee(emp);
-                  setEmployeeQuery(emp.name);
                 }}
                 selectedAction={selectedAction}
                 onSelectAction={setSelectedAction}

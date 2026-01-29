@@ -243,9 +243,8 @@ export default function StepActionPanel({
   stepName: string;
   stepStatus: StepStatus;
 
-  // ✅ ตัด employeeQuery / options / loading ออก เพราะ component จัดการเอง
   selectedEmployee: EmployeeApi | null;
-  onSelectEmployee: (emp: EmployeeApi | null) => void; // ✅ เปลี่ยนให้รับ null ได้ (เวลา user พิมพ์ใหม่)
+  onSelectEmployee: (emp: EmployeeApi | null) => void;
 
   selectedAction: StepStatus | null;
   onSelectAction: (s: StepStatus) => void;
@@ -281,7 +280,9 @@ export default function StepActionPanel({
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h3 className="text-sm font-medium text-slate-500 mb-1">เช็กรายการ</h3>
+          <h3 className="text-sm font-medium text-slate-500 mb-1">
+            เช็กรายการ
+          </h3>
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-slate-900">{stepName}</span>
             {getBadge()}
@@ -290,7 +291,6 @@ export default function StepActionPanel({
       </div>
 
       <div className="flex-1 space-y-6">
-        {/* ✅ Operator autocomplete (ใช้ component เดียว) */}
         <EmployeeAutocomplete
           label={
             <>
@@ -367,7 +367,9 @@ export default function StepActionPanel({
                 )}
               </div>
 
-              <span className="text-sm font-medium text-slate-700">เสร็จสิ้น</span>
+              <span className="text-sm font-medium text-slate-700">
+                เสร็จสิ้น
+              </span>
             </button>
           </div>
         </div>
