@@ -18,7 +18,6 @@ export function useJobQuery(jobId: string | undefined) {
       return;
     }
 
-    // ถ้าเคย fetch แล้ว ใช้ isRefetching แทน loading
     if (hasFetchedOnce.current) {
       setIsRefetching(true);
     } else {

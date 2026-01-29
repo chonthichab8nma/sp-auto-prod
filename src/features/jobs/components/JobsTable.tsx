@@ -132,15 +132,9 @@ export default function StationsTable({
                 </td>
 
                 <td className="box-border px-6 py-4 text-slate-600">
-                  <div className="flex flex-col leading-tight">
-                    {/* <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>
-                      {job.vehicle.brand} {job.vehicle.model}
-                    </span> */}
+                  <div className="flex flex-col leading-normal">
                     <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>
                       {job.vehicle.brand} {job.vehicle.model}
-                    </span>
-                    <span className="text-[12px] text-slate-400 truncate">
-                      {job.vehicle.type || "-"}
                     </span>
                   </div>
                 </td>

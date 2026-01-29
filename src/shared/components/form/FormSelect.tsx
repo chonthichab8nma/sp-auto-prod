@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
+import { createPortal } from "react-dom";
 interface FormSelectProps extends Omit<
   React.SelectHTMLAttributes<HTMLSelectElement>,
   "children"
@@ -8,7 +8,15 @@ interface FormSelectProps extends Omit<
   options: string[];
   placeholder?: string;
   error?: string;
+  // portal?: boolean;
 }
+
+type Pos = {
+  top: number;
+  left: number;
+  width: number;
+  placement: "down" | "up";
+};
 
 const FormSelect = ({
   label,
@@ -27,6 +35,8 @@ const FormSelect = ({
   const btnRef = useRef<HTMLButtonElement | null>(null);
 
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<Pos | null>(null);
+
   const stringValue = (value ?? "") as string;
 
   const selectedLabel = useMemo(() => {
@@ -52,13 +62,91 @@ const FormSelect = ({
     requestAnimationFrame(() => btnRef.current?.focus());
   };
 
+  const updatePos = () => {
+    const el = btnRef.current;
+    if (!el) return;
+
+    const r = el.getBoundingClientRect();
+    const gap = 8;
+    const menuMaxH = 288;
+    const spaceBelow = window.innerHeight - r.bottom - gap;
+    const spaceAbove = r.top - gap;
+
+    const placement: Pos["placement"] =
+      spaceBelow < Math.min(menuMaxH, 200) && spaceAbove > spaceBelow
+        ? "up"
+        : "down";
+
+    const top = placement === "down" ? r.bottom + gap : r.top - gap;
+
+    const padding = 8;
+    const maxLeft = Math.max(padding, window.innerWidth - r.width - padding);
+    const left = Math.min(Math.max(r.left, padding), maxLeft);
+
+    setPos({ top, left, width: r.width, placement });
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    updatePos();
+
+    const onAny = () => updatePos();
+    window.addEventListener("resize", onAny);
+    window.addEventListener("scroll", onAny, true);
+
+    return () => {
+      window.removeEventListener("resize", onAny);
+      window.removeEventListener("scroll", onAny, true);
+    };
+  }, [open]);
+
+  const dropdown =
+    open && !disabled && pos
+      ? createPortal(
+          <div
+            className="fixed z-[9999]"
+            style={{ top: pos.top, left: pos.left, width: pos.width }}
+          >
+            <div
+              className={[
+                "rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden",
+                pos.placement === "up" ? "-translate-y-full" : "",
+              ].join(" ")}
+            >
+              <ul className="max-h-72 overflow-auto py-1">
+                {options.map((o) => {
+                  const isSelected = o === stringValue;
+                  return (
+                    <li key={o}>
+                      <button
+                        type="button"
+                        onClick={() => commit(o)}
+                        className={[
+                          "w-full text-left px-4 py-2 text-sm leading-normal",
+                          "hover:bg-blue-50 hover:text-blue-700",
+                          isSelected
+                            ? "font-medium text-blue-700"
+                            : "text-slate-800",
+                        ].join(" ")}
+                      >
+                        {o}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div className="flex flex-col gap-2" ref={rootRef}>
       {label && (
         <label className="text-sm font-medium text-slate-800">{label}</label>
       )}
 
-      {/* hidden native select */}
       <select
         {...props}
         name={name}
@@ -85,7 +173,14 @@ const FormSelect = ({
           ref={btnRef}
           type="button"
           disabled={disabled}
-          onClick={() => !disabled && setOpen((v) => !v)}
+          onClick={() => {
+            if (disabled) return;
+            setOpen((v) => {
+              const next = !v;
+              if (!v && next) requestAnimationFrame(updatePos);
+              return next;
+            });
+          }}
           className={`
             placeholder:py-2
     w-full h-9.75 px-4 pr-10 text-left
@@ -123,31 +218,7 @@ const FormSelect = ({
             </svg>
           </span>
         </button>
-
-        {open && !disabled && (
-          <div className="absolute z-50 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
-            <ul className="max-h-72 overflow-auto py-1">
-              {options.map((o) => {
-                const isSelected = o === stringValue;
-                return (
-                  <li key={o}>
-                    <button
-                      type="button"
-                      onClick={() => commit(o)}
-                      className={`
-                        w-full text-left px-4 py-2 text-sm
-                        hover:bg-blue-50 hover:text-blue-700
-                        ${isSelected ? "font-medium text-blue-700" : "text-slate-800"}
-                      `}
-                    >
-                      {o}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+        {dropdown}
       </div>
 
       {error && <p className="text-xs text-red-500">{error}</p>}
