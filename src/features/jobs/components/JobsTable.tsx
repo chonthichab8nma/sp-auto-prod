@@ -1,4 +1,3 @@
-// import { ArrowUpDown, MoreVertical } from "lucide-react";
 import type { JobApi } from "../api/job.api";
 import StatusBadge from "../../../shared/components/ui/StatusBadge";
 import Skeleton from "../../../shared/components/ui/Skeleton";
@@ -134,6 +133,9 @@ export default function StationsTable({
 
                 <td className="box-border px-6 py-4 text-slate-600">
                   <div className="flex flex-col leading-tight">
+                    {/* <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>
+                      {job.vehicle.brand} {job.vehicle.model}
+                    </span> */}
                     <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>
                       {job.vehicle.brand} {job.vehicle.model}
                     </span>

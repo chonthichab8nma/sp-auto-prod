@@ -3,8 +3,8 @@ import type { JobFormData } from "../../../Type";
 import FormInput from "../../../shared/components/form/FormInput";
 import FormSelect from "../../../shared/components/form/FormSelect";
 import { useNavigate } from "react-router-dom";
-import type { EmployeeApi } from "../../../stations/api/employees.api";
-import { getEmployeesApi } from "../../../stations/api/employees.api";
+import EmployeeAutocomplete from "../../../shared/components/ui/EmployeeAutocomplete";
+
 import toast from "react-hot-toast";
 
 import {
@@ -22,6 +22,7 @@ import {
 import { jobsService } from "../services/jobs.service";
 import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
 import { CalendarIcon } from "lucide-react";
+import type { EmployeeApi } from "../../../stations/api/employees.api";
 
 type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null;
@@ -30,13 +31,6 @@ type CreateJobFormState = JobFormData & {
 
   isExistingVehicle?: boolean;
 };
-
-// type EmployeeApi = {
-//   id: number;
-//   name: string;
-//   role?: string | null;
-//   phone?: string | null;
-// };
 
 const LabelWithStar = ({ text }: { text: string }) => (
   <span className="inline-flex items-center gap-1">
@@ -92,8 +86,6 @@ export default function CreateJobForm() {
   const [brandModels, setBrandModels] = useState<VehicleModelApi[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
-  // const [vehiclesCache, setVehiclesCache] = useState<VehicleApi[] | null>(null);
-
   const [insurances, setInsurances] = useState<InsuranceCompanyApi[]>([]);
   const [isLoadingInsurances, setIsLoadingInsurances] = useState(false);
 
@@ -109,7 +101,6 @@ export default function CreateJobForm() {
     [formData.paymentType],
   );
 
-  //fetch dropdown meta (types + brands/models)
   useEffect(() => {
     let alive = true;
 
@@ -292,79 +283,9 @@ export default function CreateJobForm() {
     }
   };
 
-  const [employees, setEmployees] = useState<EmployeeApi[]>([]);
-  const [employeeQuery, setEmployeeQuery] = useState("");
-  const [employeeLoading, setEmployeeLoading] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
+  const [receiverEmployee, setReceiverEmployee] = useState<EmployeeApi | null>(
     null,
   );
-
-  const onEmployeeQueryChange = (v: string) => {
-    setEmployeeQuery(v);
-    setSelectedEmployee(null);
-
-    if (errors.receiver) {
-      setErrors((prev) => ({ ...prev, receiver: "" }));
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      receiver: v,
-      receiverId: null, // ถ้าคุณมี field นี้ แนะนำให้เคลียร์ตอนพิมพ์ใหม่
-    }));
-  };
-
-  const onSelectEmployee = (emp: EmployeeApi) => {
-    setSelectedEmployee(emp);
-    // setEmployeeQuery("");
-    setEmployeeQuery(emp.name);
-
-    if (errors.receiver) {
-      setErrors((prev) => ({ ...prev, receiver: "" }));
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      receiver: emp.name,
-      receiverId: emp.id,
-    }));
-  };
-
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      try {
-        setEmployeeLoading(true);
-        const res = await getEmployeesApi({});
-        const list = Array.isArray(res) ? res : (res?.data ?? []);
-        if (!alive) return;
-        setEmployees(list);
-      } catch (e) {
-        console.error(e);
-        if (alive) setEmployees([]);
-      } finally {
-        if (alive) setEmployeeLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const employeeOptions = useMemo(() => {
-    const q = employeeQuery.trim().toLowerCase();
-    if (!q) return [];
-    return employees
-      .filter((e) => (e.name ?? "").toLowerCase().includes(q))
-      .slice(0, 20);
-  }, [employees, employeeQuery]);
-
-  const showEmployeeDropdown =
-    !!employeeQuery.trim() &&
-    !selectedEmployee &&
-    (employeeLoading || employeeOptions.length > 0);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -473,14 +394,14 @@ export default function CreateJobForm() {
 
     const normalizedReg = normalizeRegistration(formData.registration || "");
 
-    // payload ส่วนกลาง
+    // payload
     const basePayload = {
       startDate: isoDateValueStartDate,
       estimatedEndDate: isoDateValueEstimateDate,
-      receiver: formData.receiver,
+      receiver: formData.receiver || "",
+      receiverId: formData.receiverId ?? null,
       paymentType: formData.paymentType,
       excessFee: formData.excessFee,
-      // receiverId: formData.receiverId,
       customer: {
         name: formData.customerName || "",
         phone: formData.customerPhone || "",
@@ -559,8 +480,6 @@ export default function CreateJobForm() {
               onChange={handleChange}
               onBlur={lookupRegistrationAndAutofill}
               error={errors.registration}
-
-              // required
             />
             <FormInput
               label={<LabelWithStar text="เลขตัวถัง" />}
@@ -582,7 +501,6 @@ export default function CreateJobForm() {
               onChange={handleChange}
               placeholder="เลือกยี่ห้อ/แบรนด์รถ"
               error={errors.brand}
-              // required
             />
             <FormSelect
               options={modelOptions}
@@ -603,18 +521,7 @@ export default function CreateJobForm() {
                     : "เลือกรุ่นรถ"
               }
               error={errors.model}
-              // required
             />
-            {/* <FormSelect
-
-              options={typeOptions}
-              label={<LabelWithStar text="ประเภทรถ" />}
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              placeholder="เลือกประเภทรถ"
-              
-            /> */}
             <ReadOnlyValue label="ประเภทรถ" value={formData.type} />
 
             <div className="grid grid-cols-2 gap-4">
@@ -627,7 +534,6 @@ export default function CreateJobForm() {
                 onChange={handleChange}
                 placeholder="ปี"
                 error={errors.year}
-                // required
               />
               <FormInput
                 label={<LabelWithStar text="สี" />}
@@ -637,7 +543,6 @@ export default function CreateJobForm() {
                 onChange={handleChange}
                 placeholder="ระบุสี"
                 error={errors.color}
-                // required
               />
             </div>
             {formData.isExistingVehicle && formData.vehicleId ? (
@@ -658,19 +563,17 @@ export default function CreateJobForm() {
 
           <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
             <DatePickerPopover
-            className="lg:col-span-1"
+              className="lg:col-span-1"
               mode="single"
               label={<LabelWithStar text="วันที่นำรถเข้าจอดซ่อม" />}
               value={formData.startDate}
               error={errors.startDate}
-              onChange={(v) =>
-                setFormData((p) => ({ ...p, startDate: v }))
-              }
+              onChange={(v) => setFormData((p) => ({ ...p, startDate: v }))}
               triggerClassName="h-9.5! rounded-lg!"
               icon={<CalendarIcon className="h-4 w-4" />}
             />
             <DatePickerPopover
-            className="lg:col-span-1"
+              className="lg:col-span-1"
               mode="single"
               label={<LabelWithStar text="กำหนดซ่อมเสร็จ/นัดรับรถ" />}
               value={formData.estimatedEndDate}
@@ -682,7 +585,7 @@ export default function CreateJobForm() {
               icon={<CalendarIcon className="h-4 w-4" />}
             />
             <FormInput
-             className="lg:col-span-1"
+              className="lg:col-span-1"
               label={<LabelWithStar text="ค่าความเสียหายส่วนแรก" />}
               name="excessFee"
               value={formData.excessFee}
@@ -691,64 +594,32 @@ export default function CreateJobForm() {
               onFocus={(e) => e.target.select()}
               // error={errors.excessFee}
             />
-
             <div className="sm:col-span-2 lg:col-span-3 pt-2">
-              <div className="flex flex-col gap-2 relative ">
-                <label className="text-sm font-medium text-slate-800 bloack ">
-                  <LabelWithStar text="เจ้าหน้าที่รับรถ" />
-                </label>
+              <EmployeeAutocomplete
+                label={<LabelWithStar text="เจ้าหน้าที่รับรถ" />}
+                required
+                value={receiverEmployee}
+                onChange={(emp) => {
+                  setReceiverEmployee(emp);
 
-                <input
-                  name="receiver"
-                  type="text"
-                  placeholder="เลือกพนักงาน"
-                  value={
-                    selectedEmployee ? selectedEmployee.name : employeeQuery
-                  }
-                  onChange={(e) => onEmployeeQueryChange(e.target.value)}
-                  className={`placeholder:py-2 w-full px-4 py-2 rounded-lg border text-sm leading-relaxed outline-none transition-all  placeholder:text-slate-400 
-                  ${errors.receiver ? "border-red-500 focus:border-red-500 bg-white" : "border-slate-200  focus:bg-white focus:border-blue-500"}
-                  `}
-                />
-                {errors.receiver && (
-                  <p className="text-xs text-red-500">{errors.receiver}</p>
-                )}
-
-                {showEmployeeDropdown && (
-                  <div className="absolute top-16 z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
-                    {employeeLoading ? (
-                      <div className="px-4 py-3 text-sm text-slate-500">
-                        กำลังโหลด...
-                      </div>
-                    ) : employeeOptions.length === 0 ? (
-                      <div className="px-4 py-3 text-sm text-slate-500">
-                        ไม่พบพนักงาน
-                      </div>
-                    ) : (
-                      <ul className="max-h-64 overflow-auto">
-                        {employeeOptions.map((emp) => (
-                          <li key={emp.id}>
-                            <button
-                              type="button"
-                              onClick={() => onSelectEmployee(emp)}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center justify-between"
-                            >
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium text-slate-800 truncate">
-                                  {emp.name}
-                                </div>
-                              </div>
-                              <span className="text-xs text-slate-400">
-                                #{emp.id}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.receiver;
+                    return next;
+                  });
+                  setFormData((prev) => ({
+                    ...prev,
+                    receiverId: emp?.id ?? null,
+                    receiver: emp?.name ?? "",
+                  }));
+                }}
+                error={errors.receiver ?? null}
+                placeholder="เลือกพนักงาน"
+                limit={50}
+                minQueryLength={1}
+                debounceMs={250}
+                inputClassName="py-2"
+              />
             </div>
           </div>
         </div>
