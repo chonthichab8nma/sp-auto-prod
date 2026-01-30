@@ -30,10 +30,14 @@ export default function StageStepper({
   const computedActiveStageIndex =
     activeStageCode === null
       ? -1
-      : stages.findIndex((s) => (s.stage.code as StageCode) === activeStageCode);
+      : stages.findIndex(
+          (s) => (s.stage.code as StageCode) === activeStageCode,
+        );
 
   const activeStageIndex =
-    typeof checkpointIndex === "number" ? checkpointIndex : computedActiveStageIndex;
+    typeof checkpointIndex === "number"
+      ? checkpointIndex
+      : computedActiveStageIndex;
 
   return (
     <div className="flex items-center gap-2">
@@ -43,7 +47,6 @@ export default function StageStepper({
 
         return (
           <div key={s.id} className="flex items-center">
-            {/* <div className="flex items-center gap-2"> */}
             <button
               type="button"
               onClick={() => onChange?.(idx)}
@@ -56,8 +59,8 @@ export default function StageStepper({
                     isCompleted
                       ? "bg-green-600 text-white"
                       : isActive
-                      ? "bg-blue-600 text-white"
-                      : "bg-slate-100 text-slate-400"
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-400"
                   }
                 `}
               >
@@ -69,15 +72,20 @@ export default function StageStepper({
                     isCompleted
                       ? "text-slate-900"
                       : isActive
-                      ? "text-blue-700"
-                      : "text-slate-500"
+                        ? "text-blue-700"
+                        : "text-slate-500"
                   }
                 `}
               >
                 {s.stage.name}
               </span>
-              </button>
-            {/* </div> */}
+
+              {isActive && (
+                <span className="ml-auto text-blue-600 text-xs font-semibold">
+                  ●
+                </span>
+              )}
+            </button>
 
             {idx < stages.length - 1 && (
               <ChevronRight size={16} className="mx-2 text-slate-300" />
