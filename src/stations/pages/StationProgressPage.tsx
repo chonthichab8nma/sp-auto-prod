@@ -366,6 +366,18 @@ export default function StationProgressPage({
                   checkpointIndex={checkpointIndex}
                   onChange={(idx) => {
                     setFollowMode(false);
+                    if (idx <= checkpointIndex) {
+                      setCheckpointIndex(idx);
+                      return;
+                    }
+
+                    if (!isStageDone) {
+                      toast.error(
+                        "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
+                      );
+                      return;
+                    }
+
                     setCheckpointIndex(idx);
                   }}
                 />
