@@ -597,7 +597,7 @@ export default function CreateJobForm() {
             <div className="sm:col-span-2 lg:col-span-3 pt-2">
               <EmployeeAutocomplete
                 label={<LabelWithStar text="เจ้าหน้าที่รับรถ" />}
-                required
+                // required
                 value={receiverEmployee}
                 onChange={(emp) => {
                   setReceiverEmployee(emp);
@@ -634,7 +634,7 @@ export default function CreateJobForm() {
 
           <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-5">
             <FormInput
-              label="ชื่อ-นามสกุล"
+              label={<LabelWithStar text="ชื่อ-นามสกุล" />}
               name="customerName"
               value={formData.customerName}
               onChange={handleChange}
@@ -642,7 +642,7 @@ export default function CreateJobForm() {
               error={errors.customerName}
             />
             <FormInput
-              label="เบอร์โทรศัพท์"
+              label={<LabelWithStar text="เบอร์โทรศัพท์" />}
               name="customerPhone"
               value={formData.customerPhone}
               onChange={handleChange}
@@ -650,7 +650,7 @@ export default function CreateJobForm() {
               error={errors.customerPhone}
             />
             <FormInput
-              label="ที่อยู่"
+            label={<LabelWithStar text="ที่อยู่"/>}
               name="customerAddress"
               value={formData.customerAddress}
               onChange={handleChange}
