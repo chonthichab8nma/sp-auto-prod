@@ -364,6 +364,10 @@ export default function StationProgressPage({
                 <StageStepper
                   job={jobState}
                   checkpointIndex={checkpointIndex}
+                  onChange={(idx) => {
+                    setFollowMode(false);
+                    setCheckpointIndex(idx);
+                  }}
                 />
               </div>
             </div>

@@ -14,9 +14,11 @@ const STATUS_TO_STAGE_CODE: Record<JobStatus, StageCode | null> = {
 export default function StageStepper({
   job,
   checkpointIndex,
+  onChange,
 }: {
   job: JobApi;
   checkpointIndex?: number;
+  onChange?: (index: number) => void;
 }) {
   const stages = (job.jobStages ?? [])
     .slice()
@@ -41,7 +43,13 @@ export default function StageStepper({
 
         return (
           <div key={s.id} className="flex items-center">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2"> */}
+            <button
+              type="button"
+              onClick={() => onChange?.(idx)}
+              className="flex items-center gap-2 text-left"
+              aria-current={isActive ? "step" : undefined}
+            >
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors
                   ${
@@ -68,7 +76,8 @@ export default function StageStepper({
               >
                 {s.stage.name}
               </span>
-            </div>
+              </button>
+            {/* </div> */}
 
             {idx < stages.length - 1 && (
               <ChevronRight size={16} className="mx-2 text-slate-300" />
