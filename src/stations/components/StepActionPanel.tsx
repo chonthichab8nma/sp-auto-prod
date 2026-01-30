@@ -76,7 +76,6 @@ export default function StepActionPanel({
               ผู้ดำเนินการ <span className="text-red-500">*</span>
             </>
           }
-          required
           value={selectedEmployee}
           onChange={onSelectEmployee}
           error={error}
