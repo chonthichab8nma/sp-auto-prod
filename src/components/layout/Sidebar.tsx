@@ -54,6 +54,7 @@ export default function Sidebar({
           isCollapsed ? "w-18" : "w-64",
         ].join(" ")}
       >
+
         {/* Header */}
         <div
           className={[
@@ -62,10 +63,21 @@ export default function Sidebar({
           ].join(" ")}
         >
           {!isCollapsed && (
-            <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white font-bold italic text-sm">
-              SP
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white font-bold italic text-sm">
+                SP
+              </div>
+              <div className="leading-tight">
+                <div className="text-sm font-semibold text-slate-800">
+                  SP Auto
+                </div>
+                <div className="text-xs text-slate-500 truncate max-w-[120px]">
+                  ร้านสมชายการช่าง
+                </div>
+              </div>
             </div>
           )}
+
           <button
             type="button"
             onClick={onToggle}
@@ -123,7 +135,14 @@ export default function Sidebar({
             ].join(" ")}
           >
             <LogOut size={18} />
-            {!isCollapsed && <span>ออกจากระบบ</span>}
+            {!isCollapsed && (
+          <div className="flex-1 text-left leading-tight">
+            <div>ออกจากระบบ</div>
+            <div className="text-xs text-slate-400 group-hover:text-red-500 transition-colors">
+              Sign out
+            </div>
+          </div>
+        )}
           </button>
         </div>
       </aside>
