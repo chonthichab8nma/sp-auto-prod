@@ -471,78 +471,82 @@ export default function CreateJobForm() {
             <p className="text-sm text-slate-500 mt-1">ข้อมูลรถ</p>
           </div>
 
-          <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-5">
-            <FormInput
-              label={<LabelWithStar text="ทะเบียนรถ" />}
-              name="registration"
-              placeholder="ระบุทะเบียนรถ"
-              value={formData.registration}
-              onChange={handleChange}
-              onBlur={lookupRegistrationAndAutofill}
-              error={errors.registration}
-            />
-            <FormInput
-              label={<LabelWithStar text="เลขตัวถัง" />}
-              placeholder="ระบุเลขตัวถัง"
-              name="chassisNumber"
-              disabled={!!formData.isExistingVehicle}
-              value={formData.chassisNumber}
-              onChange={handleChange}
-              error={errors.chassisNumber}
-              // required
-            />
-
-            <FormSelect
-              options={brandOptions}
-              label={<LabelWithStar text="ยี่ห้อ/แบรนด์" />}
-              name="brand"
-              disabled={!!formData.isExistingVehicle}
-              value={formData.brand}
-              onChange={handleChange}
-              placeholder="เลือกยี่ห้อ/แบรนด์รถ"
-              error={errors.brand}
-            />
-            <FormSelect
-              options={modelOptions}
-              label={<LabelWithStar text="รุ่น" />}
-              name="model"
-              disabled={
-                !!formData.isExistingVehicle ||
-                !formData.brand ||
-                isLoadingModels
-              }
-              value={formData.model}
-              onChange={handleChange}
-              placeholder={
-                !formData.brand
-                  ? "เลือกรุ่นรถ"
-                  : isLoadingModels
-                    ? "กำลังโหลดรุ่น..."
-                    : "เลือกรุ่นรถ"
-              }
-              error={errors.model}
-            />
-            <ReadOnlyValue label="ประเภทรถ" value={formData.type} />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormSelect
-                options={yearOptions}
-                label={<LabelWithStar text="ปี" />}
-                name="year"
-                disabled={!!formData.isExistingVehicle}
-                value={formData.year}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-4 lg:gap-5">
+            <div className="xl:col-span-4">
+              <FormInput
+                label={<LabelWithStar text="ทะเบียนรถ" />}
+                name="registration"
+                placeholder="ระบุทะเบียนรถ"
+                value={formData.registration}
                 onChange={handleChange}
-                placeholder="ปี"
-                error={errors.year}
+                onBlur={lookupRegistrationAndAutofill}
+                error={errors.registration}
               />
+            </div>
+            <div className="xl:col-span-4">
+              <FormInput
+                label={<LabelWithStar text="เลขตัวถัง" />}
+                placeholder="ระบุเลขตัวถัง"
+                name="chassisNumber"
+                disabled={!!formData.isExistingVehicle}
+                value={formData.chassisNumber}
+                onChange={handleChange}
+                error={errors.chassisNumber}
+                // required
+              />
+            </div>
+            <div className="xl:col-span-4">
+              <FormSelect
+                options={brandOptions}
+                label={<LabelWithStar text="ยี่ห้อ/แบรนด์" />}
+                name="brand"
+                disabled={!!formData.isExistingVehicle}
+                value={formData.brand}
+                onChange={handleChange}
+                placeholder="เลือกยี่ห้อ/แบรนด์รถ"
+                error={errors.brand}
+              />
+            </div>
+            <div className="xl:col-span-4">
+              <FormSelect
+                options={modelOptions}
+                label={<LabelWithStar text="รุ่น" />}
+                name="model"
+                disabled={
+                  !!formData.isExistingVehicle ||
+                  !formData.brand ||
+                  isLoadingModels
+                }
+                value={formData.model}
+                onChange={handleChange}
+                placeholder={
+                  !formData.brand
+                    ? "เลือกรุ่นรถ"
+                    : isLoadingModels
+                      ? "กำลังโหลดรุ่น..."
+                      : "เลือกรุ่นรถ"
+                }
+                error={errors.model}
+              />
+            </div>
+            <div className="xl:col-span-4">
+              <ReadOnlyValue label="ประเภทรถ" value={formData.type} />
+            </div>
+            <div className="xl:col-span-2">
+              {/* ปี */}
+              <FormInput
+                label={<LabelWithStar text="ปี" />}
+                placeholder="ระบุปี"
+                className="w-full"
+              />
+            </div>
+
+            {/* สี */}
+            <div className="xl:col-span-2">
               <FormInput
                 label={<LabelWithStar text="สี" />}
-                name="color"
-                disabled={!!formData.isExistingVehicle}
-                value={formData.color}
-                onChange={handleChange}
                 placeholder="ระบุสี"
-                error={errors.color}
+                className="w-full"
               />
             </div>
             {formData.isExistingVehicle && formData.vehicleId ? (
@@ -650,7 +654,7 @@ export default function CreateJobForm() {
               error={errors.customerPhone}
             />
             <FormInput
-            label={<LabelWithStar text="ที่อยู่"/>}
+              label={<LabelWithStar text="ที่อยู่" />}
               name="customerAddress"
               value={formData.customerAddress}
               onChange={handleChange}

@@ -140,7 +140,7 @@ const FormSelect = ({
           <div
             ref={menuRef}
             onMouseDown={(e) => e.stopPropagation()}
-            className="fixed z-[9999]"
+            className="fixed z-9999"
             style={{ top: pos.top, left: pos.left, width: pos.width }}
           >
             <div
@@ -180,10 +180,12 @@ const FormSelect = ({
       : null;
 
   return (
-    <div className="flex flex-col gap-2" ref={rootRef}>
-      {label && (
-        <label className="text-sm font-medium text-slate-800">{label}</label>
-      )}
+    <div className="flex flex-col gap-1.5 md:gap-1" ref={rootRef}>
+  {label && (
+    <label className="text-sm font-medium text-slate-800">
+      {label}
+    </label>
+  )}
 
       <select
        ref={selectRef} 
