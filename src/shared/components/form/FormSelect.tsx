@@ -180,7 +180,7 @@ const FormSelect = ({
       : null;
 
   return (
-    <div className="flex flex-col gap-1.5 md:gap-1" ref={rootRef}>
+    <div className="flex flex-col gap-2" ref={rootRef}>
   {label && (
     <label className="text-sm font-medium text-slate-800">
       {label}

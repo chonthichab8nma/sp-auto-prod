@@ -534,19 +534,28 @@ export default function CreateJobForm() {
             </div>
             <div className="xl:col-span-2">
               {/* ปี */}
-              <FormInput
+              <FormSelect
+                options={yearOptions}
                 label={<LabelWithStar text="ปี" />}
-                placeholder="ระบุปี"
-                className="w-full"
+                name="year"
+                disabled={!!formData.isExistingVehicle}
+                value={formData.year}
+                onChange={handleChange}
+                placeholder="ปี"
+                error={errors.year}
               />
             </div>
 
             {/* สี */}
             <div className="xl:col-span-2">
-              <FormInput
+             <FormInput
                 label={<LabelWithStar text="สี" />}
+                name="color"
+                disabled={!!formData.isExistingVehicle}
+                value={formData.color}
+                onChange={handleChange}
                 placeholder="ระบุสี"
-                className="w-full"
+                error={errors.color}
               />
             </div>
             {formData.isExistingVehicle && formData.vehicleId ? (
