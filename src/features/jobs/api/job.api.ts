@@ -15,7 +15,7 @@ export type JobsQuery = {
   brand?: string;
   model?: string;
   color?: string;
-  type?: string;
+  typeId?: number;
   year?: string;
   vehicleRegistration?: string;
   chassisNumber?: string;
@@ -192,7 +192,7 @@ export async function getJobsApi(q: JobsQuery): Promise<JobsListApiResponse> {
       brand: q.brand?.trim() || undefined,
       model: q.model?.trim() || undefined,
       color: q.color?.trim() || undefined,
-      type: q.type?.trim() || undefined,
+      typeId: q.typeId,
       year: q.year?.trim() || undefined,
       vehicleRegistration: q.vehicleRegistration?.trim() || undefined,
       chassisNumber: q.chassisNumber?.trim() || undefined,

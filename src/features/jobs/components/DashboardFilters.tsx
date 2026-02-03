@@ -34,7 +34,7 @@ export default function DashboardFilters({
     brand?: string;
     model?: string;
     color?: string;
-    type?: string;
+    typeId?: number;
     year?: string;
     vehicleRegistration?: string;
     chassisNumber?: string;
@@ -67,7 +67,10 @@ export default function DashboardFilters({
   );
 
   const brandOptions = useMemo(() => brands.map((b) => b.name), [brands]);
-  const typeOptions = useMemo(() => types.map((t) => t.name), [types]);
+  const typeOptions = useMemo(
+    () => types.map((t) => `${t.id}::${t.name}`),
+    [types],
+  );
 
   useEffect(() => {
     // Fetch dropdown data
@@ -314,8 +317,18 @@ export default function DashboardFilters({
             <FormSelect
               options={typeOptions}
               placeholder="ทั้งหมด"
-              value={advancedFilters.type ?? ""}
-              onChange={(e) => onAdvancedFilterChange("type", e.target.value)}
+              value={
+                advancedFilters.typeId
+                  ? `${advancedFilters.typeId}::${types.find((t) => t.id === advancedFilters.typeId)?.name ?? ""}`
+                  : ""
+              }
+              onChange={(e) => {
+                const [idStr] = e.target.value.split("::");
+                onAdvancedFilterChange(
+                  "typeId",
+                  idStr ? Number(idStr) : undefined,
+                );
+              }}
             />
           </div>
           {/* Year */}
