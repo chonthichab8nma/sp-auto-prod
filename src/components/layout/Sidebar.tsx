@@ -71,8 +71,8 @@ export default function Sidebar({
                 <div className="text-sm font-semibold text-slate-800">
                   SP Auto
                 </div>
-                <div className="text-xs text-slate-500 truncate max-w-[120px]">
-                  ร้านสมชายการช่าง
+                <div className="text-xs text-slate-500 truncate max-w-30">
+                  ร้านซ่อมรถ
                 </div>
               </div>
             </div>
