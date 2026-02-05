@@ -4,12 +4,11 @@ export type JobsQuery = {
   page: number;
   pageSize: number;
 
-  status?: JobStatusApi; // CLAIM | REPAIR | BILLING | DONE
-  search?: string; // ค้นหาทั่วไป
-  startDateFrom?: string; // YYYY-MM-DD
-  startDateTo?: string; // YYYY-MM-DD
+  status?: JobStatusApi;
+  search?: string;
+  startDateFrom?: string;
+  startDateTo?: string;
 
-  // Advanced Filters
   jobNumber?: string;
   insuranceCompanyId?: number;
   brand?: string;
