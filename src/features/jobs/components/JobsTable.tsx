@@ -11,7 +11,6 @@ const columns = [
   { key: "status", label: "สถานะ", width: 120, align: "center" },
   { key: "start", label: "วันที่นำรถเข้าจอดซ่อม", width: 180, align: "left" },
   { key: "end", label: "วันที่นัดรับรถ", width: 250, align: "left" },
-  // { key: "actions", label: "", width: 56, align: "right" },
 ] as const;
 
 const tableWidth = columns.reduce((sum, c) => sum + c.width, 0);
@@ -20,14 +19,6 @@ const alignClass = (a: string) =>
   a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
 
 function SkeletonCell({ colKey }: { colKey: (typeof columns)[number]["key"] }) {
-
-  // if (colKey === "actions") {
-  //   return (
-  //     <div className="flex justify-end">
-  //       <Skeleton className="h-5 w-5 rounded" />
-  //     </div>
-  //   );
-  // }
 
   if (colKey === "status") {
     return (
@@ -46,7 +37,6 @@ function SkeletonCell({ colKey }: { colKey: (typeof columns)[number]["key"] }) {
     );
   }
 
-  // default
   return <Skeleton className="h-5 w-36" />;
 }
 
