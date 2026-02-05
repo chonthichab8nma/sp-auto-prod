@@ -140,8 +140,6 @@ export default function StationProgressPage({
   const [showBulkSkipConfirm, setShowBulkSkipConfirm] = useState(false);
 
   const isRepairStage = jobState.status === "REPAIR";
-
-  
   const stepsToSkip = useMemo(() => {
     if (!isRepairStage) return [];
     const allSteps = stepsVm.slice(0, -2);
