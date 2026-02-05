@@ -162,14 +162,6 @@ export default function Dashboard() {
           }}
           values={statsValues}
         />
-
-        {/* <pre>{
-
-          JSON.stringify(advancedFilters,null,2)
-          }</pre> */}
-
-
-
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-4">
             โหลดข้อมูลไม่สำเร็จ: {String(error)}

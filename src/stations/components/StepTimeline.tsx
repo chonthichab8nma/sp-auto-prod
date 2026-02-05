@@ -7,7 +7,7 @@ export type StepVM = {
   name: string;
   status: StepStatus;
   timestamp?: string | null;
-  employee?: { name: string }
+  employee?: { name: string };
   isSkippable?: boolean;
 };
 
@@ -29,6 +29,8 @@ function StatusBadge({ status }: { status: StepStatus }) {
   }
   return null;
 }
+
+
 
 export default function StepTimeline({
   title,
@@ -60,6 +62,9 @@ export default function StepTimeline({
               {steps.map((step) => {
                 const isActive = step.id === activeStepId;
                 const isCompleted = step.status === "completed";
+                const isSkipped = step.status === "skipped";
+
+                
 
                 let Icon = Plus;
                 let iconColor = "text-slate-400";
@@ -81,10 +86,7 @@ export default function StepTimeline({
                     onClick={() => onSelectStep(step.id)}
                     className={`
                       relative group flex items-start justify-between p-4 rounded-xl cursor-pointer transition-all border border-transparent
-                      ${isActive
-                        ? "border-slate-100"
-                        : ""
-                      }
+                      ${isActive ? "border-slate-100" : ""}
                     `}
                   >
                     <div className="flex items-start gap-4">
@@ -97,15 +99,18 @@ export default function StepTimeline({
                       <div>
                         <div className="flex items-center">
                           <span
-                            className={`text-sm font-medium ${isCompleted
-                              ? "text-slate-900"
-                              : isActive
-                                ? "text-blue-700"
-                                : "text-slate-600"
-                              }`}
+                            className={`text-sm font-medium ${
+                              isCompleted
+                                ? "text-slate-900"
+                                : isActive
+                                  ? "text-blue-700"
+                                  : "text-slate-600"
+                            }`}
                           >
                             {step.name}
                           </span>
+
+                          
                           <StatusBadge status={step.status} />
                         </div>
 
