@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Filter, CalendarIcon } from "lucide-react";
+import { CirclePlus, Filter, CalendarIcon } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -102,7 +102,7 @@ export default function DashboardFilters({
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
         {/* Insurance Company ID */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-4">
           <span className="text-sm font-semibold text-slate-700 block mb-2">
             บริษัทประกัน
           </span>
@@ -116,10 +116,7 @@ export default function DashboardFilters({
                   )?.name ?? "")
                 : ""
             }
-            className="h-11 rounded-xl
-    border-slate-200
-    hover:border-slate-200 hover:bg-slate-50
-    focus:border-blue-500"
+            className="h-11 rounded-xl border-slate-200hover:border-slate-200 hover:bg-slate-50 focus:border-blue-500"
             onChange={(e) => {
               const name = e.target.value;
               const found = insurances.find((i) => i.name === name);
@@ -164,19 +161,26 @@ export default function DashboardFilters({
           </button>
         </div>
 
-        <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row">
+        <div className="lg:col-span-2 flex ">
           <button
             type="button"
             onClick={() => navigate("/create")}
             className="
-            h-11 w-full lg:flex-1
-           bg-blue-600 text-white
-            rounded-xl
-            text-sm font-medium
-           hover:bg-blue-700
-             transition-colors
-              "
+      h-11 w-full
+      bg-blue-600 text-white
+      rounded-xl
+      text-sm font-semibold
+      inline-flex items-center justify-start gap-2
+      pl-4 pr-5
+      hover:bg-blue-700
+      transition-colors
+      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+      shadow-sm
+    "
           >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
+              <CirclePlus className="h-4 w-4" />
+            </span>
             รับรถ
           </button>
         </div>
