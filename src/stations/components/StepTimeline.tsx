@@ -62,7 +62,7 @@ export default function StepTimeline({
               {steps.map((step) => {
                 const isActive = step.id === activeStepId;
                 const isCompleted = step.status === "completed";
-                const isSkipped = step.status === "skipped";
+                // const isSkipped = step.status === "skipped";
 
                 
 
