@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Search, Filter, CalendarIcon } from "lucide-react";
+import { Filter, CalendarIcon } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,17 +12,13 @@ import FormSelect from "../../../shared/components/form/FormSelect";
 import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
 
 export default function DashboardFilters({
-  searchTerm,
-
   startDate,
   endDate,
   advancedFilters,
-  onSearchTermChange,
 
   onStartDateChange,
   onEndDateChange,
   onAdvancedFilterChange,
-  onSubmitSearch,
 }: {
   searchTerm: string;
   selectedCarType: string;
@@ -97,46 +93,40 @@ export default function DashboardFilters({
       ) {
         setIsTypeDropdownOpen(false);
       }
-      // if (
-      //   datePickerRef.current &&
-      //   !datePickerRef.current.contains(event.target as Node)
-      // ) {
-      //   setShowDatePicker(false);
-      // }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") onSubmitSearch();
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-        {/* Search */}
+        {/* Insurance Company ID */}
         <div className="lg:col-span-3">
-          <label className=" text-sm font-semibold text-slate-700 block mb-2">
-            ค้นหา
-          </label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              className="placeholder:py-2 w-full h-11 pl-10 pr-4 py-2.5
-              border border-slate-200 rounded-xl
-              text-sm text-slate-700
-            placeholder:text-slate-400
-            focus:border-blue-500
-              outline-none transition-all
-            hover:bg-slate-50"
-              placeholder="ค้นหาทะเบียนรถ / ชื่อลูกค้า"
-              value={searchTerm}
-              onChange={(e) => onSearchTermChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
+          <span className="text-sm font-semibold text-slate-700 block mb-2">
+            บริษัทประกัน
+          </span>
+          <FormSelect
+            options={insuranceOptions}
+            placeholder="ทั้งหมด"
+            value={
+              advancedFilters?.insuranceCompanyId
+                ? (insurances.find(
+                    (i) => i.id === advancedFilters.insuranceCompanyId,
+                  )?.name ?? "")
+                : ""
+            }
+            className="h-11 rounded-xl
+    border-slate-200
+    hover:border-slate-200 hover:bg-slate-50
+    focus:border-blue-500"
+            onChange={(e) => {
+              const name = e.target.value;
+              const found = insurances.find((i) => i.name === name);
+
+              onAdvancedFilterChange?.("insuranceCompanyId", found?.id);
+            }}
+          />
         </div>
 
         {/* Date picker */}
@@ -153,7 +143,7 @@ export default function DashboardFilters({
           />
         </div>
 
-        <div className="lg:col-span-3 flex flex-col gap-2 lg:flex-row ">
+        <div className="lg:col-span-3">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className={`
@@ -250,7 +240,7 @@ export default function DashboardFilters({
             />
           </div>
           {/* Registration */}
-          <div>
+          {/* <div>
             <label className="text-xs font-semibold text-slate-500 block mb-1">
               ทะเบียนรถ
             </label>
@@ -263,7 +253,7 @@ export default function DashboardFilters({
                 onAdvancedFilterChange("vehicleRegistration", e.target.value)
               }
             />
-          </div>
+          </div> */}
           {/* Chassis */}
           <div>
             <label className="text-xs font-semibold text-slate-500 block mb-1">
@@ -342,29 +332,6 @@ export default function DashboardFilters({
               placeholder="ระบุปี เช่น 2024"
               value={advancedFilters.year || ""}
               onChange={(e) => onAdvancedFilterChange("year", e.target.value)}
-            />
-          </div>
-          {/* Insurance Company ID */}
-          <div>
-            <span className="text-xs font-semibold text-slate-500 block mb-1">
-              บริษัทประกัน
-            </span>
-            <FormSelect
-              options={insuranceOptions}
-              placeholder="ทั้งหมด"
-              value={
-                advancedFilters.insuranceCompanyId
-                  ? (insurances.find(
-                      (i) => i.id === advancedFilters.insuranceCompanyId,
-                    )?.name ?? "")
-                  : ""
-              }
-              onChange={(e) => {
-                const name = e.target.value;
-                const found = insurances.find((i) => i.name === name);
-
-                onAdvancedFilterChange("insuranceCompanyId", found?.id);
-              }}
             />
           </div>
         </div>

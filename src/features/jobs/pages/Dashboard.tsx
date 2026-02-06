@@ -8,6 +8,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 
 import type { JobsQuery, JobsListApiResponse } from "../api/job.api";
 import { useDashboardQuery } from "../hooks/useDashboardQuery";
+import DashboardSearchInput from "../components/DashboardSearchInput";
 
 function resolveTotalPages(
   res: JobsListApiResponse | null,
@@ -40,7 +41,6 @@ function mapUiStatusToApi(s: string): JobStatusApi | undefined {
       return undefined; // "ทั้งหมด"
   }
 }
-
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -84,7 +84,8 @@ export default function Dashboard() {
       color: advancedFilters.color?.trim() || undefined,
       type: advancedFilters.type?.trim() || undefined,
       year: advancedFilters.year?.trim() || undefined,
-      vehicleRegistration: advancedFilters.vehicleRegistration?.trim() || undefined,
+      vehicleRegistration:
+        advancedFilters.vehicleRegistration?.trim() || undefined,
       chassisNumber: advancedFilters.chassisNumber?.trim() || undefined,
       vinNumber: advancedFilters.vinNumber?.trim() || undefined,
       customerName: advancedFilters.customerName?.trim() || undefined,
@@ -101,7 +102,6 @@ export default function Dashboard() {
   );
 
   const { data, loading, error } = useDashboardQuery(query);
-
 
   const items = data?.data ?? [];
   const totalPages = resolveTotalPages(data, pageSize);
@@ -167,6 +167,17 @@ export default function Dashboard() {
             โหลดข้อมูลไม่สำเร็จ: {String(error)}
           </div>
         )}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+          <div className="lg:col-span-6">
+            <DashboardSearchInput
+              value={searchTerm}
+              onChange={(v) => {
+                setSearchTerm(v);
+              }}
+              onSubmit={() => setCurrentPage(1)}
+            />
+          </div>
+        </div>
 
         <JobsTable
           jobs={items}
