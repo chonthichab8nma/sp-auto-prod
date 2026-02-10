@@ -17,6 +17,7 @@ export default function AppToaster() {
       }}
       containerStyle={{
         top: 16,
+        zIndex: 100000,
       }}
     />
   );

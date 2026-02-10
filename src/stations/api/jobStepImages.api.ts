@@ -1,6 +1,5 @@
 import { http } from "../../shared/lib/http";
 
-/* ---------- types ---------- */
 export type UploadImageErrorApi = {
   fileName: string;
   error: string;
@@ -72,4 +71,13 @@ export function getJobStepImageViewUrl(
   imageId: number,
 ): string {
   return `/api/v1/private/jobs/steps/${stepId}/images/${imageId}/view`;
+}
+
+export async function deleteJobStepImage(
+  stepId: string,
+  imageId: number,
+): Promise<void> {
+  await http.delete(
+    `/private/jobs/steps/${stepId}/images/${imageId}`,
+  );
 }
