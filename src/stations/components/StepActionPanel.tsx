@@ -3,11 +3,13 @@ import type { StepStatus } from "../../Type";
 import type { EmployeeApi } from "../api/employees.api";
 import EmployeeAutocomplete from "../../shared/components/ui/EmployeeAutocomplete";
 import StepImagesUploader from "./StepImagesUploader";
+import StepRemarkPanel from "./StepRemarkPanel";
 
 export default function StepActionPanel({
   stepId,
   stepName,
   stepStatus,
+  initialRemark,
 
   selectedEmployee,
   onSelectEmployee,
@@ -20,10 +22,12 @@ export default function StepActionPanel({
   canSkip = true,
   skipLabel = "ข้าม",
   onBulkSkip,
+  onRemarkSaved,
 }: {
   stepId: string;
   stepName: string;
   stepStatus: StepStatus;
+  initialRemark?: string | null;
 
   selectedEmployee: EmployeeApi | null;
   onSelectEmployee: (emp: EmployeeApi | null) => void;
@@ -36,6 +40,7 @@ export default function StepActionPanel({
   canSkip?: boolean;
   skipLabel?: string;
   onBulkSkip?: () => void;
+  onRemarkSaved?: (stepId: string, remark: string) => void;
 }) {
   const getBadge = () => {
     if (stepStatus === "completed")
@@ -92,6 +97,16 @@ export default function StepActionPanel({
             รูปภาพ
           </label> */}
           <StepImagesUploader stepId={stepId} />
+        </div>
+
+        <div className="mt-3">
+          <StepRemarkPanel
+            stepId={Number(stepId)}
+            status={stepStatus}
+            employeeId={selectedEmployee?.id}
+            initialRemark={initialRemark ?? ""}
+            onSaved={(r) => onRemarkSaved?.(stepId, r)}
+          />
         </div>
 
         {/* Status */}

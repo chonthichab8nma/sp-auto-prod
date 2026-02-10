@@ -1,9 +1,15 @@
 import { http } from "../../shared/lib/http";
 import type { StepStatus } from "../../Type";
 
+export type PatchJobStepStatusBody = {
+  status: StepStatus;
+  employeeId?: number;
+  remark?: string; 
+};
+
 export async function patchJobStepStatus(
   stepId: number,
-  body: { status: StepStatus; employeeId?: number },
+  body: PatchJobStepStatusBody,
 ) {
   if (
     (body.status === "completed" || body.status === "in_progress") &&

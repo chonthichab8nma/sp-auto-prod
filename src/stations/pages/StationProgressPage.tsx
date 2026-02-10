@@ -104,6 +104,7 @@ export default function StationProgressPage({
       timestamp: s.completedAt,
       isSkippable: Boolean(s.stepTemplate?.isSkippable),
       employee: s.employee ? { name: s.employee.name } : undefined,
+      // remark: s.remark ?? null,
     }));
   }, [stages, checkpointIndex]);
 
@@ -123,6 +124,7 @@ export default function StationProgressPage({
   }, [checkpointIndex, stepsVm]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
+  
 
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
     null,
@@ -155,6 +157,10 @@ export default function StationProgressPage({
       .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
     return sorted.length ? String(sorted[sorted.length - 1].id) : null;
   }, [stages, checkpointIndex]);
+
+//   const lastStepIdForViewingStage = useMemo(() => {
+//   return stepsVm.length ? stepsVm[stepsVm.length - 1].id : null;
+// }, [stepsVm]);
 
   const isSavingLastStepNow =
     lastStepIdForViewingStage != null &&
@@ -463,6 +469,8 @@ export default function StationProgressPage({
                 stepId={activeStep.id}
                 stepName={activeStep.name}
                 stepStatus={activeStep.status}
+                initialRemark={activeStep.remark}
+                
                 selectedEmployee={selectedEmployee}
                 onSelectEmployee={(emp: EmployeeApi | null) => {
                   setSelectedEmployee(emp);

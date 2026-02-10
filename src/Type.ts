@@ -7,6 +7,7 @@ export interface Step {
   status: StepStatus;
   timestamp?: string;
   employee?: string;
+  remark?:string;
 }
 
 export interface Stage {

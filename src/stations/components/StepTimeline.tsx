@@ -9,6 +9,7 @@ export type StepVM = {
   timestamp?: string | null;
   employee?: { name: string };
   isSkippable?: boolean;
+  remark?: string | null;
 };
 
 function StatusBadge({ status }: { status: StepStatus }) {

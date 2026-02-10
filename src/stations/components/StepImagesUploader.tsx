@@ -356,7 +356,7 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
             className="cursor-pointer rounded-2xl border border-dashed p-4 text-center text-sm text-slate-400 hover:bg-slate-50"
             onClick={() => inputRef.current?.click()}
           >
-            ยังไม่มีรูป • แตะเพื่อเพิ่มรูป
+            แตะเพื่อเพิ่มรูป
           </div>
         ) : (
           <>
