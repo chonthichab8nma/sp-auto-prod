@@ -2,8 +2,10 @@ import { Check } from "lucide-react";
 import type { StepStatus } from "../../Type";
 import type { EmployeeApi } from "../api/employees.api";
 import EmployeeAutocomplete from "../../shared/components/ui/EmployeeAutocomplete";
+import StepImagesUploader from "./StepImagesUploader";
 
 export default function StepActionPanel({
+  stepId,
   stepName,
   stepStatus,
 
@@ -19,6 +21,7 @@ export default function StepActionPanel({
   skipLabel = "ข้าม",
   onBulkSkip,
 }: {
+  stepId: string;
   stepName: string;
   stepStatus: StepStatus;
 
@@ -84,6 +87,12 @@ export default function StepActionPanel({
           minQueryLength={1}
           debounceMs={250}
         />
+        <div className="space-y-2">
+          {/* <label className="block text-sm font-medium text-slate-700">
+            รูปภาพ
+          </label> */}
+          <StepImagesUploader stepId={stepId} />
+        </div>
 
         {/* Status */}
         <div className="space-y-2">

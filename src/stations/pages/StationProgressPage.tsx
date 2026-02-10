@@ -460,6 +460,7 @@ export default function StationProgressPage({
               </div>
             ) : activeStep ? (
               <StepActionPanel
+                stepId={activeStep.id}
                 stepName={activeStep.name}
                 stepStatus={activeStep.status}
                 selectedEmployee={selectedEmployee}
