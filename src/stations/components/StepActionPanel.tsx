@@ -106,6 +106,7 @@ export default function StepActionPanel({
             employeeId={selectedEmployee?.id}
             initialRemark={initialRemark ?? ""}
             onSaved={(r) => onRemarkSaved?.(stepId, r)}
+            variant="minimal"
           />
         </div>
 

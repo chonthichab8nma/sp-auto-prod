@@ -10,6 +10,7 @@ type StepRemarkPanelProps = {
   employeeId?: number;
   initialRemark?: string | null;
   onSaved?: (remark: string) => void;
+  variant?: "default" | "minimal";
 };
 
 export default function StepRemarkPanel({
@@ -18,6 +19,7 @@ export default function StepRemarkPanel({
   employeeId,
   initialRemark,
   onSaved,
+  variant = "default",
 }: StepRemarkPanelProps) {
   const initial = initialRemark ?? "";
 
@@ -102,6 +104,28 @@ export default function StepRemarkPanel({
   }, [savedRemark]);
 
   if (!isEditing) {
+    if (variant === "minimal") {
+      return (
+        <div className="text-sm text-slate-700">
+          <span className="font-medium text-slate-800">หมายเหตุ:</span>{" "}
+          {savedRemark.trim() ? (
+            <span className="whitespace-pre-wrap break-words">{savedRemark}</span>
+          ) : (
+            <span className="text-slate-400">ยังไม่มีหมายเหตุ</span>
+          )}
+          <button
+            type="button"
+            onClick={onEdit}
+            className="ml-2 inline-flex items-center gap-1 text-slate-400 hover:text-slate-700"
+            aria-label="แก้ไขหมายเหตุ"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            <span className="text-xs">แก้ไข</span>
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="text-sm text-slate-700">
         <span className="font-medium text-slate-800">หมายเหตุ:</span>{" "}
@@ -130,6 +154,62 @@ export default function StepRemarkPanel({
       </div>
     );
   }
+
+  if (variant === "minimal") {
+    return (
+      <div>
+        <div className="text-sm font-semibold text-slate-600">
+          หมายเหตุ
+        </div>
+
+        <textarea
+          ref={textareaRef}
+          value={remark}
+          onChange={(e) => setRemark(e.target.value)}
+          rows={1}
+          placeholder="ระบุรายละเอียดคำขอถึงร้าน"
+          className={[
+            "mt-3 w-full resize-none bg-transparent text-sm leading-relaxed",
+            "border-0 border-b border-slate-200",
+            "px-0 py-2",
+            "text-slate-700 placeholder:text-slate-300",
+            "outline-none",
+            "focus:border-slate-300",
+            "focus:ring-0",
+          ].join(" ")}
+        />
+
+        <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+          <div className="min-h-4.5">
+            {needsEmployee && !employeeId ? (
+              <span className="text-red-600">
+                ต้องเลือกผู้ดำเนินการก่อนจึงจะบันทึกหมายเหตุได้
+              </span>
+            ) : dirty ? (
+              <span className="text-amber-600">มีการแก้ไขที่ยังไม่บันทึก</span>
+            ) : (
+              <span className="text-slate-400"> </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void onSave()}
+            disabled={!canSave}
+            className={[
+              "rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-medium transition",
+              !canSave
+                ? "cursor-not-allowed text-slate-300"
+                : "text-slate-700 hover:bg-slate-100",
+            ].join(" ")}
+          >
+            {saving ? "กำลังบันทึก..." : "บันทึก"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-start justify-between gap-3">
