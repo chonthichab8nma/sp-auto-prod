@@ -159,11 +159,9 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
             await deleteJobStepImage(stepId, imageId);
             await loadImages({ silent: true });
 
-        toast.success("ลบรูปเรียบร้อยแล้ว",{
-            duration: 1500,
-        }
-            
-        );
+            toast.success("ลบรูปเรียบร้อยแล้ว", {
+              duration: 1500,
+            });
 
             if (prevCount <= 1) {
               setOpen(false);
@@ -304,9 +302,12 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
     </div>
   );
 
+  const MAX_PREVIEW = 3;
+  const previewImages = images.slice(0, MAX_PREVIEW);
+  const hiddenCount = Math.max(0, images.length - MAX_PREVIEW);
+
   return (
     <div className="space-y-3">
-      {/* header */}
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-medium text-slate-800">รูปภาพ</div>
@@ -331,7 +332,6 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
         </button>
       </div>
 
-      {/* input */}
       <input
         ref={inputRef}
         type="file"
@@ -342,14 +342,12 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
         disabled={uploading}
       />
 
-      {/* error */}
       {error && (
         <pre className="whitespace-pre-wrap rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
           {error}
         </pre>
       )}
 
-      {/* grid */}
       <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/60">
         {!hasImages && !loading ? (
           <div
@@ -364,9 +362,11 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
               <div className="grid grid-cols-3 gap-2">
                 {showSkeleton
                   ? null
-                  : images.map((img, idx) => {
+                  : previewImages.map((img, idx) => {
                       const src =
                         img.url || getJobStepImageViewUrl(stepId, img.id);
+                      const isLastPreview =
+                        idx === MAX_PREVIEW - 1 && hiddenCount > 0;
 
                       return (
                         <button
@@ -383,8 +383,14 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
                             loading="lazy"
                           />
                           <div className="pointer-events-none absolute inset-0 bg-black/0 transition group-hover:bg-black/15" />
+                          {isLastPreview && (
+                            <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/55">
+                              <span className="text-lg font-semibold text-white">
+                                +{hiddenCount}
+                              </span>
+                            </div>
+                          )}
 
-                          {/* ✅ delete button on thumbnail */}
                           <button
                             type="button"
                             onClick={(e) => {
