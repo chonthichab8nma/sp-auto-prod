@@ -2,14 +2,12 @@ import { Check } from "lucide-react";
 import type { StepStatus } from "../../Type";
 import type { EmployeeApi } from "../api/employees.api";
 import EmployeeAutocomplete from "../../shared/components/ui/EmployeeAutocomplete";
-import StepImagesUploader from "./StepImagesUploader";
-import StepRemarkPanel from "./StepRemarkPanel";
+import StepImageUpload from "./StepImageUpload";
 
 export default function StepActionPanel({
-  stepId,
   stepName,
   stepStatus,
-  initialRemark,
+  stepId,
 
   selectedEmployee,
   onSelectEmployee,
@@ -22,12 +20,12 @@ export default function StepActionPanel({
   canSkip = true,
   skipLabel = "ข้าม",
   onBulkSkip,
-  onRemarkSaved,
+  remark,
+  onRemarkChange,
 }: {
-  stepId: string;
   stepName: string;
   stepStatus: StepStatus;
-  initialRemark?: string | null;
+  stepId?: number | null;
 
   selectedEmployee: EmployeeApi | null;
   onSelectEmployee: (emp: EmployeeApi | null) => void;
@@ -40,7 +38,8 @@ export default function StepActionPanel({
   canSkip?: boolean;
   skipLabel?: string;
   onBulkSkip?: () => void;
-  onRemarkSaved?: (stepId: string, remark: string) => void;
+  remark?: string;
+  onRemarkChange?: (value: string) => void;
 }) {
   const getBadge = () => {
     if (stepStatus === "completed")
@@ -92,23 +91,6 @@ export default function StepActionPanel({
           minQueryLength={1}
           debounceMs={250}
         />
-        <div className="space-y-2">
-          {/* <label className="block text-sm font-medium text-slate-700">
-            รูปภาพ
-          </label> */}
-          <StepImagesUploader stepId={stepId} />
-        </div>
-
-        <div className="mt-3">
-          <StepRemarkPanel
-            stepId={Number(stepId)}
-            status={stepStatus}
-            employeeId={selectedEmployee?.id}
-            initialRemark={initialRemark ?? ""}
-            onSaved={(r) => onRemarkSaved?.(stepId, r)}
-            variant="minimal"
-          />
-        </div>
 
         {/* Status */}
         <div className="space-y-2">
@@ -176,7 +158,30 @@ export default function StepActionPanel({
             </button>
           </div>
         </div>
+
+        {/* Remark (optional) */}
+        {onRemarkChange && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              หมายเหตุ <span className="text-slate-400 font-normal">(ไม่บังคับ)</span>
+            </label>
+            <textarea
+              value={remark ?? ""}
+              onChange={(e) => onRemarkChange(e.target.value)}
+              placeholder="ระบุหมายเหตุเพิ่มเติม..."
+              rows={2}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            />
+          </div>
+        )}
       </div>
+
+      {/* Image upload */}
+      {stepId && (
+        <div className="mt-6 pt-6 border-t border-slate-100">
+          <StepImageUpload stepId={stepId} />
+        </div>
+      )}
 
       <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
         <button

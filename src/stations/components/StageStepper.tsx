@@ -11,6 +11,11 @@ const STATUS_TO_STAGE_CODE: Record<JobStatus, StageCode | null> = {
   DONE: null,
 };
 
+const AGING_RING: Record<string, string> = {
+  warning: "ring-2 ring-yellow-400",
+  critical: "ring-2 ring-red-400",
+};
+
 export default function StageStepper({
   job,
   checkpointIndex,
@@ -44,6 +49,10 @@ export default function StageStepper({
       {stages.map((s, idx) => {
         const isActive = idx === activeStageIndex;
         const isCompleted = Boolean(s.isCompleted);
+        const agingRing =
+          !isCompleted && isActive && s.stageAgingStatus
+            ? AGING_RING[s.stageAgingStatus] ?? ""
+            : "";
 
         return (
           <div key={s.id} className="flex items-center">
@@ -54,7 +63,7 @@ export default function StageStepper({
               aria-current={isActive ? "step" : undefined}
             >
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${agingRing}
                   ${
                     isCompleted
                       ? "bg-green-600 text-white"
@@ -79,6 +88,20 @@ export default function StageStepper({
               >
                 {s.stage.name}
               </span>
+
+              {isActive && s.daysInStage != null && s.daysInStage > 0 && (
+                <span
+                  className={`text-[10px] font-semibold ${
+                    s.stageAgingStatus === "critical"
+                      ? "text-red-500"
+                      : s.stageAgingStatus === "warning"
+                        ? "text-yellow-600"
+                        : "text-slate-400"
+                  }`}
+                >
+                  {s.daysInStage}d
+                </span>
+              )}
 
               {isActive && (
                 <span className="ml-auto text-blue-600 text-xs font-semibold">

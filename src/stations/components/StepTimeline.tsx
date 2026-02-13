@@ -63,9 +63,7 @@ export default function StepTimeline({
               {steps.map((step) => {
                 const isActive = step.id === activeStepId;
                 const isCompleted = step.status === "completed";
-                // const isSkipped = step.status === "skipped";
 
-                
 
                 let Icon = Plus;
                 let iconColor = "text-slate-400";
@@ -92,7 +90,7 @@ export default function StepTimeline({
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`z-5 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${dotColor}`}
+                        className={`z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${dotColor}`}
                       >
                         <Icon size={14} className={iconColor} strokeWidth={3} />
                       </div>

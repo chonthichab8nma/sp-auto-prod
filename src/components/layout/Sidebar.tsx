@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { PanelLeft, LayoutDashboard, RadioTower, LogOut } from "lucide-react";
+import {
+  PanelLeft,
+  LayoutDashboard,
+  RadioTower,
+  LogOut,
+  BarChart3,
+  AlertTriangle,
+  Banknote,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalPortal from "../../shared/components/ui/ModalPortal";
 
@@ -120,6 +128,55 @@ export default function Sidebar({
           >
             <RadioTower size={18} />
             {!isCollapsed && <span className="whitespace-nowrap">สเตชั่น</span>}
+          </Link>
+
+          <Link
+            to="/analytics"
+            onClick={handleNavigate}
+            className={[
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isCollapsed ? "justify-center" : "",
+              activePath === "/analytics"
+                ? "text-blue-600 bg-blue-50 font-medium"
+                : "text-gray-600 hover:bg-gray-50",
+            ].join(" ")}
+          >
+            <BarChart3 size={18} />
+            {!isCollapsed && <span className="whitespace-nowrap">รายงาน</span>}
+          </Link>
+
+          <Link
+            to="/alerts"
+            onClick={handleNavigate}
+            className={[
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isCollapsed ? "justify-center" : "",
+              activePath === "/alerts"
+                ? "text-blue-600 bg-blue-50 font-medium"
+                : "text-gray-600 hover:bg-gray-50",
+            ].join(" ")}
+          >
+            <AlertTriangle size={18} />
+            {!isCollapsed && (
+              <span className="whitespace-nowrap">แจ้งเตือน</span>
+            )}
+          </Link>
+
+          <Link
+            to="/disbursement"
+            onClick={handleNavigate}
+            className={[
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isCollapsed ? "justify-center" : "",
+              activePath === "/disbursement"
+                ? "text-blue-600 bg-blue-50 font-medium"
+                : "text-gray-600 hover:bg-gray-50",
+            ].join(" ")}
+          >
+            <Banknote size={18} />
+            {!isCollapsed && (
+              <span className="whitespace-nowrap">การเบิกจ่าย</span>
+            )}
           </Link>
         </nav>
 

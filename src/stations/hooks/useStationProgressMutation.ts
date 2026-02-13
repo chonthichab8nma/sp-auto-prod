@@ -6,6 +6,7 @@ export type SaveStepInput = {
   stepId: string;
   status: StepStatus;
   employeeId?: number;
+  remark?: string;
 };
 
 type UseStationProgressMutationResult = {
@@ -48,6 +49,7 @@ export function useStationProgressMutation(): UseStationProgressMutationResult {
       await patchJobStepStatus(stepIdNum, {
         status: input.status,
         employeeId: input.employeeId,
+        ...(input.remark !== undefined && { remark: input.remark }),
       });
     } catch (err: unknown) {
       const msg = toErrorMessage(err);

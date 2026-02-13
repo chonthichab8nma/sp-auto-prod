@@ -21,7 +21,10 @@ export default function AppShell() {
     if (pathname === "/" || pathname.startsWith("/dashboard"))
       return "แดชบอร์ด";
     if (pathname.startsWith("/stations")) return "สเตชัน";
-    return ""; // หน้าอื่นไม่โชว์
+    if (pathname === "/analytics") return "รายงาน";
+    if (pathname === "/alerts") return "แจ้งเตือน";
+    if (pathname === "/disbursement") return "การเบิกจ่าย";
+    return "";
   };
 
   const mobileTitle = getMobileSectionTitleTH(location.pathname);

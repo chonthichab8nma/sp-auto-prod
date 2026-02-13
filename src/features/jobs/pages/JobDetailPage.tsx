@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
+import AgingBadge from "../../../shared/components/ui/AgingBadge";
 
 import type { JobApi } from "../api/job.api";
 import { formatThaiDate } from "../../../shared/lib/date";
@@ -91,6 +92,8 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
           >
             <ChevronLeft size={18} />
           </button>
+
+          <AgingBadge status={job?.agingStatus} days={job?.daysInProcess} />
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {stages?.map((stage, idx) => {
@@ -215,7 +218,6 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
         <Section
           title="รายละเอียดการชำระเงิน"
           subtitle="ข้อมูลการชำระเงิน"
-          hasBorder={false}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
             <StackItem
@@ -227,6 +229,54 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
             <StackItem
               label="ชื่อบริษัทประกันภัย"
               value={job?.insuranceCompany?.name ?? "-"}
+            />
+          </div>
+        </Section>
+
+        <Section
+          title="ข้อมูลการเงิน"
+          subtitle="ยอดเคลม อนุมัติ เบิกจ่าย"
+          hasBorder={false}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+            <StackItem
+              label="ยอดเคลม"
+              value={
+                job?.claimAmount != null
+                  ? `฿ ${Number(job.claimAmount).toLocaleString("th-TH")}`
+                  : "-"
+              }
+            />
+            <StackItem
+              label="ยอดอนุมัติ"
+              value={
+                job?.approvedAmount != null
+                  ? `฿ ${Number(job.approvedAmount).toLocaleString("th-TH")}`
+                  : "-"
+              }
+            />
+            <StackItem
+              label="ยอดเบิก"
+              value={
+                job?.disbursedAmount != null
+                  ? `฿ ${Number(job.disbursedAmount).toLocaleString("th-TH")}`
+                  : "-"
+              }
+            />
+            <StackItem
+              label="วันเบิก"
+              value={formatThaiDate(job?.disbursementDate)}
+            />
+            <StackItem
+              label="คงเหลือรอเบิก"
+              value={
+                job?.approvedAmount != null
+                  ? `฿ ${(
+                      Number(job.approvedAmount ?? 0) -
+                      Number(job.disbursedAmount ?? 0)
+                    ).toLocaleString("th-TH")}`
+                  : "-"
+              }
             />
           </div>
         </Section>

@@ -94,6 +94,17 @@ export type EmployeeApi = {
   name: string;
 } | null;
 
+export type StepImageApi = {
+  id: number;
+  fileName: string;
+  url: string;
+  viewUrl?: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedAt: string;
+  employee: { id: number; name: string } | null;
+};
+
 export type JobStepApi = {
   id: number;
   jobStageId: number;
@@ -102,9 +113,15 @@ export type JobStepApi = {
   employeeId: number | null;
   completedAt: string | null;
   notes: string | null;
+  remark: string | null;
+  stepAmount: number | null;
   stepTemplate: StepTemplateApi;
   employee: EmployeeApi;
+  images?: StepImageApi[];
 };
+
+export type AgingStatus = "normal" | "warning" | "critical";
+export type AgingColor = "green" | "yellow" | "red";
 
 export type JobStageApi = {
   id: number;
@@ -114,6 +131,8 @@ export type JobStageApi = {
   isCompleted: boolean;
   startedAt: string | null;
   completedAt: string | null;
+  daysInStage?: number;
+  stageAgingStatus?: AgingStatus;
   stage: StageApi;
   jobSteps: JobStepApi[];
 };
@@ -130,8 +149,15 @@ export type JobApi = {
   startDate: string;
   estimatedEndDate: string | null;
   actualEndDate: string | null;
+  claimAmount: number | null;
+  approvedAmount: number | null;
+  disbursedAmount: number | null;
+  disbursementDate: string | null;
   repairDescription: string;
   notes: string | null;
+  daysInProcess?: number;
+  agingStatus?: AgingStatus;
+  agingColor?: AgingColor;
   currentStageIndex: number;
   status: JobStatusApi;
   isFinished: boolean;

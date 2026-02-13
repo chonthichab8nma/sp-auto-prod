@@ -1,5 +1,6 @@
 import type { JobApi } from "../api/job.api";
 import StatusBadge from "../../../shared/components/ui/StatusBadge";
+import AgingBadge from "../../../shared/components/ui/AgingBadge";
 import Skeleton from "../../../shared/components/ui/Skeleton";
 import { formatThaiDate } from "../../../shared/lib/date";
 
@@ -10,8 +11,8 @@ const columns = [
   { key: "brandModel", label: "ยี่ห้อ/รุ่น (ประเภท)", width: 240, align: "left" },
   { key: "status", label: "สถานะ", width: 120, align: "center" },
   { key: "start", label: "วันที่นำรถเข้าจอดซ่อม", width: 180, align: "left" },
-  { key: "end", label: "วันที่นัดรับรถ", width: 250, align: "left" },
-  // { key: "actions", label: "", width: 56, align: "right" },
+  { key: "end", label: "วันที่นัดรับรถ", width: 180, align: "left" },
+  { key: "aging", label: "อายุงาน", width: 100, align: "center" },
 ] as const;
 
 const tableWidth = columns.reduce((sum, c) => sum + c.width, 0);
@@ -20,14 +21,13 @@ const alignClass = (a: string) =>
   a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
 
 function SkeletonCell({ colKey }: { colKey: (typeof columns)[number]["key"] }) {
-
-  // if (colKey === "actions") {
-  //   return (
-  //     <div className="flex justify-end">
-  //       <Skeleton className="h-5 w-5 rounded" />
-  //     </div>
-  //   );
-  // }
+  if (colKey === "aging") {
+    return (
+      <div className="flex justify-center">
+        <Skeleton className="h-6 w-14 rounded-full" />
+      </div>
+    );
+  }
 
   if (colKey === "status") {
     return (
@@ -151,10 +151,11 @@ export default function StationsTable({
                   {formatThaiDate(job.estimatedEndDate)}
                 </td>
 
-                <td className="box-border px-6 py-4 text-right">
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                <td className="box-border px-6 py-4 text-center">
+                  <AgingBadge
+                    status={job.agingStatus}
+                    days={job.daysInProcess}
+                    compact
                   />
                 </td>
               </tr>

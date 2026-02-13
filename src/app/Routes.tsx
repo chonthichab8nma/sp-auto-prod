@@ -9,6 +9,9 @@ import AppShell from "./AppShell";
 import Dashboard from "../features/jobs/pages/Dashboard";
 import CreateJobForm from "../features/jobs/pages/CreateJobForm";
 import JobDetailPage from "../features/jobs/pages/JobDetailPage";
+import AnalyticsDashboard from "../features/dashboard/pages/AnalyticsDashboard";
+import AgingAlertsPage from "../features/jobs/pages/AgingAlertsPage";
+import DisbursementPage from "../features/jobs/pages/DisbursementPage";
 import type { StepStatus } from "../Type";
 import StationsPage from "../stations/pages/StationPage";
 import StationProgressPage from "../stations/pages/StationProgressPage";
@@ -113,6 +116,10 @@ export default function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
+
+          <Route path="/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/alerts" element={<AgingAlertsPage />} />
+          <Route path="/disbursement" element={<DisbursementPage />} />
 
           <Route path="/stations" element={<StationsPage />} />
 
