@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Check } from "lucide-react";
+import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
 
 import type { StepStatus } from "../../Type";
@@ -16,6 +16,7 @@ import StepActionPanel from "../components/StepActionPanel";
 import { useStationProgressMutation } from "../hooks/useStationProgressMutation";
 import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
+import { printWorkOrder } from "../pdf/workOrderPrint";
 
 function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
@@ -124,7 +125,7 @@ export default function StationProgressPage({
   }, [checkpointIndex, stepsVm]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
-  
+
 
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
     null,
@@ -165,6 +166,41 @@ export default function StationProgressPage({
   const isSavingLastStepNow =
     lastStepIdForViewingStage != null &&
     String(activeStepId) === String(lastStepIdForViewingStage);
+
+  const billingStageIndex = useMemo(
+    () =>
+      stages.findIndex(
+        (s) => (s.stage.code ?? "").toUpperCase() === "BILLING",
+      ),
+    [stages],
+  );
+
+  const isRepairCustomerReceiveStep = useMemo(() => {
+    if (jobState.status !== "REPAIR") return false;
+    const rawName = activeStep?.name ?? "";
+    const normalized = rawName.replace(/\s+/g, "");
+    return (
+      normalized.includes("ลูกค้ารับรถ") ||
+      normalized.includes("ถูกค้ารับรถ")
+    );
+  }, [jobState.status, activeStep?.name]);
+
+  const isViewingBillingStage = useMemo(() => {
+    const currentStageCode = stages[checkpointIndex]?.stage.code ?? "";
+    return currentStageCode.toUpperCase() === "BILLING";
+  }, [stages, checkpointIndex]);
+
+  const canPrintBillingPdf = isViewingBillingStage && isSavingLastStepNow;
+
+  const handleDownloadPdf = async () => {
+    const toastId = toast.loading("กำลังสร้างไฟล์ PDF...");
+    try {
+      await printWorkOrder(jobState);
+      toast.success("ดาวน์โหลด PDF เรียบร้อย", { id: toastId });
+    } catch {
+      toast.error("สร้าง PDF ไม่สำเร็จ", { id: toastId });
+    }
+  };
 
   const handleBulkSkip = async () => {
     if (stepsToSkip.length === 0) {
@@ -261,6 +297,11 @@ export default function StationProgressPage({
       const shouldAutoAdvance =
         isSavingLastStepNow && stageDoneNow && checkpointIndex === stageIdx;
 
+      const shouldJumpToBilling =
+        isRepairCustomerReceiveStep &&
+        selectedAction === "completed" &&
+        billingStageIndex >= 0;
+
       setJobState((prev) => {
         const sortedStages = (prev.jobStages ?? [])
           .slice()
@@ -314,7 +355,10 @@ export default function StationProgressPage({
               : prevIdx,
         };
       });
-      if (shouldAutoAdvance) {
+      if (shouldJumpToBilling) {
+        setFollowMode(false);
+        setCheckpointIndex(billingStageIndex);
+      } else if (shouldAutoAdvance) {
         setCheckpointIndex((i) => Math.min(i + 1, stages.length - 1));
       }
 
@@ -399,6 +443,15 @@ export default function StationProgressPage({
             </div>
 
             <div className="mt-4 xl:mt-8 flex gap-3 w-full xl:w-auto">
+              {canPrintBillingPdf && (
+                <button
+                  onClick={handleDownloadPdf}
+                  className="flex-1 xl:flex-none px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <Printer size={16} />
+                  พิมพ์ PDF
+                </button>
+              )}
               <button
                 onClick={() => {
                   setFollowMode(false);
