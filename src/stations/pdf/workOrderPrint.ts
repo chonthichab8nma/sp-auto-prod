@@ -7,6 +7,7 @@ import type {
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { formatThaiDate, formatThaiDateTime } from "../../shared/lib/date";
+import { vehiclesService } from "../../features/jobs/services/vehicles.service";
 
 type StepCell = {
   name: string;
@@ -69,6 +70,21 @@ function resolveVehicleType(job: JobApi): string {
       ? anyJob.vehicleType
       : anyJob.vehicleType?.name,
     anyJob.type,
+  );
+}
+
+function resolveVehicleTypeFromVehicle(vehicle: unknown): string {
+  const v = (vehicle ?? {}) as {
+    type?: string | null;
+    typeName?: string | null;
+    vehicleType?: { name?: string | null } | string | null;
+    bodyType?: string | null;
+  };
+  return pickString(
+    v.type,
+    v.typeName,
+    typeof v.vehicleType === "string" ? v.vehicleType : v.vehicleType?.name,
+    v.bodyType,
   );
 }
 
@@ -161,7 +177,7 @@ function renderStepProgressTable(title: string, cells: StepCell[]): string {
   `;
 }
 
-function renderSheetInner(job: JobApi): string {
+function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
   const claimStage = getStage(job, "CLAIM");
   const repairStage = getStage(job, "REPAIR");
   const billingStage = getStage(job, "BILLING");
@@ -181,10 +197,10 @@ function renderSheetInner(job: JobApi): string {
           <div><strong>โทร</strong> 064-3544141 <strong>อีเมล์</strong> SP.AutoPaint88@gmail.com</div>
         </div>
         <div class="border border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
-          <div class="mb-0.5"><strong>วันที่นำรถเข้าจอดซ่อม</strong> <span class="inline-block min-w-[140px] px-1 border-b border-dotted border-black text-center">${text(formatThaiDate(job.startDate))}</span></div>
-          <div class="mb-0.5"><strong>กำหนดซ่อมเสร็จ/นัดรับรถ</strong> <span class="inline-block min-w-[140px] px-1 border-b border-dotted border-black text-center">${text(formatThaiDate(job.estimatedEndDate))}</span></div>
-          <div class="mb-0.5"><strong>เจ้าหน้าที่รับรถ</strong> <span class="inline-block min-w-[140px] px-1 border-b border-dotted border-black text-center">${text(job.receiver?.name ?? "-")}</span></div>
-          <div><strong>ค่าความเสียหายส่วนแรก</strong> <span class="inline-block min-w-[140px] px-1 border-b border-dotted border-black text-center">${text(Number(job.excessFee ?? 0).toLocaleString("th-TH"))}</span></div>
+          <div class="mb-0.5"><strong>วันที่นำรถเข้าจอดซ่อม : </strong><span class="inline-block px-0.5">${text(formatThaiDate(job.startDate))}</span></div>
+          <div class="mb-0.5"><strong>กำหนดซ่อมเสร็จ/นัดรับรถ : </strong><span class="inline-block px-0.5">${text(formatThaiDate(job.estimatedEndDate))}</span></div>
+          <div class="mb-0.5"><strong>เจ้าหน้าที่รับรถ : </strong><span class="inline-block px-0.5">${text(job.receiver?.name ?? "-")}</span></div>
+          <div><strong>ค่าความเสียหายส่วนแรก : </strong><span class="inline-block px-0.5">${text(Number(job.excessFee ?? 0).toLocaleString("th-TH"))}</span></div>
         </div>
         <div class="border border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
           <div class="mb-0.5 text-start font-bold">ประเภทการชำระ</div>
@@ -201,7 +217,7 @@ function renderSheetInner(job: JobApi): string {
             <td class="border border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ทะเบียนรถ</td>
             <td class="border border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.registration)}</td>
             <td class="border border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ประเภทรถ</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(resolveVehicleType(job))}</td>
+            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(vehicleTypeValue)}</td>
           </tr>
           <tr>
             <td class="border border-black px-2 py-1.5 font-bold text-center align-middle">เลขตัวถัง</td>
@@ -243,9 +259,22 @@ export async function printWorkOrder(job: JobApi): Promise<void> {
   let host: HTMLDivElement | null = null;
 
   try {
+    let vehicleTypeValue = resolveVehicleType(job);
+    if (vehicleTypeValue === "-" && job.vehicle.registration?.trim()) {
+      try {
+        const vehicle = await vehiclesService.findVehicleByReg(
+          job.vehicle.registration,
+        );
+        const fetchedType = resolveVehicleTypeFromVehicle(vehicle);
+        if (fetchedType !== "-") vehicleTypeValue = fetchedType;
+      } catch {
+        // If vehicle lookup fails, keep existing fallback value.
+      }
+    }
+
     host = document.createElement("div");
     host.className = "fixed -left-[2000px] top-0 opacity-0 pointer-events-none";
-    host.innerHTML = renderSheetInner(job);
+    host.innerHTML = renderSheetInner(job, vehicleTypeValue);
     document.body.appendChild(host);
 
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
