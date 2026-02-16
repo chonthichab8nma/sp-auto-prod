@@ -35,8 +35,8 @@ export type CustomerRef =
 export type CreateJobPayloadBase = {
   jobNumber?: string;
 
-  startDate: string; 
-  estimatedEndDate: string; 
+  startDate?: string | null;
+  estimatedEndDate?: string | null;
   receiver: string;
 
   paymentType: string;
@@ -67,12 +67,14 @@ export const getDefaultCreateJobFormData = (): JobFormData => ({
   model: "",
   year: "",
   color: "",
-  startDate: new Date().toISOString().split("T")[0],
+  startDate: "",
   estimatedEndDate: "",
   receiver: "",
   receiverId: null,
   excessFee: 0,
   paymentType: "Insurance",
+  repairDescription: "",
+  notes: "",
   insuranceCompany: "",
   customerName: "",
   customerPhone: "",
@@ -142,14 +144,16 @@ export function normalizeCreateJobPayload(
   );
 
   const base: CreateJobPayloadBase = {
-    startDate: toIsoDateTime(form.startDate),
-    estimatedEndDate: toIsoDateTime(form.estimatedEndDate),
     receiver: form.receiver.trim(),
 
     paymentType: form.paymentType,
     repairDescription,
     excessFee: Number(form.excessFee) || 0,
     notes: notes ?? null,
+    startDate: form.startDate ? toIsoDateTime(form.startDate) : null,
+    estimatedEndDate: form.estimatedEndDate
+      ? toIsoDateTime(form.estimatedEndDate)
+      : null,
   };
 
   const insurancePart: InsuranceCompanyRef =
@@ -248,8 +252,6 @@ export function validateCreateJob(
     req("customerAddress", "กรุณากรอกเบอร์โทรศัพท์ลูกค้า");
   }
 
-  req("startDate", "กรุณาเลือกวันที่นำรถเข้าจอดซ่อม");
-  req("estimatedEndDate", "กรุณาเลือกกำหนดซ่อมเสร็จ/นัดรับรถ");
   req("receiver", "กรุณากรอกเจ้าหน้าที่รับรถ");
 
   const insuranceCompanyIdFromForm = readOptionalNumberField(

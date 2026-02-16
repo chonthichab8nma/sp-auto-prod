@@ -42,6 +42,10 @@ function mapUiStatusToApi(s: string): JobStatusApi | undefined {
   }
 }
 
+function stripWhitespace(value?: string) {
+  return (value ?? "").replace(/\s+/g, "");
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const pageSize = 10;
@@ -72,7 +76,7 @@ export default function Dashboard() {
     () => ({
       page: currentPage,
       pageSize,
-      search: searchTerm.trim() || undefined,
+      search: stripWhitespace(searchTerm) || undefined,
       status: mapUiStatusToApi(selectedStatus),
       startDateFrom: startDate || undefined,
       startDateTo: endDate || undefined,
@@ -85,7 +89,7 @@ export default function Dashboard() {
       type: advancedFilters.type?.trim() || undefined,
       year: advancedFilters.year?.trim() || undefined,
       vehicleRegistration:
-        advancedFilters.vehicleRegistration?.trim() || undefined,
+        stripWhitespace(advancedFilters.vehicleRegistration) || undefined,
       chassisNumber: advancedFilters.chassisNumber?.trim() || undefined,
       vinNumber: advancedFilters.vinNumber?.trim() || undefined,
       customerName: advancedFilters.customerName?.trim() || undefined,

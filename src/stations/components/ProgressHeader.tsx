@@ -22,7 +22,7 @@ export default function ProgressHeader({
  console.log("status → label =", status, "→", label);
 
   return (
-    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 mb-6 flex items-center gap-4">
+    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4">
       <button
         onClick={onBack}
         className="w-8 h-8   rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-500"

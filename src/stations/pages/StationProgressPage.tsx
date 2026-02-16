@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Check } from "lucide-react";
+import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
 
 import type { StepStatus } from "../../Type";
@@ -16,9 +16,18 @@ import StepActionPanel from "../components/StepActionPanel";
 import { useStationProgressMutation } from "../hooks/useStationProgressMutation";
 import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
+import { printWorkOrder } from "../pdf/workOrderPrint";
+import {
+  vehiclesService,
+  type VehicleBrandApi,
+} from "../../features/jobs/services/vehicles.service";
 
 function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
+}
+
+function normalizeBrandKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
 }
 
 export default function StationProgressPage({
@@ -37,10 +46,31 @@ export default function StationProgressPage({
   const navigate = useNavigate();
 
   const [jobState, setJobState] = useState<JobApi>(job);
+  const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
+  const [logoLoadError, setLogoLoadError] = useState(false);
 
   useEffect(() => {
     setJobState(job);
   }, [job]);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const data = await vehiclesService.listBrands();
+        if (!alive) return;
+        setBrands(data);
+      } catch {
+        if (!alive) return;
+        setBrands([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const stages = useMemo(
     () => sortStages(jobState.jobStages ?? []),
@@ -124,7 +154,7 @@ export default function StationProgressPage({
   }, [checkpointIndex, stepsVm]);
 
   const activeStep = stepsVm.find((s) => s.id === activeStepId);
-  
+
 
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
     null,
@@ -165,6 +195,62 @@ export default function StationProgressPage({
   const isSavingLastStepNow =
     lastStepIdForViewingStage != null &&
     String(activeStepId) === String(lastStepIdForViewingStage);
+
+  const billingStageIndex = useMemo(
+    () =>
+      stages.findIndex(
+        (s) => (s.stage.code ?? "").toUpperCase() === "BILLING",
+      ),
+    [stages],
+  );
+
+  const isRepairCustomerReceiveStep = useMemo(() => {
+    if (jobState.status !== "REPAIR") return false;
+    const rawName = activeStep?.name ?? "";
+    const normalized = rawName.replace(/\s+/g, "");
+    return (
+      normalized.includes("ลูกค้ารับรถ") ||
+      normalized.includes("ถูกค้ารับรถ")
+    );
+  }, [jobState.status, activeStep?.name]);
+
+  const isViewingBillingStage = useMemo(() => {
+    const currentStageCode = stages[checkpointIndex]?.stage.code ?? "";
+    return currentStageCode.toUpperCase() === "BILLING";
+  }, [stages, checkpointIndex]);
+
+  const brandLogoUrl = useMemo(() => {
+    const brandName = normalizeBrandKey(jobState.vehicle?.brand);
+    if (!brandName || brands.length === 0) return null;
+
+    const matched = brands.find((b) => {
+      const keys = [
+        normalizeBrandKey(b.name),
+        normalizeBrandKey(b.nameEn),
+        normalizeBrandKey(b.code),
+      ];
+      return keys.includes(brandName);
+    });
+
+    return matched?.logoUrl ?? null;
+  }, [brands, jobState.vehicle?.brand]);
+
+  useEffect(() => {
+    setLogoLoadError(false);
+  }, [brandLogoUrl]);
+
+  const canPrintBillingPdf = isViewingBillingStage && isSavingLastStepNow;
+  const isDoneStatus = jobState.status === "DONE";
+
+  const handleDownloadPdf = async () => {
+    const toastId = toast.loading("กำลังสร้างไฟล์ PDF...");
+    try {
+      await printWorkOrder(jobState);
+      toast.success("ดาวน์โหลด PDF เรียบร้อย", { id: toastId });
+    } catch {
+      toast.error("สร้าง PDF ไม่สำเร็จ", { id: toastId });
+    }
+  };
 
   const handleBulkSkip = async () => {
     if (stepsToSkip.length === 0) {
@@ -261,6 +347,11 @@ export default function StationProgressPage({
       const shouldAutoAdvance =
         isSavingLastStepNow && stageDoneNow && checkpointIndex === stageIdx;
 
+      const shouldJumpToBilling =
+        isRepairCustomerReceiveStep &&
+        selectedAction === "completed" &&
+        billingStageIndex >= 0;
+
       setJobState((prev) => {
         const sortedStages = (prev.jobStages ?? [])
           .slice()
@@ -314,7 +405,10 @@ export default function StationProgressPage({
               : prevIdx,
         };
       });
-      if (shouldAutoAdvance) {
+      if (shouldJumpToBilling) {
+        setFollowMode(false);
+        setCheckpointIndex(billingStageIndex);
+      } else if (shouldAutoAdvance) {
         setCheckpointIndex((i) => Math.min(i + 1, stages.length - 1));
       }
 
@@ -345,48 +439,66 @@ export default function StationProgressPage({
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] text-slate-800">
-      <ProgressHeader
+      <div className="mb-3 md:mb-6">
+        <ProgressHeader
         registration={jobState.vehicle.registration}
         status={jobState.status}
         onBack={() => navigate(-1)}
-      />
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+        />
+      </div>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-4 md:mb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
-          <div className="flex gap-4 w-full xl:w-auto min-w-0">
-            <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center bg-white shrink-0">
-              <Car size={24} className="text-slate-800" />
+          <div className="w-full xl:w-auto min-w-0">
+            <div className="flex gap-4 w-full xl:w-auto min-w-0">
+              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center bg-white shrink-0 overflow-hidden">
+                {brandLogoUrl && !logoLoadError ? (
+                  <img
+                    src={brandLogoUrl}
+                    alt={jobState.vehicle.brand || "vehicle brand"}
+                    className="h-9 w-9 object-contain"
+                    onError={() => setLogoLoadError(true)}
+                  />
+                ) : (
+                  <Car size={24} className="text-slate-800" />
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold text-slate-900 leading-tight truncate">
+                  {jobState.vehicle.brand}
+                </h2>
+                <p className="text-slate-500 text-sm truncate">
+                  {jobState.vehicle.model}
+                </p>
+              </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-bold text-slate-900 leading-tight truncate">
-                {jobState.vehicle.brand}
-              </h2>
-              <p className="text-slate-500 text-sm truncate">
-                {jobState.vehicle.model}
-              </p>
-
-              <div className="mt-4 xl:mt-6 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar">
-                <StageStepper
-                  job={jobState}
-                  checkpointIndex={checkpointIndex}
-                  onChange={(idx) => {
-                    setFollowMode(false);
-                    if (idx <= checkpointIndex) {
-                      setCheckpointIndex(idx);
-                      return;
-                    }
-
-                    if (!isStageDone) {
-                      toast.error(
-                        "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
-                      );
-                      return;
-                    }
-
+            <div className="mt-4 xl:mt-6 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar">
+              <StageStepper
+                job={jobState}
+                checkpointIndex={checkpointIndex}
+                onChange={(idx) => {
+                  setFollowMode(false);
+                  if (isDoneStatus) {
                     setCheckpointIndex(idx);
-                  }}
-                />
-              </div>
+                    return;
+                  }
+
+                  if (idx <= checkpointIndex) {
+                    setCheckpointIndex(idx);
+                    return;
+                  }
+
+                  if (!isStageDone) {
+                    toast.error(
+                      "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
+                    );
+                    return;
+                  }
+
+                  setCheckpointIndex(idx);
+                }}
+              />
             </div>
           </div>
 
@@ -399,6 +511,15 @@ export default function StationProgressPage({
             </div>
 
             <div className="mt-4 xl:mt-8 flex gap-3 w-full xl:w-auto">
+              {canPrintBillingPdf && (
+                <button
+                  onClick={handleDownloadPdf}
+                  className="flex-1 xl:flex-none px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <Printer size={16} />
+                  พิมพ์ PDF
+                </button>
+              )}
               <button
                 onClick={() => {
                   setFollowMode(false);
@@ -411,7 +532,7 @@ export default function StationProgressPage({
               </button>
               <button
                 onClick={() => {
-                  if (!isStageDone) {
+                  if (!isDoneStatus && !isStageDone) {
                     toast.error(
                       "ต้องทำขั้นตอนของสถานีนี้ให้เสร็จก่อน ถึงจะไปสถานีถัดไปได้",
                     );
@@ -419,7 +540,10 @@ export default function StationProgressPage({
                   }
                   setCheckpointIndex((i) => Math.min(stages.length - 1, i + 1));
                 }}
-                disabled={checkpointIndex >= stages.length - 1 || !isStageDone}
+                disabled={
+                  checkpointIndex >= stages.length - 1 ||
+                  (!isDoneStatus && !isStageDone)
+                }
                 className="flex-1 xl:flex-none px-6 py-2 bg-blue-600 text-white rounded-lg
                 text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-200
                 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -431,7 +555,7 @@ export default function StationProgressPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 items-start">
         <div className="xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <StepTimeline
             title={stages[checkpointIndex]?.stage.name ?? "รายการ"}

@@ -1,8 +1,13 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
 
 import type { JobApi } from "../api/job.api";
 import { formatThaiDate } from "../../../shared/lib/date";
+import {
+  vehiclesService,
+  type VehicleBrandApi,
+} from "../services/vehicles.service";
 
 const Section = ({
   title,
@@ -69,17 +74,113 @@ function buildTimelineStages(job: JobApi) {
     }));
 }
 
+function normalizeBrandKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function normalizeModelKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
 export default function JobDetailPage({ job }: { job: JobApi | null }) {
   const navigate = useNavigate();
+  const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
+  const [logoLoadError, setLogoLoadError] = useState(false);
+  const [vehicleTypeFromDb, setVehicleTypeFromDb] = useState<string>("");
 
   const handleBack = () => navigate(-1);
 
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
 
   const stages = buildTimelineStages(job!);
-  console.log({
-    job,
-  });
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const data = await vehiclesService.listBrands();
+        if (!alive) return;
+        setBrands(data);
+      } catch {
+        if (!alive) return;
+        setBrands([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const brandLogoUrl = useMemo(() => {
+    const brandName = normalizeBrandKey(job?.vehicle?.brand);
+    if (!brandName || brands.length === 0) return null;
+
+    const matched = brands.find((b) => {
+      const keys = [
+        normalizeBrandKey(b.name),
+        normalizeBrandKey(b.nameEn),
+        normalizeBrandKey(b.code),
+      ];
+      return keys.includes(brandName);
+    });
+
+    return matched?.logoUrl ?? null;
+  }, [brands, job?.vehicle?.brand]);
+
+  const vehicleTypeFromCatalog = useMemo(() => {
+    const brandName = normalizeBrandKey(job?.vehicle?.brand);
+    const modelName = normalizeModelKey(job?.vehicle?.model);
+    if (!brandName || !modelName || brands.length === 0) return "";
+
+    const matchedBrand = brands.find((b) => {
+      const keys = [
+        normalizeBrandKey(b.name),
+        normalizeBrandKey(b.nameEn),
+        normalizeBrandKey(b.code),
+      ];
+      return keys.includes(brandName);
+    });
+
+    const matchedModel = matchedBrand?.models?.find(
+      (m) => normalizeModelKey(m.name) === modelName,
+    );
+
+    return matchedModel?.type?.name ?? "";
+  }, [brands, job?.vehicle?.brand, job?.vehicle?.model]);
+
+  useEffect(() => {
+    setLogoLoadError(false);
+  }, [brandLogoUrl]);
+
+  useEffect(() => {
+    let alive = true;
+    const registration = job?.vehicle?.registration?.trim();
+
+    if (!registration) {
+      setVehicleTypeFromDb("");
+      return;
+    }
+
+    (async () => {
+      try {
+        const vehicle = await vehiclesService.findVehicleByReg(registration);
+        if (!alive) return;
+        setVehicleTypeFromDb(vehicle?.type ?? "");
+      } catch {
+        if (!alive) return;
+        setVehicleTypeFromDb("");
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [job?.vehicle?.registration]);
+
+  const displayVehicleType =
+    vehicleTypeFromDb || job?.vehicle?.type || vehicleTypeFromCatalog || "-";
 
   return (
     <div className="p-6 min-h-screen bg-white">
@@ -147,13 +248,22 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
         <Section title="รายละเอียดรถ" subtitle="ข้อมูลรถ">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <CarFront size={40} className="text-slate-800" />
+              {brandLogoUrl && !logoLoadError ? (
+                <img
+                  src={brandLogoUrl}
+                  alt={job?.vehicle.brand || "vehicle brand"}
+                  className="h-10 w-10 object-contain"
+                  onError={() => setLogoLoadError(true)}
+                />
+              ) : (
+                <CarFront size={40} className="text-slate-800" />
+              )}
               <div>
                 <h1 className="text-lg font-bold text-slate-900">
                   {job?.vehicle.brand}
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  {job?.vehicle.model} {job?.vehicle.year} {job?.vehicle.type}
+                  {job?.vehicle.model} {job?.vehicle.year} {displayVehicleType}
                 </p>
               </div>
             </div>
@@ -167,6 +277,7 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
             />
             <RowItem label="ยี่ห้อ/แบรนด์" value={job?.vehicle.brand} />
             <RowItem label="รุ่น" value={job?.vehicle.model} />
+            <RowItem label="ประเภทรถ" value={displayVehicleType} />
             <RowItem label="ปี" value={job?.vehicle.year} />
             <RowItem label="สี" value={job?.vehicle.color} />
           </div>
@@ -190,6 +301,15 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
               label="เจ้าหน้าที่รับรถ"
               value={job?.receiver?.name ?? "-"}
             />
+            <div className="md:col-span-2">
+              <StackItem
+                label="ความต้องการซ่อม"
+                value={job?.repairDescription ?? ""}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <StackItem label="หมายเหตุ" value={job?.notes ?? ""} />
+            </div>
           </div>
         </Section>
 

@@ -64,15 +64,17 @@ export default function Sidebar({
         >
           {!isCollapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white font-bold italic text-sm">
-                SP
-              </div>
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-7 h-7 object-contain shrink-0"
+              />
               <div className="leading-tight">
                 <div className="text-sm font-semibold text-slate-800">
-                  SP Auto
+                  ร้านซ่อมรถ
                 </div>
                 <div className="text-xs text-slate-500 truncate max-w-30">
-                  ร้านซ่อมรถ
+                  เอส.พี.ออโต้เพ้นท์ เซอร์วิส
                 </div>
               </div>
             </div>
