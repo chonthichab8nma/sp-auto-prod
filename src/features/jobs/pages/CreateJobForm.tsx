@@ -387,21 +387,20 @@ export default function CreateJobForm() {
       return;
     }
 
-    const isoDateValueStartDate = new Date(formData.startDate).toISOString();
-    const isoDateValueEstimateDate = new Date(
-      formData.estimatedEndDate,
-    ).toISOString();
-
     const normalizedReg = normalizeRegistration(formData.registration || "");
 
     // payload
     const basePayload = {
-      startDate: isoDateValueStartDate,
-      estimatedEndDate: isoDateValueEstimateDate,
       receiver: formData.receiver || "",
       receiverId: formData.receiverId ?? null,
       paymentType: formData.paymentType,
       excessFee: formData.excessFee,
+      ...(formData.startDate
+        ? { startDate: new Date(formData.startDate).toISOString() }
+        : {}),
+      ...(formData.estimatedEndDate
+        ? { estimatedEndDate: new Date(formData.estimatedEndDate).toISOString() }
+        : {}),
       customer: {
         name: formData.customerName || "",
         phone: formData.customerPhone || "",
@@ -578,7 +577,7 @@ export default function CreateJobForm() {
             <DatePickerPopover
               className="lg:col-span-1"
               mode="single"
-              label={<LabelWithStar text="วันที่นำรถเข้าจอดซ่อม" />}
+              label="วันที่นำรถเข้าจอดซ่อม"
               value={formData.startDate}
               error={errors.startDate}
               onChange={(v) => setFormData((p) => ({ ...p, startDate: v }))}
@@ -588,7 +587,7 @@ export default function CreateJobForm() {
             <DatePickerPopover
               className="lg:col-span-1"
               mode="single"
-              label={<LabelWithStar text="กำหนดซ่อมเสร็จ/นัดรับรถ" />}
+              label="กำหนดซ่อมเสร็จ/นัดรับรถ"
               value={formData.estimatedEndDate}
               error={errors.estimatedEndDate}
               onChange={(v) =>
