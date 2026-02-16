@@ -226,8 +226,6 @@ export default function CreateJobForm() {
       return;
     }
 
-    setFormData((prev) => ({ ...prev, registration: reg }));
-
     try {
       const found = await vehiclesService.findVehicleByReg(reg);
       console.log("FOUND vehicle=", found);
@@ -387,8 +385,6 @@ export default function CreateJobForm() {
       return;
     }
 
-    const normalizedReg = normalizeRegistration(formData.registration || "");
-
     // payload
     const basePayload = {
       receiver: formData.receiver || "",
@@ -413,7 +409,7 @@ export default function CreateJobForm() {
       ? { vehicleId: formData.vehicleId }
       : {
           vehicle: {
-            registration: normalizedReg || formData.registration,
+            registration: formData.registration,
             brand: formData.brand,
             model: formData.model,
             type: formData.type,
