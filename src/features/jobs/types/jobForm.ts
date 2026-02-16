@@ -73,6 +73,7 @@ export const getDefaultCreateJobFormData = (): JobFormData => ({
   receiverId: null,
   excessFee: 0,
   paymentType: "Insurance",
+  notes: "",
   insuranceCompany: "",
   customerName: "",
   customerPhone: "",

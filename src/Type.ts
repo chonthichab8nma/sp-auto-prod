@@ -32,6 +32,7 @@ export interface JobFormData {
   receiver: string;
   receiverId: number | null;
   paymentType: PaymentType;
+  notes?: string | null;
   insuranceCompany?: string;
   customerName?: string;
   customerPhone?: string;
@@ -47,4 +48,3 @@ export interface Job extends JobFormData {
   currentStageIndex: number;
   isFinished: boolean;
 }
-
