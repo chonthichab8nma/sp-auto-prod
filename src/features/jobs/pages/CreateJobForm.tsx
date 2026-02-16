@@ -392,12 +392,12 @@ export default function CreateJobForm() {
       paymentType: formData.paymentType,
       excessFee: formData.excessFee,
       notes: formData.notes?.trim() ? formData.notes.trim() : null,
-      ...(formData.startDate
-        ? { startDate: new Date(formData.startDate).toISOString() }
-        : {}),
-      ...(formData.estimatedEndDate
-        ? { estimatedEndDate: new Date(formData.estimatedEndDate).toISOString() }
-        : {}),
+      startDate: formData.startDate
+        ? new Date(formData.startDate).toISOString()
+        : null,
+      estimatedEndDate: formData.estimatedEndDate
+        ? new Date(formData.estimatedEndDate).toISOString()
+        : null,
       customer: {
         name: formData.customerName || "",
         phone: formData.customerPhone || "",

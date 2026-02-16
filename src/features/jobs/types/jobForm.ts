@@ -35,8 +35,8 @@ export type CustomerRef =
 export type CreateJobPayloadBase = {
   jobNumber?: string;
 
-  startDate?: string;
-  estimatedEndDate?: string;
+  startDate?: string | null;
+  estimatedEndDate?: string | null;
   receiver: string;
 
   paymentType: string;
@@ -149,12 +149,10 @@ export function normalizeCreateJobPayload(
     repairDescription,
     excessFee: Number(form.excessFee) || 0,
     notes: notes ?? null,
-    ...(form.startDate
-      ? { startDate: toIsoDateTime(form.startDate) }
-      : {}),
-    ...(form.estimatedEndDate
-      ? { estimatedEndDate: toIsoDateTime(form.estimatedEndDate) }
-      : {}),
+    startDate: form.startDate ? toIsoDateTime(form.startDate) : null,
+    estimatedEndDate: form.estimatedEndDate
+      ? toIsoDateTime(form.estimatedEndDate)
+      : null,
   };
 
   const insurancePart: InsuranceCompanyRef =
