@@ -1,8 +1,13 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
 
 import type { JobApi } from "../api/job.api";
 import { formatThaiDate } from "../../../shared/lib/date";
+import {
+  vehiclesService,
+  type VehicleBrandApi,
+} from "../services/vehicles.service";
 
 const Section = ({
   title,
@@ -69,17 +74,59 @@ function buildTimelineStages(job: JobApi) {
     }));
 }
 
+function normalizeBrandKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
 export default function JobDetailPage({ job }: { job: JobApi | null }) {
   const navigate = useNavigate();
+  const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
+  const [logoLoadError, setLogoLoadError] = useState(false);
 
   const handleBack = () => navigate(-1);
 
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
 
   const stages = buildTimelineStages(job!);
-  console.log({
-    job,
-  });
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const data = await vehiclesService.listBrands();
+        if (!alive) return;
+        setBrands(data);
+      } catch {
+        if (!alive) return;
+        setBrands([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const brandLogoUrl = useMemo(() => {
+    const brandName = normalizeBrandKey(job?.vehicle?.brand);
+    if (!brandName || brands.length === 0) return null;
+
+    const matched = brands.find((b) => {
+      const keys = [
+        normalizeBrandKey(b.name),
+        normalizeBrandKey(b.nameEn),
+        normalizeBrandKey(b.code),
+      ];
+      return keys.includes(brandName);
+    });
+
+    return matched?.logoUrl ?? null;
+  }, [brands, job?.vehicle?.brand]);
+
+  useEffect(() => {
+    setLogoLoadError(false);
+  }, [brandLogoUrl]);
 
   return (
     <div className="p-6 min-h-screen bg-white">
@@ -147,7 +194,16 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
         <Section title="รายละเอียดรถ" subtitle="ข้อมูลรถ">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <CarFront size={40} className="text-slate-800" />
+              {brandLogoUrl && !logoLoadError ? (
+                <img
+                  src={brandLogoUrl}
+                  alt={job?.vehicle.brand || "vehicle brand"}
+                  className="h-10 w-10 object-contain"
+                  onError={() => setLogoLoadError(true)}
+                />
+              ) : (
+                <CarFront size={40} className="text-slate-800" />
+              )}
               <div>
                 <h1 className="text-lg font-bold text-slate-900">
                   {job?.vehicle.brand}
