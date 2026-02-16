@@ -1,23 +1,174 @@
-import JobsTable from "../../features/jobs/components/JobsTable";
 import type { JobApi } from "../../features/jobs/api/job.api";
+import StatusBadge from "../../shared/components/ui/StatusBadge";
+import Skeleton from "../../shared/components/ui/Skeleton";
+import { formatThaiDate } from "../../shared/lib/date";
+import { getDelayBadgeClass, resolveAgingBand } from "../utils/aging";
 
+const columns = [
+  { key: "reg", label: "ทะเบียนรถ", width: 190, align: "left" },
+  { key: "name", label: "ชื่อ-นามสกุล", width: 220, align: "left" },
+  { key: "phone", label: "เบอร์โทรศัพท์", width: 160, align: "left" },
+  { key: "brandModel", label: "ยี่ห้อ/รุ่น", width: 220, align: "left" },
+  { key: "status", label: "สถานะ", width: 120, align: "center" },
+  { key: "start", label: "วันที่นำรถเข้าซ่อม", width: 170, align: "left" },
+  { key: "end", label: "วันที่นัดรับรถ", width: 170, align: "left" },
+] as const;
 
-export type StationType = "CLAIM" | "REPAIR" | "BILLING";
-export type StationFilter = StationType | "ALL";
+const tableWidth = columns.reduce((sum, c) => sum + c.width, 0);
 
-export default function StationsTable({
-  station = "ALL",
-  jobs = [],
-  onRowClick,
-}: {
-  station?: StationFilter;
-  jobs?: JobApi[];
-  onRowClick: (id: number) => void;
-}) {
-  const filteredJobs =
-    station === "ALL" ? jobs : jobs.filter((job) => job.status === station);
+const alignClass = (a: string) =>
+  a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
 
-  return <JobsTable jobs={filteredJobs} onRowClick={onRowClick} loading />;
+function SkeletonCell({ colKey }: { colKey: (typeof columns)[number]["key"] }) {
+  if (colKey === "status") {
+    return (
+      <div className="flex justify-center">
+        <Skeleton className="h-7 w-20 rounded-full" />
+      </div>
+    );
+  }
+
+  if (colKey === "reg") {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-6 w-28 rounded-full" />
+      </div>
+    );
+  }
+
+  return <Skeleton className="h-5 w-32" />;
 }
 
+export default function StationsTable({
+  jobs,
+  loading,
+  delayDaysByJobId,
+  onRowClick,
+}: {
+  jobs: JobApi[];
+  loading: boolean;
+  delayDaysByJobId: Record<number, number>;
+  onRowClick: (id: number) => void;
+}) {
+  return (
+    <div className="w-full bg-white overflow-x-auto">
+      <table
+        className="inline-table table-fixed border-collapse"
+        style={{ width: tableWidth }}
+      >
+        <colgroup>
+          {columns.map((c) => (
+            <col key={c.key} style={{ width: c.width }} />
+          ))}
+        </colgroup>
+
+        <thead>
+          <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+            {columns.map((c) => (
+              <th
+                key={c.key}
+                className={`box-border px-6 py-4 text-[13px] font-medium text-slate-500 whitespace-nowrap ${alignClass(
+                  c.align,
+                )}`}
+              >
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody className="divide-y divide-slate-100">
+          {loading ? (
+            [...Array(6)].map((_, i) => (
+              <tr key={`sk-${i}`} className="h-15">
+                {columns.map((c) => (
+                  <td
+                    key={c.key}
+                    className={`box-border px-6 py-4 ${alignClass(c.align)}`}
+                  >
+                    <SkeletonCell colKey={c.key} />
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : jobs.length === 0 ? (
+            <tr>
+              <td
+                colSpan={columns.length}
+                className="px-6 py-20 text-center text-slate-400"
+              >
+                ไม่มีข้อมูล
+              </td>
+            </tr>
+          ) : (
+            jobs.map((job) => {
+              const delayDays = delayDaysByJobId[job.id];
+              const hasAlert =
+                typeof delayDays === "number" &&
+                resolveAgingBand(delayDays) !== "normal";
+
+              return (
+                <tr
+                  key={job.id}
+                  className="h-15 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                  onClick={() => onRowClick(job.id)}
+                >
+                  <td className="box-border px-6 py-4">
+                    <div className="font-medium text-slate-700">
+                      {job.vehicle.registration}
+                    </div>
+                    <div className="mt-1.5">
+                      {hasAlert ? (
+                        <span
+                          className={[
+                            "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+                            getDelayBadgeClass(delayDays),
+                          ].join(" ")}
+                        >
+                          ล่าช้า {delayDays} วัน
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400">-</span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td
+                    className="box-border px-6 py-4 text-slate-600 truncate"
+                    title={job.customer?.name || "-"}
+                  >
+                    {job.customer?.name || "-"}
+                  </td>
+
+                  <td className="box-border px-6 py-4 text-slate-600">
+                    {job.customer?.phone || "-"}
+                  </td>
+
+                  <td className="box-border px-6 py-4 text-slate-600">
+                    <span className="truncate" title={`${job.vehicle.brand} ${job.vehicle.model}`}>
+                      {job.vehicle.brand} {job.vehicle.model}
+                    </span>
+                  </td>
+
+                  <td className="box-border px-6 py-4 text-center">
+                    <StatusBadge job={job} />
+                  </td>
+
+                  <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
+                    {formatThaiDate(job.startDate)}
+                  </td>
+
+                  <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
+                    {formatThaiDate(job.estimatedEndDate)}
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 

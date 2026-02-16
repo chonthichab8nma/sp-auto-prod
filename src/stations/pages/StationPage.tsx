@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import StationsFilters from "../components/StationsFilters";
+import type { AlertFilterValue } from "../components/StationsFilters";
+import StationsTable from "../components/StationsTable";
+import { useStationAlertsQuery } from "../hooks/useStationAlertsQuery";
+import { resolveAgingBand } from "../utils/aging";
 
 import Pagination from "../../shared/components/ui/Pagination";
 
@@ -11,7 +15,6 @@ import type {
 } from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
 import type { JobApi } from "../../features/jobs/api/job.api";
-import StationsTable from "../../features/jobs/components/JobsTable";
 
 function resolveTotalPages(
   res: JobsListApiResponse | null,
@@ -51,6 +54,7 @@ export default function StationsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("สถานะ");
+  const [selectedAlert, setSelectedAlert] = useState<AlertFilterValue>("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   const query: JobsQuery = useMemo(
@@ -64,8 +68,26 @@ export default function StationsPage() {
   );
 
   const { data, error, loading } = useDashboardQuery(query);
+  const { data: alertsData, error: alertsError } = useStationAlertsQuery();
 
   const apiJobs: JobApi[] = data?.data ?? [];
+  const delayDaysByJobId = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const row of alertsData) {
+      map[row.id] = row.daysInProcess;
+    }
+    return map;
+  }, [alertsData]);
+
+  const jobsForTable = useMemo(() => {
+    if (selectedAlert === "all") return apiJobs;
+    return apiJobs.filter((job) => {
+      const days = delayDaysByJobId[job.id];
+      if (typeof days !== "number") return false;
+      return resolveAgingBand(days) === selectedAlert;
+    });
+  }, [apiJobs, delayDaysByJobId, selectedAlert]);
+
   const totalPages = resolveTotalPages(data, pageSize);
 
   const statusOptions = useMemo(
@@ -83,30 +105,31 @@ export default function StationsPage() {
       <StationsFilters
         searchTerm={searchTerm}
         selectedStatus={selectedStatus}
+        selectedAlert={selectedAlert}
         statusOptions={statusOptions}
         onSearchTermChange={setSearchTerm}
         onStatusChange={(v) => {
           setSelectedStatus(v);
           setCurrentPage(1);
         }}
+        onAlertChange={(v) => {
+          setSelectedAlert(v);
+          setCurrentPage(1);
+        }}
         onSubmitSearch={() => setCurrentPage(1)}
       />
 
-      {error && (
+      {(error || alertsError) && (
         <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-4">
-          โหลดข้อมูลไม่สำเร็จ: {String(error)}
+          โหลดข้อมูลไม่สำเร็จ: {String(error || alertsError)}
         </div>
       )}
 
       <div className="mt-4">
-        {/* <StationsTable
-          station="ALL"
-          jobs={apiJobs}
-          onRowClick={(id) => navigate(`/stations/${id}`)}
-        /> */}
         <StationsTable
-          jobs={apiJobs}
+          jobs={jobsForTable}
           loading={loading}
+          delayDaysByJobId={delayDaysByJobId}
           onRowClick={(id) => navigate(`/stations/${id}`)}
         />
       </div>
