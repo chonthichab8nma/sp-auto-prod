@@ -32,6 +32,7 @@ export interface JobFormData {
   receiver: string;
   receiverId: number | null;
   paymentType: PaymentType;
+  repairDescription?: string;
   notes?: string | null;
   insuranceCompany?: string;
   customerName?: string;

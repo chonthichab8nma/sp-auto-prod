@@ -301,6 +301,15 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
               label="เจ้าหน้าที่รับรถ"
               value={job?.receiver?.name ?? "-"}
             />
+            <div className="md:col-span-2">
+              <StackItem
+                label="ความต้องการซ่อม"
+                value={job?.repairDescription ?? ""}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <StackItem label="หมายเหตุ" value={job?.notes ?? ""} />
+            </div>
           </div>
         </Section>
 

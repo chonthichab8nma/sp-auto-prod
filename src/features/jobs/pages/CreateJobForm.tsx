@@ -390,6 +390,7 @@ export default function CreateJobForm() {
       receiver: formData.receiver || "",
       receiverId: formData.receiverId ?? null,
       paymentType: formData.paymentType,
+      repairDescription: formData.repairDescription?.trim() || "",
       excessFee: formData.excessFee,
       notes: formData.notes?.trim() ? formData.notes.trim() : null,
       startDate: formData.startDate
@@ -630,6 +631,26 @@ export default function CreateJobForm() {
                 debounceMs={250}
                 inputClassName="py-2"
               />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-800 block leading-5">
+                  ความต้องการซ่อม
+                </label>
+                <textarea
+                  name="repairDescription"
+                  rows={3}
+                  value={formData.repairDescription ?? ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      repairDescription: e.target.value,
+                    }))
+                  }
+                  placeholder="ระบุความต้องการซ่อม เช่น อาการเสียที่พบ หรือรายการซ่อมที่ต้องการ (ถ้ามี)"
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:bg-slate-50 hover:border-slate-300 focus:border-blue-600 resize-y min-h-[88px]"
+                />
+              </div>
             </div>
             <div className="sm:col-span-2 lg:col-span-3">
               <div className="flex flex-col gap-2">
