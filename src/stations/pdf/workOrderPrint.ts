@@ -185,6 +185,14 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
   const claimCells = toStepCells(claimStage?.jobSteps ?? []);
   const repairCells = toStepCells(repairStage?.jobSteps ?? []);
   const billingCells = toStepCells(billingStage?.jobSteps ?? []);
+  const insuranceCompanyName =
+    job.paymentType === "Insurance"
+      ? text(job.insuranceCompany?.name ?? "-")
+      : "-";
+  const insuranceLabel =
+    job.paymentType === "Insurance"
+      ? `ประกัน : ${insuranceCompanyName}`
+      : "ประกัน";
 
   return `
     <div data-work-order-sheet class="bg-[#ffffff] text-[#111] w-[1122px] min-h-[793px] border-[1px] border-black p-2 font-[\"TH_Sarabun_New\",\"Sarabun\",sans-serif]">
@@ -205,7 +213,7 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
         <div class="border-[0.7px] border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
           <div class="mb-0.5 text-start font-bold">ประเภทการชำระ</div>
           <div class="grid grid-cols-1 gap-y-0.5">
-            <div class="text-start">${renderCheckbox(job.paymentType === "Insurance", "ประกัน")}</div>
+            <div class="text-start">${renderCheckbox(job.paymentType === "Insurance", insuranceLabel)}</div>
             <div class="text-start">${renderCheckbox(job.paymentType !== "Insurance", "เงินสด")}</div>
           </div>
         </div>
