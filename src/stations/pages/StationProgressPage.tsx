@@ -17,9 +17,17 @@ import { useStationProgressMutation } from "../hooks/useStationProgressMutation"
 import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
 import { printWorkOrder } from "../pdf/workOrderPrint";
+import {
+  vehiclesService,
+  type VehicleBrandApi,
+} from "../../features/jobs/services/vehicles.service";
 
 function sortStages(stages: JobStageApi[]) {
   return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
+}
+
+function normalizeBrandKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
 }
 
 export default function StationProgressPage({
@@ -38,10 +46,31 @@ export default function StationProgressPage({
   const navigate = useNavigate();
 
   const [jobState, setJobState] = useState<JobApi>(job);
+  const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
+  const [logoLoadError, setLogoLoadError] = useState(false);
 
   useEffect(() => {
     setJobState(job);
   }, [job]);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const data = await vehiclesService.listBrands();
+        if (!alive) return;
+        setBrands(data);
+      } catch {
+        if (!alive) return;
+        setBrands([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const stages = useMemo(
     () => sortStages(jobState.jobStages ?? []),
@@ -189,6 +218,26 @@ export default function StationProgressPage({
     const currentStageCode = stages[checkpointIndex]?.stage.code ?? "";
     return currentStageCode.toUpperCase() === "BILLING";
   }, [stages, checkpointIndex]);
+
+  const brandLogoUrl = useMemo(() => {
+    const brandName = normalizeBrandKey(jobState.vehicle?.brand);
+    if (!brandName || brands.length === 0) return null;
+
+    const matched = brands.find((b) => {
+      const keys = [
+        normalizeBrandKey(b.name),
+        normalizeBrandKey(b.nameEn),
+        normalizeBrandKey(b.code),
+      ];
+      return keys.includes(brandName);
+    });
+
+    return matched?.logoUrl ?? null;
+  }, [brands, jobState.vehicle?.brand]);
+
+  useEffect(() => {
+    setLogoLoadError(false);
+  }, [brandLogoUrl]);
 
   const canPrintBillingPdf = isViewingBillingStage && isSavingLastStepNow;
   const isDoneStatus = jobState.status === "DONE";
@@ -397,46 +446,57 @@ export default function StationProgressPage({
       />
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
-          <div className="flex gap-4 w-full xl:w-auto min-w-0">
-            <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center bg-white shrink-0">
-              <Car size={24} className="text-slate-800" />
+          <div className="w-full xl:w-auto min-w-0">
+            <div className="flex gap-4 w-full xl:w-auto min-w-0">
+              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center bg-white shrink-0 overflow-hidden">
+                {brandLogoUrl && !logoLoadError ? (
+                  <img
+                    src={brandLogoUrl}
+                    alt={jobState.vehicle.brand || "vehicle brand"}
+                    className="h-9 w-9 object-contain"
+                    onError={() => setLogoLoadError(true)}
+                  />
+                ) : (
+                  <Car size={24} className="text-slate-800" />
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold text-slate-900 leading-tight truncate">
+                  {jobState.vehicle.brand}
+                </h2>
+                <p className="text-slate-500 text-sm truncate">
+                  {jobState.vehicle.model}
+                </p>
+              </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-bold text-slate-900 leading-tight truncate">
-                {jobState.vehicle.brand}
-              </h2>
-              <p className="text-slate-500 text-sm truncate">
-                {jobState.vehicle.model}
-              </p>
-
-              <div className="mt-4 xl:mt-6 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar">
-                <StageStepper
-                  job={jobState}
-                  checkpointIndex={checkpointIndex}
-                  onChange={(idx) => {
-                    setFollowMode(false);
-                    if (isDoneStatus) {
-                      setCheckpointIndex(idx);
-                      return;
-                    }
-
-                    if (idx <= checkpointIndex) {
-                      setCheckpointIndex(idx);
-                      return;
-                    }
-
-                    if (!isStageDone) {
-                      toast.error(
-                        "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
-                      );
-                      return;
-                    }
-
+            <div className="mt-4 xl:mt-6 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar">
+              <StageStepper
+                job={jobState}
+                checkpointIndex={checkpointIndex}
+                onChange={(idx) => {
+                  setFollowMode(false);
+                  if (isDoneStatus) {
                     setCheckpointIndex(idx);
-                  }}
-                />
-              </div>
+                    return;
+                  }
+
+                  if (idx <= checkpointIndex) {
+                    setCheckpointIndex(idx);
+                    return;
+                  }
+
+                  if (!isStageDone) {
+                    toast.error(
+                      "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
+                    );
+                    return;
+                  }
+
+                  setCheckpointIndex(idx);
+                }}
+              />
             </div>
           </div>
 
