@@ -124,18 +124,18 @@ function renderStepProgressTable(title: string, cells: StepCell[]): string {
       <table class="w-full table-fixed border-collapse mb-1.5 text-[10px] leading-tight">
         <thead>
           <tr>
-            <th class="border border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">${text(title)}</th>
-            <th class="border border-black px-2 py-1.5 font-bold text-center align-middle">ไม่พบขั้นตอน</th>
+            <th class="border-[0.7px] border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">${text(title)}</th>
+            <th class="border-[0.7px] border-black px-2 py-1.5 font-bold text-center align-middle">ไม่พบขั้นตอน</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="border border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">เจ้าหน้าที่</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle h-[24px]">-</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">เจ้าหน้าที่</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle h-[24px]">-</td>
           </tr>
           <tr>
-            <td class="border border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">วันที่/เวลา</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle h-[24px]">-</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">วันที่/เวลา</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle h-[24px]">-</td>
           </tr>
         </tbody>
       </table>
@@ -145,31 +145,31 @@ function renderStepProgressTable(title: string, cells: StepCell[]): string {
   const headCols = cells
     .map(
       (c) =>
-        `<th class="border border-black px-2 py-1.5 font-bold text-center align-middle">${text(c.name)}</th>`,
+        `<th class="border-[0.7px] border-black px-2 py-1.5 font-bold text-center align-middle">${text(c.name)}</th>`,
     )
     .join("");
   const empCols = cells
-    .map((c) => `<td class="border border-black px-2 py-1.5 text-center align-middle h-[24px]">${text(c.employee)}</td>`)
+    .map((c) => `<td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle h-[24px]">${text(c.employee)}</td>`)
     .join("");
   const timeCols = cells
-    .map((c) => `<td class="border border-black px-2 py-1.5 text-center align-middle h-[24px]">${text(c.signedAt)}</td>`)
+    .map((c) => `<td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle h-[24px]">${text(c.signedAt)}</td>`)
     .join("");
 
   return `
     <table class="w-full table-fixed border-collapse mb-1.5 text-[10px] leading-tight">
       <thead>
         <tr>
-          <th class="border border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">${text(title)}</th>
+          <th class="border-[0.7px] border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">${text(title)}</th>
           ${headCols}
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="border border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">เจ้าหน้าที่</td>
+          <td class="border-[0.7px] border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">เจ้าหน้าที่</td>
           ${empCols}
         </tr>
         <tr>
-          <td class="border border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">วันที่/เวลา</td>
+          <td class="border-[0.7px] border-black px-2 py-1.5 w-[78px] font-bold text-center align-middle">วันที่/เวลา</td>
           ${timeCols}
         </tr>
       </tbody>
@@ -187,22 +187,22 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
   const billingCells = toStepCells(billingStage?.jobSteps ?? []);
 
   return `
-    <div data-work-order-sheet class="bg-[#ffffff] text-[#111] w-[1122px] min-h-[793px] border-2 border-black p-2 font-[\"TH_Sarabun_New\",\"Sarabun\",sans-serif]">
+    <div data-work-order-sheet class="bg-[#ffffff] text-[#111] w-[1122px] min-h-[793px] border-[1px] border-black p-2 font-[\"TH_Sarabun_New\",\"Sarabun\",sans-serif]">
       <h1 class="text-center text-[22px] leading-none font-bold mb-6">ใบปฏิบัติงาน</h1>
 
       <div class="grid grid-cols-[2fr_2fr_1.2fr] gap-1.5 mb-1.5">
-        <div class="border border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
+        <div class="border-[0.7px] border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
           <div class="mb-0.5"><strong>บริษัท เอส.พี.ออโต้เพ้นท์ เซอร์วิส จำกัด</strong></div>
           <div class="mb-0.5"><strong>ที่อยู่</strong> 142/3 หมู่ 16 ตำบลรังงาม อำเภอเนินสง่า จังหวัดชัยภูมิ 36130</div>
           <div><strong>โทร</strong> 064-3544141 <strong>อีเมล์</strong> SP.AutoPaint88@gmail.com</div>
         </div>
-        <div class="border border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
+        <div class="border-[0.7px] border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
           <div class="mb-0.5"><strong>วันที่นำรถเข้าจอดซ่อม : </strong><span class="inline-block px-0.5">${text(formatThaiDate(job.startDate))}</span></div>
           <div class="mb-0.5"><strong>กำหนดซ่อมเสร็จ/นัดรับรถ : </strong><span class="inline-block px-0.5">${text(formatThaiDate(job.estimatedEndDate))}</span></div>
           <div class="mb-0.5"><strong>เจ้าหน้าที่รับรถ : </strong><span class="inline-block px-0.5">${text(job.receiver?.name ?? "-")}</span></div>
           <div><strong>ค่าความเสียหายส่วนแรก : </strong><span class="inline-block px-0.5">${text(Number(job.excessFee ?? 0).toLocaleString("th-TH"))}</span></div>
         </div>
-        <div class="border border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
+        <div class="border-[0.7px] border-black px-2 py-1.5 text-[10px] leading-snug min-h-[72px]">
           <div class="mb-0.5 text-start font-bold">ประเภทการชำระ</div>
           <div class="grid grid-cols-1 gap-y-0.5">
             <div class="text-start">${renderCheckbox(job.paymentType === "Insurance", "ประกัน")}</div>
@@ -214,20 +214,20 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
       <div class="mb-1.5 text-[10px] leading-snug w-full">
         <table class="w-full border-collapse">
           <tr>
-            <td class="border border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ทะเบียนรถ</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.registration)}</td>
-            <td class="border border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ประเภทรถ</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(vehicleTypeValue)}</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ทะเบียนรถ</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.registration)}</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ประเภทรถ</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle">${text(vehicleTypeValue)}</td>
           </tr>
           <tr>
-            <td class="border border-black px-2 py-1.5 font-bold text-center align-middle">เลขตัวถัง</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle" colspan="3">${text(job.vehicle.chassisNumber ?? "")}</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 font-bold text-center align-middle">เลขตัวถัง</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle" colspan="3">${text(job.vehicle.chassisNumber ?? "")}</td>
           </tr>
           <tr>
-            <td class="border border-black px-2 py-1.5 font-bold text-center align-middle">ยี่ห้อ</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.brand)}</td>
-            <td class="border border-black px-2 py-1.5 font-bold text-center align-middle">รุ่น</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.model)} / ปี ${text(job.vehicle.year)} / สี ${text(job.vehicle.color)}</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 font-bold text-center align-middle">ยี่ห้อ</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.brand)}</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 font-bold text-center align-middle">รุ่น</td>
+            <td class="border-[0.7px] border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.model)} / ปี ${text(job.vehicle.year)} / สี ${text(job.vehicle.color)}</td>
           </tr>
         </table>
       </div>
@@ -237,11 +237,11 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
       ${renderStepProgressTable("ตั้งเบิก", billingCells)}
 
       <div class="grid grid-cols-[2fr_1fr] gap-0 text-[10px] leading-snug">
-        <div class="border border-black p-1.5 min-h-[78px]">
+        <div class="border-[0.7px] border-black p-1.5 min-h-[78px]">
           <div class="font-bold mb-0.5">ความต้องการซ่อม :</div>
           <div class="whitespace-pre-wrap">${text(job.repairDescription || "")}</div>
         </div>
-        <div class="border border-black p-1.5 min-h-[78px]">
+        <div class="border-[0.7px] border-black p-1.5 min-h-[78px]">
           <div class="font-bold mb-0.5">หมายเหตุ :</div>          <div class="whitespace-pre-wrap">${text(job.notes || "")}</div>
         </div>
       </div>
