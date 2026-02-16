@@ -33,9 +33,43 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function text(value: unknown): string {
-  if (value == null) return "";
-  return escapeHtml(String(value));
+function text(value: unknown, fallback = "-"): string {
+  if (value == null) return fallback;
+  const stringValue = String(value).trim();
+  if (!stringValue) return fallback;
+  return escapeHtml(stringValue);
+}
+
+function pickString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (trimmed) return trimmed;
+  }
+  return "-";
+}
+
+function resolveVehicleType(job: JobApi): string {
+  const v = job.vehicle as JobApi["vehicle"] & {
+    typeName?: string | null;
+    vehicleType?: { name?: string | null } | string | null;
+    bodyType?: string | null;
+  };
+  const anyJob = job as JobApi & {
+    vehicleType?: { name?: string | null } | string | null;
+    type?: string | null;
+  };
+
+  return pickString(
+    v.type,
+    v.typeName,
+    typeof v.vehicleType === "string" ? v.vehicleType : v.vehicleType?.name,
+    v.bodyType,
+    typeof anyJob.vehicleType === "string"
+      ? anyJob.vehicleType
+      : anyJob.vehicleType?.name,
+    anyJob.type,
+  );
 }
 
 function isDone(status: JobStepStatusApi): boolean {
@@ -57,7 +91,10 @@ function toStepCells(steps: JobStepApi[]): StepCell[] {
   return sortSteps(steps).map((step) => ({
     name: step.stepTemplate?.name ?? "-",
     employee: isDone(step.status) ? (step.employee?.name ?? "-") : "-",
-    signedAt: isDone(step.status) ? formatThaiDateTime(step.completedAt) : "-",
+    signedAt:
+      isDone(step.status) && step.completedAt
+        ? formatThaiDateTime(step.completedAt)
+        : "-",
   }));
 }
 
@@ -164,7 +201,7 @@ function renderSheetInner(job: JobApi): string {
             <td class="border border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ทะเบียนรถ</td>
             <td class="border border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.registration)}</td>
             <td class="border border-black px-2 py-1.5 w-[96px] font-bold text-center align-middle">ประเภทรถ</td>
-            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(job.vehicle.type)}</td>
+            <td class="border border-black px-2 py-1.5 text-center align-middle">${text(resolveVehicleType(job))}</td>
           </tr>
           <tr>
             <td class="border border-black px-2 py-1.5 font-bold text-center align-middle">เลขตัวถัง</td>
