@@ -439,12 +439,14 @@ export default function StationProgressPage({
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] text-slate-800">
-      <ProgressHeader
+      <div className="mb-3 md:mb-6">
+        <ProgressHeader
         registration={jobState.vehicle.registration}
         status={jobState.status}
         onBack={() => navigate(-1)}
-      />
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+        />
+      </div>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-4 md:mb-6">
         <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
           <div className="w-full xl:w-auto min-w-0">
             <div className="flex gap-4 w-full xl:w-auto min-w-0">
@@ -553,7 +555,7 @@ export default function StationProgressPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 items-start">
         <div className="xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <StepTimeline
             title={stages[checkpointIndex]?.stage.name ?? "รายการ"}
