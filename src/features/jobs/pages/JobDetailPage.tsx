@@ -78,10 +78,15 @@ function normalizeBrandKey(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
+function normalizeModelKey(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
 export default function JobDetailPage({ job }: { job: JobApi | null }) {
   const navigate = useNavigate();
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [logoLoadError, setLogoLoadError] = useState(false);
+  const [vehicleTypeFromDb, setVehicleTypeFromDb] = useState<string>("");
 
   const handleBack = () => navigate(-1);
 
@@ -124,9 +129,58 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
     return matched?.logoUrl ?? null;
   }, [brands, job?.vehicle?.brand]);
 
+  const vehicleTypeFromCatalog = useMemo(() => {
+    const brandName = normalizeBrandKey(job?.vehicle?.brand);
+    const modelName = normalizeModelKey(job?.vehicle?.model);
+    if (!brandName || !modelName || brands.length === 0) return "";
+
+    const matchedBrand = brands.find((b) => {
+      const keys = [
+        normalizeBrandKey(b.name),
+        normalizeBrandKey(b.nameEn),
+        normalizeBrandKey(b.code),
+      ];
+      return keys.includes(brandName);
+    });
+
+    const matchedModel = matchedBrand?.models?.find(
+      (m) => normalizeModelKey(m.name) === modelName,
+    );
+
+    return matchedModel?.type?.name ?? "";
+  }, [brands, job?.vehicle?.brand, job?.vehicle?.model]);
+
   useEffect(() => {
     setLogoLoadError(false);
   }, [brandLogoUrl]);
+
+  useEffect(() => {
+    let alive = true;
+    const registration = job?.vehicle?.registration?.trim();
+
+    if (!registration) {
+      setVehicleTypeFromDb("");
+      return;
+    }
+
+    (async () => {
+      try {
+        const vehicle = await vehiclesService.findVehicleByReg(registration);
+        if (!alive) return;
+        setVehicleTypeFromDb(vehicle?.type ?? "");
+      } catch {
+        if (!alive) return;
+        setVehicleTypeFromDb("");
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [job?.vehicle?.registration]);
+
+  const displayVehicleType =
+    vehicleTypeFromDb || job?.vehicle?.type || vehicleTypeFromCatalog || "-";
 
   return (
     <div className="p-6 min-h-screen bg-white">
@@ -209,7 +263,7 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
                   {job?.vehicle.brand}
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  {job?.vehicle.model} {job?.vehicle.year} {job?.vehicle.type}
+                  {job?.vehicle.model} {job?.vehicle.year} {displayVehicleType}
                 </p>
               </div>
             </div>
@@ -223,6 +277,7 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
             />
             <RowItem label="ยี่ห้อ/แบรนด์" value={job?.vehicle.brand} />
             <RowItem label="รุ่น" value={job?.vehicle.model} />
+            <RowItem label="ประเภทรถ" value={displayVehicleType} />
             <RowItem label="ปี" value={job?.vehicle.year} />
             <RowItem label="สี" value={job?.vehicle.color} />
           </div>

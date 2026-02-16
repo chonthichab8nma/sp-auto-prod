@@ -416,6 +416,7 @@ export default function CreateJobForm() {
             registration: normalizedReg || formData.registration,
             brand: formData.brand,
             model: formData.model,
+            type: formData.type,
             color: formData.color,
             chassisNumber: formData.chassisNumber,
             year: formData.year,
