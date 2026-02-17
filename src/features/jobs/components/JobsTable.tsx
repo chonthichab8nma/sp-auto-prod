@@ -6,17 +6,18 @@ import Skeleton from "../../../shared/components/ui/Skeleton";
 import { formatThaiDate } from "../../../shared/lib/date";
 
 const columns = [
-  { key: "reg", label: "ทะเบียนรถ", width: 140, align: "left" },
-  { key: "name", label: "ชื่อ-นามสกุล", width: 220, align: "left" },
-  { key: "phone", label: "เบอร์โทรศัพท์", width: 160, align: "left" },
-  { key: "brandModel", label: "ยี่ห้อ/รุ่น (ประเภท)", width: 240, align: "left" },
+  { key: "reg", label: "ทะเบียนรถ", width: 180, align: "left" },
+  { key: "brandModel", label: "ยี่ห้อ/รุ่น", width: 240, align: "left" },
   { key: "status", label: "สถานะ", width: 120, align: "center" },
   { key: "start", label: "วันที่นำรถเข้าจอดซ่อม", width: 180, align: "left" },
-  { key: "end", label: "วันที่นัดรับรถ", width: 250, align: "left" },
+  { key: "end", label: "วันที่นัดรับรถ", width: 180, align: "left" },
+  { key: "name", label: "ชื่อลูกค้า", width: 220, align: "left" },
+  { key: "phone", label: "เบอร์โทรศัพท์", width: 170, align: "left" },
   // { key: "actions", label: "", width: 56, align: "right" },
 ] as const;
 
 const tableWidth = columns.reduce((sum, c) => sum + c.width, 0);
+const columnPercents = columns.map((c) => (c.width / tableWidth) * 100);
 
 const alignClass = (a: string) =>
   a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
@@ -203,12 +204,12 @@ export default function StationsTable({
 
       <div className="hidden overflow-x-auto md:block">
         <table
-          className="inline-table table-fixed border-collapse"
-          style={{ width: tableWidth }}
+          className="w-full table-fixed border-collapse"
+          style={{ minWidth: tableWidth }}
         >
           <colgroup>
-            {columns.map((c) => (
-              <col key={c.key} style={{ width: c.width }} />
+            {columns.map((c, idx) => (
+              <col key={c.key} style={{ width: `${columnPercents[idx]}%` }} />
             ))}
           </colgroup>
 
@@ -261,17 +262,6 @@ export default function StationsTable({
                     {job.vehicle.registration}
                   </td>
 
-                  <td
-                    className="box-border px-6 py-4 text-slate-600 truncate"
-                    title={job.customer?.name || "-"}
-                  >
-                    {job.customer?.name || "-"}
-                  </td>
-
-                  <td className="box-border px-6 py-4 text-slate-600">
-                    {job.customer?.phone || "-"}
-                  </td>
-
                   <td className="box-border px-6 py-4 text-slate-600">
                     <div className="flex flex-col leading-normal">
                       <span
@@ -293,6 +283,17 @@ export default function StationsTable({
 
                   <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
                     {formatThaiDate(job.estimatedEndDate)}
+                  </td>
+
+                  <td
+                    className="box-border px-6 py-4 text-slate-600 truncate"
+                    title={job.customer?.name || "-"}
+                  >
+                    {job.customer?.name || "-"}
+                  </td>
+
+                  <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
+                    {job.customer?.phone || "-"}
                   </td>
                 </tr>
               ))
