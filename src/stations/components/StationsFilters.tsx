@@ -48,7 +48,7 @@ export default function StationsFilters({
             subTitle: "",
             count: summaryCounts.all,
             icon: List,
-            iconWrapClass: "bg-blue-100 text-blue-600",
+            iconWrapClass: "bg-blue-50 text-blue-600",
           },
           {
             key: "warning" as const,
@@ -56,7 +56,7 @@ export default function StationsFilters({
             subTitle: "15 วัน",
             count: summaryCounts.warning,
             icon: ArrowUpCircle,
-            iconWrapClass: "bg-amber-100 text-amber-600",
+            iconWrapClass: "bg-amber-50 text-amber-500",
           },
           {
             key: "critical" as const,
@@ -64,7 +64,7 @@ export default function StationsFilters({
             subTitle: "30 วัน",
             count: summaryCounts.critical,
             icon: AlertTriangle,
-            iconWrapClass: "bg-rose-100 text-rose-600",
+            iconWrapClass: "bg-rose-50 text-rose-500",
           },
         ].map((item) => {
           const active = selectedAlert === item.key;
@@ -75,31 +75,33 @@ export default function StationsFilters({
               type="button"
               onClick={() => onAlertChange(item.key)}
               className={[
-                "w-full rounded-3xl border bg-white px-5 py-4 text-left shadow-sm transition",
+                "w-full min-h-[90px] rounded-[28px] border bg-white px-4 py-2.5 text-left transition shadow-sm",
                 active
-                  ? "border-blue-500 ring-1 ring-blue-500/30 shadow-[0_6px_16px_rgba(37,99,235,0.16)]"
-                  : "border-slate-200 hover:border-slate-300",
+                  ? "border-blue-500 ring-2 ring-blue-500/10 bg-blue-50/10"
+                  : "border-slate-100",
               ].join(" ")}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <span
                   className={[
-                    "flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl",
+                    "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl",
                     item.iconWrapClass,
                   ].join(" ")}
                 >
-                  <Icon className="h-8 w-8" />
+                  <Icon className="h-6 w-6" />
                 </span>
-                <span className="min-w-0">
-                  <span className="block text-xl leading-tight font-semibold text-slate-600">
-                    {item.title}
+                <span className="min-w-0 flex-1 flex items-center justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block text-base leading-tight font-semibold text-slate-600">
+                      {item.title}
+                    </span>
                     {item.subTitle && (
-                      <span className="ml-2 inline text-slate-500">
+                      <span className="mt-0.5 block text-base leading-tight font-semibold text-slate-500">
                         {item.subTitle}
                       </span>
                     )}
                   </span>
-                  <span className="mt-2 block text-5xl leading-none font-extrabold text-slate-900">
+                  <span className="shrink-0 text-right text-[40px] leading-none font-extrabold text-slate-900">
                     {item.count}
                   </span>
                 </span>
