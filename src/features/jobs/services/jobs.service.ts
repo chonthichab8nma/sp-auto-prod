@@ -1,6 +1,7 @@
 import type { Job } from "../../../Type";
 import type { CreateJobPayload } from "../types/jobForm";
 import { http } from "../../../shared/lib/http";
+import type { JobApi } from "../api/job.api";
 
 export type ServiceResult<T> =
   | { ok: true; data: T }
@@ -63,5 +64,17 @@ export const jobsService = {
     });
 
     return data.data[0] ?? null;
+  },
+
+  async update(jobId: number, payload: unknown): Promise<ServiceResult<JobApi>> {
+    try {
+      const { data } = await http.patch<JobApi>(`/private/jobs/${jobId}`, payload);
+      return { ok: true, data };
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        return { ok: false, error: e.message };
+      }
+      return { ok: false, error: "อัปเดตงานไม่สำเร็จ" };
+    }
   },
 };
