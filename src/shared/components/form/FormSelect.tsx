@@ -57,18 +57,6 @@ const FormSelect = ({
     return () => document.removeEventListener("mousedown", onDocDown);
   }, []);
 
-  // const commit = (next: string) => {
-
-  //   console.log(next)
-  //   onChange?.({
-  //     target: { name: name ?? "", value: next } as any,
-  //     currentTarget: { name: name ?? "", value: next } as any,
-  //   } as React.ChangeEvent<HTMLSelectElement>);
-
-  //   setOpen(false);
-  //   requestAnimationFrame(() => btnRef.current?.focus());
-  // };
-
   const commit = (next: string) => {
     // ✅ วิธีที่ชัวร์: ยิง change event จริงจาก <select>
     const el = selectRef.current;
@@ -194,10 +182,7 @@ const FormSelect = ({
         value={stringValue}
         required={required}
         disabled={disabled}
-        onChange={(e) => {
-          console.log(e);
-          onChange?.(e);
-        }}
+        onChange={onChange}
         className="sr-only"
         tabIndex={-1}
         aria-hidden="true"

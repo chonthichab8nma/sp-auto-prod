@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { CirclePlus, Filter, CalendarIcon } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,22 @@ import {
 import FormSelect from "../../../shared/components/form/FormSelect";
 import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
 
+type DashboardAdvancedFilters = {
+  jobNumber?: string;
+  insuranceCompanyId?: number;
+  brand?: string;
+  model?: string;
+  color?: string;
+  typeId?: number;
+  year?: string;
+  vehicleRegistration?: string;
+  chassisNumber?: string;
+  vinNumber?: string;
+  customerName?: string;
+};
+
+type DashboardFilterValue = string | number | undefined;
+
 export default function DashboardFilters({
   startDate,
   endDate,
@@ -20,42 +36,21 @@ export default function DashboardFilters({
   onEndDateChange,
   onAdvancedFilterChange,
 }: {
-  searchTerm: string;
-  selectedCarType: string;
   startDate: string;
   endDate: string;
-  advancedFilters?: {
-    jobNumber?: string;
-    insuranceCompanyId?: number;
-    brand?: string;
-    model?: string;
-    color?: string;
-    typeId?: number;
-    year?: string;
-    vehicleRegistration?: string;
-    chassisNumber?: string;
-    vinNumber?: string;
-    customerName?: string;
-  };
-  onSearchTermChange: (v: string) => void;
-  onCarTypeChange: (v: string) => void;
+  advancedFilters?: DashboardAdvancedFilters;
   onStartDateChange: (v: string) => void;
   onEndDateChange: (v: string) => void;
-  onAdvancedFilterChange?: (key: string, value: any) => void;
-  onSubmitSearch: () => void;
+  onAdvancedFilterChange?: (
+    key: keyof DashboardAdvancedFilters,
+    value: DashboardFilterValue,
+  ) => void;
 }) {
   const navigate = useNavigate();
-  // const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  console.log(isTypeDropdownOpen);
-  // API Data State
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [types, setTypes] = useState<VehicleTypeApi[]>([]);
   const [insurances, setInsurances] = useState<InsuranceCompanyApi[]>([]);
-
-  // const datePickerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const insuranceOptions = useMemo(
     () => insurances.map((i) => i.name),
@@ -85,17 +80,6 @@ export default function DashboardFilters({
       }
     };
     fetchMetadata();
-
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsTypeDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (

@@ -99,14 +99,6 @@ function LoginGate() {
 }
 
 export default function AppRoutes() {
-  const updateStep = (
-    stageIdx: number,
-    stepId: string,
-    status: StepStatus,
-    employeeId: number | null,
-  ) => {
-    console.log({ stageIdx, stepId, status, employeeId });
-  };
   return (
     <Routes>
       <Route path="/login" element={<LoginGate />} />
@@ -122,7 +114,7 @@ export default function AppRoutes() {
 
           <Route
             path="/stations/:jobId"
-            element={<StationWrapper onUpdateStep={updateStep} />}
+            element={<StationWrapper onUpdateStep={() => {}} />}
           />
         </Route>
       </Route>

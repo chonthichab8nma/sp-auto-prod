@@ -8,22 +8,13 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { formatThaiDate, formatThaiDateTime } from "../../shared/lib/date";
 import { vehiclesService } from "../../features/jobs/services/vehicles.service";
+import { sortJobStages, sortJobSteps } from "../../features/jobs/lib/stage";
 
 type StepCell = {
   name: string;
   employee: string;
   signedAt: string;
 };
-
-function sortStages(stages: JobStageApi[]) {
-  return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
-}
-
-function sortSteps(steps: JobStepApi[]) {
-  return steps
-    .slice()
-    .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
-}
 
 function escapeHtml(value: string): string {
   return value
@@ -96,7 +87,7 @@ function getStage(
   job: JobApi,
   stageCode: "CLAIM" | "REPAIR" | "BILLING",
 ): JobStageApi | null {
-  const stages = sortStages(job.jobStages ?? []);
+  const stages = sortJobStages(job.jobStages ?? []);
   const found = stages.find(
     (stage) => (stage.stage.code ?? "").toUpperCase() === stageCode,
   );
@@ -104,7 +95,7 @@ function getStage(
 }
 
 function toStepCells(steps: JobStepApi[]): StepCell[] {
-  return sortSteps(steps).map((step) => ({
+  return sortJobSteps(steps).map((step) => ({
     name: step.stepTemplate?.name ?? "-",
     employee: isDone(step.status) ? (step.employee?.name ?? "-") : "-",
     signedAt:

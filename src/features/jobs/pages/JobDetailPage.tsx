@@ -8,6 +8,11 @@ import {
   vehiclesService,
   type VehicleBrandApi,
 } from "../services/vehicles.service";
+import { buildJobTimelineStages } from "../lib/stage";
+import {
+  resolveBrandLogoUrl,
+  resolveVehicleTypeFromCatalog,
+} from "../lib/vehicleCatalog";
 
 const Section = ({
   title,
@@ -63,25 +68,6 @@ const StackItem = ({
   </div>
 );
 
-function buildTimelineStages(job: JobApi) {
-  return job?.jobStages
-    .slice()
-    .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex)
-    .map((s) => ({
-      id: String(s.id),
-      name: s.stage.name,
-      isCompleted: s.isCompleted,
-    }));
-}
-
-function normalizeBrandKey(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
-}
-
-function normalizeModelKey(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
-}
-
 export default function JobDetailPage({ job }: { job: JobApi | null }) {
   const navigate = useNavigate();
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
@@ -92,7 +78,7 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
 
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
 
-  const stages = buildTimelineStages(job!);
+  const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
 
   useEffect(() => {
     let alive = true;
@@ -114,40 +100,15 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
   }, []);
 
   const brandLogoUrl = useMemo(() => {
-    const brandName = normalizeBrandKey(job?.vehicle?.brand);
-    if (!brandName || brands.length === 0) return null;
-
-    const matched = brands.find((b) => {
-      const keys = [
-        normalizeBrandKey(b.name),
-        normalizeBrandKey(b.nameEn),
-        normalizeBrandKey(b.code),
-      ];
-      return keys.includes(brandName);
-    });
-
-    return matched?.logoUrl ?? null;
+    return resolveBrandLogoUrl(brands, job?.vehicle?.brand);
   }, [brands, job?.vehicle?.brand]);
 
   const vehicleTypeFromCatalog = useMemo(() => {
-    const brandName = normalizeBrandKey(job?.vehicle?.brand);
-    const modelName = normalizeModelKey(job?.vehicle?.model);
-    if (!brandName || !modelName || brands.length === 0) return "";
-
-    const matchedBrand = brands.find((b) => {
-      const keys = [
-        normalizeBrandKey(b.name),
-        normalizeBrandKey(b.nameEn),
-        normalizeBrandKey(b.code),
-      ];
-      return keys.includes(brandName);
-    });
-
-    const matchedModel = matchedBrand?.models?.find(
-      (m) => normalizeModelKey(m.name) === modelName,
+    return resolveVehicleTypeFromCatalog(
+      brands,
+      job?.vehicle?.brand,
+      job?.vehicle?.model,
     );
-
-    return matchedModel?.type?.name ?? "";
   }, [brands, job?.vehicle?.brand, job?.vehicle?.model]);
 
   useEffect(() => {

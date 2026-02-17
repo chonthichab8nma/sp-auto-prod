@@ -6,52 +6,20 @@ import DashboardStats from "../components/DashboardStats";
 import JobsTable from "../components/JobsTable";
 import Pagination from "../../../shared/components/ui/Pagination";
 
-import type { JobsQuery, JobsListApiResponse } from "../api/job.api";
+import type { JobsQuery } from "../api/job.api";
 import { useDashboardQuery } from "../hooks/useDashboardQuery";
 import DashboardSearchInput from "../components/DashboardSearchInput";
-
-function resolveTotalPages(
-  res: JobsListApiResponse | null,
-  pageSize: number,
-): number {
-  if (!res) return 1;
-
-  if ("meta" in res) {
-    const { totalItems, totalPages } = res.meta;
-    if (typeof totalPages === "number") return Math.max(1, totalPages);
-    return Math.max(1, Math.ceil(totalItems / pageSize));
-  }
-
-  return Math.max(1, res.totalPages);
-}
-
-type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
-
-function mapUiStatusToApi(s: string): JobStatusApi | undefined {
-  switch (s) {
-    case "เคลม":
-      return "CLAIM";
-    case "ซ่อม":
-      return "REPAIR";
-    case "ตั้งเบิก":
-      return "BILLING";
-    case "เสร็จสิ้น":
-      return "DONE";
-    default:
-      return undefined; // "ทั้งหมด"
-  }
-}
-
-function stripWhitespace(value?: string) {
-  return (value ?? "").replace(/\s+/g, "");
-}
+import {
+  compactWhitespace,
+  mapUiStatusToApi,
+  resolveTotalPages,
+} from "../lib/query";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const pageSize = 10;
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCarType, setSelectedCarType] = useState("ทั้งหมด");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
@@ -64,7 +32,7 @@ export default function Dashboard() {
     brand: "",
     model: "",
     color: "",
-    type: "",
+    typeId: undefined as number | undefined,
     year: "",
     vehicleRegistration: "",
     chassisNumber: "",
@@ -76,7 +44,7 @@ export default function Dashboard() {
     () => ({
       page: currentPage,
       pageSize,
-      search: stripWhitespace(searchTerm) || undefined,
+      search: compactWhitespace(searchTerm) || undefined,
       status: mapUiStatusToApi(selectedStatus),
       startDateFrom: startDate || undefined,
       startDateTo: endDate || undefined,
@@ -86,10 +54,10 @@ export default function Dashboard() {
       brand: advancedFilters.brand?.trim() || undefined,
       model: advancedFilters.model?.trim() || undefined,
       color: advancedFilters.color?.trim() || undefined,
-      type: advancedFilters.type?.trim() || undefined,
+      typeId: advancedFilters.typeId,
       year: advancedFilters.year?.trim() || undefined,
       vehicleRegistration:
-        stripWhitespace(advancedFilters.vehicleRegistration) || undefined,
+        compactWhitespace(advancedFilters.vehicleRegistration) || undefined,
       chassisNumber: advancedFilters.chassisNumber?.trim() || undefined,
       vinNumber: advancedFilters.vinNumber?.trim() || undefined,
       customerName: advancedFilters.customerName?.trim() || undefined,
@@ -134,16 +102,9 @@ export default function Dashboard() {
 
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col gap-10">
         <DashboardFilters
-          searchTerm={searchTerm}
-          selectedCarType={selectedCarType}
           startDate={startDate}
           endDate={endDate}
           advancedFilters={advancedFilters}
-          onSearchTermChange={setSearchTerm}
-          onCarTypeChange={(v) => {
-            setSelectedCarType(v);
-            setCurrentPage(1);
-          }}
           onStartDateChange={(v) => {
             setStartDate(v);
             setCurrentPage(1);
@@ -156,7 +117,6 @@ export default function Dashboard() {
             setAdvancedFilters((prev) => ({ ...prev, [key]: value }));
             setCurrentPage(1);
           }}
-          onSubmitSearch={() => setCurrentPage(1)}
         />
         <DashboardStats
           selectedStatus={selectedStatus}
