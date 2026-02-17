@@ -9,51 +9,15 @@ import { resolveAgingBand } from "../utils/aging";
 
 import Pagination from "../../shared/components/ui/Pagination";
 
-import type {
-  JobsQuery,
-  JobsListApiResponse,
-} from "../../features/jobs/api/job.api";
-import { getJobsApi } from "../../features/jobs/api/job.api";
+import type { JobsQuery } from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
 import type { JobApi } from "../../features/jobs/api/job.api";
-
-function resolveTotalPages(
-  res: JobsListApiResponse | null,
-  pageSize: number,
-): number {
-  if (!res) return 1;
-
-  if ("meta" in res) {
-    const { totalItems, totalPages } = res.meta;
-    if (typeof totalPages === "number") return Math.max(1, totalPages);
-    return Math.max(1, Math.ceil(totalItems / pageSize));
-  }
-
-  return Math.max(1, res.totalPages);
-}
-
-function resolveTotalItems(res: JobsListApiResponse | null): number {
-  if (!res) return 0;
-  if ("meta" in res) return res.meta.totalItems;
-  return res.total;
-}
-
-type JobStatusApi = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
-
-function mapUiStatusToApi(s: string): JobStatusApi | undefined {
-  switch (s) {
-    case "เคลม":
-      return "CLAIM";
-    case "ซ่อม":
-      return "REPAIR";
-    case "ตั้งเบิก":
-      return "BILLING";
-    case "เสร็จสิ้น":
-      return "DONE";
-    default:
-      return undefined;
-  }
-}
+import {
+  fetchAllJobsPages,
+  mapUiStatusToApi,
+  resolveTotalItems,
+  resolveTotalPages,
+} from "../../features/jobs/lib/query";
 
 export default function StationsPage() {
   const navigate = useNavigate();
@@ -68,15 +32,17 @@ export default function StationsPage() {
   const [alertModeError, setAlertModeError] = useState("");
   const [summaryScopedJobs, setSummaryScopedJobs] = useState<JobApi[]>([]);
   const [summaryScopedLoading, setSummaryScopedLoading] = useState(false);
+  const normalizedSearch = searchTerm.trim();
+  const mappedStatus = mapUiStatusToApi(selectedStatus);
 
   const query: JobsQuery = useMemo(
     () => ({
       page: selectedAlert === "all" ? currentPage : 1,
       pageSize,
-      search: searchTerm.trim() || undefined,
-      status: mapUiStatusToApi(selectedStatus),
+      search: normalizedSearch || undefined,
+      status: mappedStatus,
     }),
-    [currentPage, pageSize, searchTerm, selectedAlert, selectedStatus],
+    [currentPage, mappedStatus, normalizedSearch, pageSize, selectedAlert],
   );
 
   const { data, error, loading } = useDashboardQuery(query, {
@@ -108,44 +74,11 @@ export default function StationsPage() {
       setAlertModeError("");
 
       try {
-        const merged: JobApi[] = [];
-        const batchSize = 100;
-        const baseParams = {
-          pageSize: batchSize,
-          search: searchTerm.trim() || undefined,
-          status: mapUiStatusToApi(selectedStatus),
-        };
-
-        const firstPage = await getJobsApi({
-          page: 1,
-          ...baseParams,
+        const merged = await fetchAllJobsPages({
+          pageSize: 100,
+          search: normalizedSearch || undefined,
+          status: mappedStatus,
         });
-        if (!alive) return;
-
-        merged.push(...(firstPage.data ?? []));
-
-        const totalPages =
-          "meta" in firstPage
-            ? typeof firstPage.meta.totalPages === "number"
-              ? Math.max(1, firstPage.meta.totalPages)
-              : Math.max(1, Math.ceil(firstPage.meta.totalItems / batchSize))
-            : Math.max(1, firstPage.totalPages);
-
-        if (totalPages > 1) {
-          const restPagePromises = Array.from(
-            { length: totalPages - 1 },
-            (_, index) =>
-              getJobsApi({
-                page: index + 2,
-                ...baseParams,
-              }),
-          );
-          const restPages = await Promise.all(restPagePromises);
-          if (!alive) return;
-          for (const pageRes of restPages) {
-            merged.push(...(pageRes.data ?? []));
-          }
-        }
 
         if (!alive) return;
         setAlertModeJobs(merged);
@@ -162,10 +95,10 @@ export default function StationsPage() {
     return () => {
       alive = false;
     };
-  }, [searchTerm, selectedAlert, selectedStatus]);
+  }, [mappedStatus, normalizedSearch, selectedAlert]);
 
   useEffect(() => {
-    const hasScopeFilter = Boolean(selectedStatus || searchTerm.trim());
+    const hasScopeFilter = Boolean(selectedStatus || normalizedSearch);
     if (selectedAlert !== "all" || !hasScopeFilter) {
       setSummaryScopedJobs([]);
       setSummaryScopedLoading(false);
@@ -177,43 +110,11 @@ export default function StationsPage() {
     (async () => {
       setSummaryScopedLoading(true);
       try {
-        const merged: JobApi[] = [];
-        const batchSize = 100;
-        const baseParams = {
-          pageSize: batchSize,
-          search: searchTerm.trim() || undefined,
-          status: mapUiStatusToApi(selectedStatus),
-        };
-
-        const firstPage = await getJobsApi({
-          page: 1,
-          ...baseParams,
+        const merged = await fetchAllJobsPages({
+          pageSize: 100,
+          search: normalizedSearch || undefined,
+          status: mappedStatus,
         });
-        if (!alive) return;
-        merged.push(...(firstPage.data ?? []));
-
-        const totalPages =
-          "meta" in firstPage
-            ? typeof firstPage.meta.totalPages === "number"
-              ? Math.max(1, firstPage.meta.totalPages)
-              : Math.max(1, Math.ceil(firstPage.meta.totalItems / batchSize))
-            : Math.max(1, firstPage.totalPages);
-
-        if (totalPages > 1) {
-          const restPagePromises = Array.from(
-            { length: totalPages - 1 },
-            (_, index) =>
-              getJobsApi({
-                page: index + 2,
-                ...baseParams,
-              }),
-          );
-          const restPages = await Promise.all(restPagePromises);
-          if (!alive) return;
-          for (const pageRes of restPages) {
-            merged.push(...(pageRes.data ?? []));
-          }
-        }
 
         if (!alive) return;
         setSummaryScopedJobs(merged);
@@ -225,7 +126,7 @@ export default function StationsPage() {
     return () => {
       alive = false;
     };
-  }, [searchTerm, selectedAlert, selectedStatus]);
+  }, [mappedStatus, normalizedSearch, selectedAlert, selectedStatus]);
 
   const filteredAlertJobs = useMemo(() => {
     if (selectedAlert === "all") return [];
@@ -258,9 +159,15 @@ export default function StationsPage() {
   const statusOptions = useMemo(() => ["เคลม", "ซ่อม", "ตั้งเบิก", "เสร็จสิ้น"], []);
   const summaryScopeJobs = useMemo(() => {
     if (selectedAlert !== "all") return alertModeJobs;
-    if (selectedStatus || searchTerm.trim()) return summaryScopedJobs;
+    if (selectedStatus || normalizedSearch) return summaryScopedJobs;
     return null;
-  }, [alertModeJobs, searchTerm, selectedAlert, selectedStatus, summaryScopedJobs]);
+  }, [
+    alertModeJobs,
+    normalizedSearch,
+    selectedAlert,
+    selectedStatus,
+    summaryScopedJobs,
+  ]);
 
   const summaryCounts = useMemo(
     () => ({

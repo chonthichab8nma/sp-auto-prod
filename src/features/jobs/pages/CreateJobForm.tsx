@@ -11,6 +11,12 @@ import {
   getDefaultCreateJobFormData,
   validateCreateJob,
 } from "../types/jobForm";
+import {
+  buildYearOptions,
+  parseFieldValue,
+  parseInsuranceOption,
+  uniqueStrings,
+} from "../lib/createJobForm";
 
 import {
   vehiclesService,
@@ -39,15 +45,6 @@ const LabelWithStar = ({ text }: { text: string }) => (
   </span>
 );
 
-function parseFieldValue(name: string, value: string) {
-  if (name === "excessFee") return value === "" ? 0 : Number(value);
-  return value;
-}
-
-function uniqueStrings(items: string[]) {
-  return Array.from(new Set(items.filter(Boolean)));
-}
-
 function ReadOnlyValue({
   label,
   value,
@@ -64,10 +61,6 @@ function ReadOnlyValue({
       </div>
     </div>
   );
-}
-function parseInsuranceOption(v: string) {
-  const [idStr, ...rest] = v.split("::");
-  return { id: Number(idStr), name: rest.join("::") };
 }
 
 export default function CreateJobForm() {
@@ -88,13 +81,6 @@ export default function CreateJobForm() {
 
   const [insurances, setInsurances] = useState<InsuranceCompanyApi[]>([]);
   const [isLoadingInsurances, setIsLoadingInsurances] = useState(false);
-
-  function buildYearOptions() {
-    const now = new Date().getFullYear();
-    const years: string[] = [];
-    for (let y = now; y >= now - 40; y--) years.push(String(y));
-    return years;
-  }
 
   const insuranceRequired = useMemo(
     () => formData.paymentType === "Insurance",
@@ -194,7 +180,6 @@ export default function CreateJobForm() {
         setIsLoadingInsurances(true);
 
         const list = await vehiclesService.listInsurances();
-        console.log({ list });
         if (!alive) return;
 
         setInsurances(list.data);
@@ -212,9 +197,7 @@ export default function CreateJobForm() {
   }, []);
 
   const lookupRegistrationAndAutofill = async () => {
-    console.log("BLUR registration:", formData.registration);
     const reg = normalizeRegistration(formData.registration || "");
-    console.log("LOOKUP reg =", reg);
 
     if (!reg) {
       setFormData((prev) => ({
@@ -228,7 +211,6 @@ export default function CreateJobForm() {
 
     try {
       const found = await vehiclesService.findVehicleByReg(reg);
-      console.log("FOUND vehicle=", found);
 
       if (!found) {
         setFormData((prev) => ({
@@ -267,9 +249,6 @@ export default function CreateJobForm() {
           latestJob?.customer?.address ??
           prev.customerAddress,
       }));
-      console.log("add", formData.customerAddress);
-      console.log("found.customer.address =", found?.customer?.address);
-      console.log("latestJob.customer.address =", latestJob?.customer?.address);
     } catch (err) {
       console.error("Lookup registration failed:", err);
 
@@ -405,8 +384,6 @@ export default function CreateJobForm() {
         address: formData.customerAddress || "",
       },
     };
-    console.log("SUBMIT PAYLOAD =", basePayload);
-
     const vehiclePart = formData.vehicleId
       ? { vehicleId: formData.vehicleId }
       : {
@@ -430,12 +407,9 @@ export default function CreateJobForm() {
           }
         : { ...basePayload, ...vehiclePart };
 
-    console.log(payload);
-
     try {
       setIsSubmitting(true);
       const res = await jobsService.create(payload);
-      console.log("CREATE JOB RESPONSE =", res);
       if (!res.ok) {
         toast.error(res.error || "บันทึกไม่สำเร็จ");
         return;
@@ -444,7 +418,6 @@ export default function CreateJobForm() {
     } finally {
       setIsSubmitting(false);
     }
-    console.log("submit payload (draft):", formData);
   };
 
   function onCancel() {

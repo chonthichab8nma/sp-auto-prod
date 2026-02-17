@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import type { StepStatus } from "../../Type";
 import type {
   JobApi,
-  JobStageApi,
   JobStepStatusApi,
 } from "../../features/jobs/api/job.api";
 
@@ -21,14 +20,8 @@ import {
   vehiclesService,
   type VehicleBrandApi,
 } from "../../features/jobs/services/vehicles.service";
-
-function sortStages(stages: JobStageApi[]) {
-  return stages.slice().sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
-}
-
-function normalizeBrandKey(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
-}
+import { sortJobStages } from "../../features/jobs/lib/stage";
+import { resolveBrandLogoUrl } from "../../features/jobs/lib/vehicleCatalog";
 
 export default function StationProgressPage({
   job,
@@ -73,7 +66,7 @@ export default function StationProgressPage({
   }, []);
 
   const stages = useMemo(
-    () => sortStages(jobState.jobStages ?? []),
+    () => sortJobStages(jobState.jobStages ?? []),
     [jobState.jobStages],
   );
 
@@ -220,19 +213,7 @@ export default function StationProgressPage({
   }, [stages, checkpointIndex]);
 
   const brandLogoUrl = useMemo(() => {
-    const brandName = normalizeBrandKey(jobState.vehicle?.brand);
-    if (!brandName || brands.length === 0) return null;
-
-    const matched = brands.find((b) => {
-      const keys = [
-        normalizeBrandKey(b.name),
-        normalizeBrandKey(b.nameEn),
-        normalizeBrandKey(b.code),
-      ];
-      return keys.includes(brandName);
-    });
-
-    return matched?.logoUrl ?? null;
+    return resolveBrandLogoUrl(brands, jobState.vehicle?.brand);
   }, [brands, jobState.vehicle?.brand]);
 
   useEffect(() => {

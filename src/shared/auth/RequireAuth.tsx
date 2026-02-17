@@ -8,7 +8,5 @@ export default function RequireAuth() {
   if (!isAuthed) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
-  console.log("RequireAuth isAuthed =", isAuthed);
   return <Outlet />;
-  
 }

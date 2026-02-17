@@ -4,9 +4,10 @@ import { getEmployeesApi, type EmployeeApi } from "../api/employees.api";
 export function useEmployeesQuery(search: string) {
   const [employees, setEmployees] = useState<EmployeeApi[]>([]);
   const [loading, setLoading] = useState(false);
+  const normalizedSearch = search.trim();
 
   useEffect(() => {
-    if (!search?.trim()) {
+    if (!normalizedSearch) {
       setEmployees([]);
       return;
     }
@@ -17,7 +18,7 @@ export function useEmployeesQuery(search: string) {
         const res = await getEmployeesApi({
           page: 1,
           limit: 10,
-          q: search,
+          q: normalizedSearch,
         });
         setEmployees(res.data.filter((e) => e.isActive));
       } finally {
@@ -26,7 +27,7 @@ export function useEmployeesQuery(search: string) {
     }, 300);
 
     return () => clearTimeout(t);
-  }, [search]);
-  console.log(employees);
+  }, [normalizedSearch]);
+
   return { employees, loading };
 }

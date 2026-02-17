@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Lock, EyeOff, Eye } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/useAuth";
@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login,isAuthed } = useAuth();
+  const { login, isAuthed } = useAuth();
 
   type LocationState = {
     from?: {
@@ -39,7 +39,6 @@ export default function LoginPage() {
       if (token) {
         navigate("/", { replace: true });
       }
-      console.log("login", login);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

@@ -18,9 +18,6 @@ export default function ProgressHeader({
           ? "ตั้งเบิก"
           : "เสร็จสิ้น";
 
-  console.log("ProgressHeader status =", JSON.stringify(status));
- console.log("status → label =", status, "→", label);
-
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4">
       <button
