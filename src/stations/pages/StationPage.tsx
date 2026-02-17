@@ -8,6 +8,7 @@ import { useStationAlertsQuery } from "../hooks/useStationAlertsQuery";
 import { resolveAgingBand } from "../utils/aging";
 
 import Pagination from "../../shared/components/ui/Pagination";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 import type { JobsQuery } from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
@@ -84,9 +85,7 @@ export default function StationsPage() {
         setAlertModeJobs(merged);
       } catch (e: unknown) {
         if (!alive) return;
-        setAlertModeError(
-          e instanceof Error ? e.message : "โหลดข้อมูลแจ้งเตือนล่าช้าไม่สำเร็จ",
-        );
+        setAlertModeError(toThaiErrorMessage(e, "โหลดข้อมูลแจ้งเตือนไม่สำเร็จ"));
       } finally {
         if (alive) setAlertModeLoading(false);
       }

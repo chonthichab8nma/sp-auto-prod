@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getJobAlertsApi, type JobAlertApi } from "../api/jobAlerts.api";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 export function useStationAlertsQuery() {
   const [data, setData] = useState<JobAlertApi[]>([]);
@@ -18,7 +19,7 @@ export function useStationAlertsQuery() {
         setData(res.data ?? []);
       } catch (e: unknown) {
         if (!alive) return;
-        setError(e instanceof Error ? e.message : "โหลดข้อมูลแจ้งเตือนไม่สำเร็จ");
+        setError(toThaiErrorMessage(e, "โหลดข้อมูลแจ้งเตือนไม่สำเร็จ"));
       } finally {
         if (alive) setLoading(false);
       }
@@ -31,4 +32,3 @@ export function useStationAlertsQuery() {
 
   return { data, loading, error };
 }
-

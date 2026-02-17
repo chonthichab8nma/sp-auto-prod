@@ -312,7 +312,7 @@ export async function printWorkOrder(job: JobApi): Promise<void> {
     pdf.addImage(imageData, "PNG", x, y, drawWidth, drawHeight, undefined, "FAST");
     pdf.save(buildFileName(job));
   } catch (error) {
-    console.error("printWorkOrder failed:", error);
+    console.error("พิมพ์ใบงานไม่สำเร็จ:", error);
     throw error;
   } finally {
     host?.remove();

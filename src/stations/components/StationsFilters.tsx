@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   ArrowUpCircle,
+  CheckCircle2,
   List,
   Search,
 } from "lucide-react";
@@ -45,10 +46,14 @@ export default function StationsFilters({
           {
             key: "all" as const,
             title: "งานทั้งหมด",
-            subTitle: "",
+            subTitle: "งานที่อยู่ในระบบ",
             count: summaryCounts.all,
             icon: List,
             iconWrapClass: "bg-blue-50 text-blue-600",
+            toneClass: "border-slate-200 bg-white",
+            countClass: "text-slate-900",
+            subTitleClass: "text-slate-500",
+            badgeLabel: "",
           },
           {
             key: "warning" as const,
@@ -56,7 +61,11 @@ export default function StationsFilters({
             subTitle: "15 วัน",
             count: summaryCounts.warning,
             icon: ArrowUpCircle,
-            iconWrapClass: "bg-amber-50 text-amber-500",
+            iconWrapClass: "bg-amber-50 text-amber-600",
+            toneClass: "border-amber-200 bg-amber-50/45",
+            countClass: "text-amber-700",
+            subTitleClass: "text-amber-700/80",
+            badgeLabel: "แจ้งเตือน",
           },
           {
             key: "critical" as const,
@@ -64,7 +73,11 @@ export default function StationsFilters({
             subTitle: "30 วัน",
             count: summaryCounts.critical,
             icon: AlertTriangle,
-            iconWrapClass: "bg-rose-50 text-rose-500",
+            iconWrapClass: "bg-rose-50 text-rose-600",
+            toneClass: "border-rose-200 bg-rose-50/45",
+            countClass: "text-rose-700",
+            subTitleClass: "text-rose-700/80",
+            badgeLabel: "เร่งด่วน",
           },
         ].map((item) => {
           const active = selectedAlert === item.key;
@@ -75,33 +88,43 @@ export default function StationsFilters({
               type="button"
               onClick={() => onAlertChange(item.key)}
               className={[
-                "w-full min-h-[90px] rounded-[28px] border bg-white px-4 py-2.5 text-left transition shadow-sm",
-                active
-                  ? "border-blue-500 ring-2 ring-blue-500/10 bg-blue-50/10"
-                  : "border-slate-100",
+                "relative w-full min-h-[74px] rounded-2xl border px-3.5 py-2.5 text-left transition shadow-sm",
+                item.toneClass,
+                active ? "shadow-md bg-white/95" : "opacity-95",
               ].join(" ")}
             >
+              {active ? (
+                <span className="absolute right-2.5 top-2 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <CheckCircle2 className="h-3 w-3" />
+                  เลือกอยู่
+                </span>
+              ) : null}
               <div className="flex items-center gap-3">
                 <span
                   className={[
-                    "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl",
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                     item.iconWrapClass,
                   ].join(" ")}
                 >
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-4.5 w-4.5" />
                 </span>
                 <span className="min-w-0 flex-1 flex items-center justify-between gap-3">
                   <span className="min-w-0">
-                    <span className="block text-base leading-tight font-semibold text-slate-600">
+                    <span className="block text-[14px] leading-tight font-semibold text-slate-700">
                       {item.title}
                     </span>
-                    {item.subTitle && (
-                      <span className="mt-0.5 block text-base leading-tight font-semibold text-slate-500">
+                    {item.subTitle ? (
+                      <span className={`mt-0.5 block text-[13px] leading-tight font-semibold ${item.subTitleClass}`}>
                         {item.subTitle}
                       </span>
-                    )}
+                    ) : null}
+                    {item.badgeLabel ? (
+                      <span className="mt-1 inline-flex rounded-full bg-white/85 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200/80">
+                        {item.badgeLabel}
+                      </span>
+                    ) : null}
                   </span>
-                  <span className="shrink-0 text-right text-[40px] leading-none font-extrabold text-slate-900">
+                  <span className={`shrink-0 text-right text-[32px] leading-none font-extrabold ${item.countClass}`}>
                     {item.count}
                   </span>
                 </span>

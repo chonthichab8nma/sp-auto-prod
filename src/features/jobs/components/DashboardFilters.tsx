@@ -97,7 +97,7 @@ export default function DashboardFilters({
         setTypes(typesData);
         setInsurances(insurancesData.data);
       } catch (error) {
-        console.error("Failed to fetch filter metadata:", error);
+        console.error("โหลดข้อมูลตัวกรองไม่สำเร็จ:", error);
       }
     };
     fetchMetadata();

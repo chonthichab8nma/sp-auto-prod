@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { JobApi } from "../../features/jobs/api/job.api";
 import { http } from "../../shared/lib/http";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 export function useStationProgress(jobId: number | null) {
   const [job, setJob] = useState<JobApi | null>(null);
@@ -18,7 +19,7 @@ export function useStationProgress(jobId: number | null) {
       setJob(data);
       return data;
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "โหลดข้อมูลงานไม่สำเร็จ";
+      const message = toThaiErrorMessage(e, "โหลดข้อมูลงานไม่สำเร็จ");
       setError(message);
       return null;
     } finally {

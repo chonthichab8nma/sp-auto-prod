@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import type { StepStatus } from "../../Type";
 import { patchJobStepStatus } from "../api/jobSteps.api";
 import { Pencil } from "lucide-react";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 type StepRemarkPanelProps = {
   stepId: number;
@@ -85,8 +86,7 @@ export default function StepRemarkPanel({
       setIsEditing(false);
       onSaved?.(trimmed);
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "บันทึกหมายเหตุไม่สำเร็จ";
+      const msg = toThaiErrorMessage(err, "บันทึกหมายเหตุไม่สำเร็จ");
       toast.error(msg);
     } finally {
       setSaving(false);

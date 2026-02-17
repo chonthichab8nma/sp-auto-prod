@@ -3,6 +3,7 @@ import { Lock, EyeOff, Eye } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/useAuth";
 import FormInput from "../../../shared/components/form/FormInput";
+import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,11 +41,7 @@ export default function LoginPage() {
         navigate("/", { replace: true });
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("เข้าสู่ระบบไม่สำเร็จ");
-      }
+      setError(toThaiErrorMessage(err, "เข้าสู่ระบบไม่สำเร็จ"));
     } finally {
       setLoading(false);
     }

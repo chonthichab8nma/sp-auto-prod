@@ -2,6 +2,7 @@ import type { Job } from "../../../Type";
 import type { CreateJobPayload } from "../types/jobForm";
 import { http } from "../../../shared/lib/http";
 import type { JobApi } from "../api/job.api";
+import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 
 export type ServiceResult<T> =
   | { ok: true; data: T }
@@ -42,10 +43,7 @@ export const jobsService = {
       const { data } = await http.post<Job>("/private/jobs", payload);
       return { ok: true, data };
     } catch (e: unknown) {
-      if (e instanceof Error) {
-        return { ok: false, error: e.message };
-      }
-      return { ok: false, error: "สร้างงานไม่สำเร็จ" };
+      return { ok: false, error: toThaiErrorMessage(e, "สร้างงานไม่สำเร็จ") };
     }
   },
 
@@ -71,10 +69,7 @@ export const jobsService = {
       const { data } = await http.patch<JobApi>(`/private/jobs/${jobId}`, payload);
       return { ok: true, data };
     } catch (e: unknown) {
-      if (e instanceof Error) {
-        return { ok: false, error: e.message };
-      }
-      return { ok: false, error: "อัปเดตงานไม่สำเร็จ" };
+      return { ok: false, error: toThaiErrorMessage(e, "อัปเดตงานไม่สำเร็จ") };
     }
   },
 };

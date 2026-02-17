@@ -16,6 +16,7 @@ import {
   type JobDetailEditForm,
 } from "../types/jobDetailEdit";
 import type { JobApi } from "../api/job.api";
+import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 
 export function useJobDetailEditForm(
   job: JobApi | null,
@@ -233,7 +234,7 @@ export function useJobDetailEditForm(
       const payload = buildJobUpdatePayload(job, form);
       const res = await jobsService.update(job.id, payload);
       if (!res.ok) {
-        toast.error(res.error || "บันทึกข้อมูลไม่สำเร็จ");
+        toast.error(toThaiErrorMessage(res.error, "บันทึกข้อมูลไม่สำเร็จ"));
         return;
       }
 

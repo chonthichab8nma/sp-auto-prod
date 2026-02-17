@@ -10,10 +10,13 @@ import {
 } from "../api/jobStepImages.api";
 import { confirmToast } from "../../shared/components/ui/ConfirmToast";
 import toast from "react-hot-toast";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 function getErrorMessage(error: unknown): string {
-  if (isErrorWithMessage(error)) return error.message;
-  return "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+  if (isErrorWithMessage(error)) {
+    return toThaiErrorMessage(error.message, "จัดการรูปภาพไม่สำเร็จ");
+  }
+  return toThaiErrorMessage(error, "จัดการรูปภาพไม่สำเร็จ");
 }
 
 function isErrorWithMessage(error: unknown): error is { message: string } {

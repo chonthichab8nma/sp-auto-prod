@@ -179,7 +179,7 @@ export function normalizeCreateJobPayload(
     fieldName: string,
   ): string {
     if (!value?.trim()) {
-      throw new Error(`Missing required field: ${fieldName}`);
+      throw new Error(`ข้อมูลจำเป็นไม่ครบ: ${fieldName}`);
     }
     return value.trim();
   }
