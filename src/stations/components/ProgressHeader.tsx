@@ -19,31 +19,36 @@ export default function ProgressHeader({
           : "เสร็จสิ้น";
 
   return (
-    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4">
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:gap-4 md:rounded-xl md:p-4">
       <button
         onClick={onBack}
-        className="w-8 h-8   rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-500"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 md:h-8 md:w-8 md:rounded-lg"
       >
         <ChevronLeft size={18} />
       </button>
 
-      <div className="flex items-center flex-wrap gap-2 text-sm sm:text-base">
-        <h1 className="text-lg font-bold text-slate-900">สเตชั่น</h1>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-base font-bold text-slate-900 md:text-lg">สเตชั่น</h1>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+            {label}
+          </span>
+        </div>
 
-        {/* <span className="text-slate-300 mx-1">/</span> */}
+        <div className="mt-1.5 md:hidden">
+          <p className="text-[11px] font-medium tracking-wide text-slate-400">ทะเบียนรถ</p>
+          <p className="mt-0.5 truncate text-[18px] font-semibold leading-none text-slate-900">
+            {registration}
+          </p>
+        </div>
 
-        <span className="text-slate-500">
-          <span className="text-slate-300 mx-1">/</span> รายละเอียด{" "}
-          {registration}
-        </span>
-
-        <span className="text-slate-300 mx-1">/</span>
-
-        <span className="font-bold text-slate-900">สถานะ</span>
-
-        <span className="ml-2 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-          {label}
-        </span>
+        <div className="mt-1 hidden items-center flex-wrap gap-2 text-sm sm:text-base md:flex">
+          <span className="text-slate-500">
+            <span className="mx-1 text-slate-300">/</span> รายละเอียด {registration}
+          </span>
+          <span className="mx-1 text-slate-300">/</span>
+          <span className="font-bold text-slate-900">สถานะ</span>
+        </div>
       </div>
     </div>
   );

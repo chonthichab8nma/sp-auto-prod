@@ -40,7 +40,7 @@ export default function StationsFilters({
 
   return (
     <div className="mb-6 space-y-4">
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="hidden grid-cols-1 gap-3 md:grid lg:grid-cols-3">
         {[
           {
             key: "all" as const,
@@ -112,34 +112,48 @@ export default function StationsFilters({
       </div>
 
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="relative w-full xl:flex-1 xl:max-w-3xl">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400" />
+        <div className="grid grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] gap-2 xl:flex xl:flex-1 xl:items-center xl:gap-3">
+          <div className="relative min-w-0 w-full xl:flex-1 xl:max-w-3xl">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400" />
+            </div>
+
+            <input
+              type="text"
+              className="placeholder:py-2 block w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-[13px] leading-5 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 md:text-sm"
+              placeholder="ค้นหาทะเบียนรถ / เลขตัวถัง / ชื่อลูกค้า"
+              value={searchTerm}
+              onChange={(e) => onSearchTermChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
           </div>
 
-          <input
-            type="text"
-            className="placeholder:py-2 block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-            placeholder="ค้นหาทะเบียนรถ / เลขตัวถัง / ชื่อลูกค้า"
-            value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
-            onKeyDown={handleKeyDown}
+          <FormSelect
+            options={statusOptions}
+            placeholder="สถานะ"
+            value={selectedStatus}
+            onChange={(e) => onStatusChange(e.target.value)}
+            className="w-full min-w-0 xl:w-auto xl:min-w-44"
           />
         </div>
 
-        <FormSelect
-          options={statusOptions}
-          placeholder="สถานะ"
-          value={selectedStatus}
-          onChange={(e) => onStatusChange(e.target.value)}
-          className="w-full xl:w-auto xl:min-w-44"
-        />
-
         <div className="inline-flex w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 xl:w-auto">
           {[
-            { key: "all" as const, label: "ทั้งหมด" },
-            { key: "warning" as const, label: "เกิน 15 วัน" },
-            { key: "critical" as const, label: "เกิน 30 วัน" },
+            {
+              key: "all" as const,
+              label: "ทั้งหมด",
+              count: summaryCounts.all,
+            },
+            {
+              key: "warning" as const,
+              label: "เกิน 15 วัน",
+              count: summaryCounts.warning,
+            },
+            {
+              key: "critical" as const,
+              label: "เกิน 30 วัน",
+              count: summaryCounts.critical,
+            },
           ].map((item) => {
             const active = selectedAlert === item.key;
             return (
@@ -148,13 +162,16 @@ export default function StationsFilters({
                 type="button"
                 onClick={() => onAlertChange(item.key)}
                 className={[
-                  "flex-1 px-4 py-2.5 text-sm font-semibold transition xl:flex-none",
+                  "flex-1 px-3 py-2.5 text-[13px] font-semibold transition xl:flex-none xl:px-4 xl:text-sm",
                   active
                     ? "bg-blue-500 text-white"
                     : "text-slate-700 hover:bg-white",
                 ].join(" ")}
               >
-                {item.label}
+                <span className="hidden md:inline">{item.label}</span>
+                <span className="md:hidden">
+                  {item.label} ({item.count})
+                </span>
               </button>
             );
           })}

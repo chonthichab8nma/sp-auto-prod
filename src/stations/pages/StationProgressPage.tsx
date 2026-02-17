@@ -56,9 +56,30 @@ export default function StationProgressPage({
     handleSave,
     handleSelectStep,
   } = useStationProgressViewModel({ job, onUpdateStep });
+  const handleStageChange = (idx: number) => {
+    setFollowMode(false);
+    if (isDoneStatus) {
+      setCheckpointIndex(idx);
+      return;
+    }
+
+    if (idx <= checkpointIndex) {
+      setCheckpointIndex(idx);
+      return;
+    }
+
+    if (!isStageDone) {
+      toast.error(
+        "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
+      );
+      return;
+    }
+
+    setCheckpointIndex(idx);
+  };
 
   return (
-    <div className="w-full max-w-full min-h-screen bg-[#ebebeb] text-slate-800">
+    <div className="w-full max-w-full min-h-screen bg-[#ebebeb] p-3 text-slate-800 md:p-0">
       <div className="mb-3 md:mb-6">
         <ProgressHeader
         registration={jobState.vehicle.registration}
@@ -66,75 +87,66 @@ export default function StationProgressPage({
         onBack={() => navigate(-1)}
         />
       </div>
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-4 md:mb-6">
-        <div className="flex flex-col xl:flex-row justify-between items-start gap-6">
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:mb-6 md:rounded-xl md:p-6">
+        <div className="flex flex-col justify-between items-start gap-0 md:gap-3 xl:flex-row xl:gap-6">
           <div className="w-full xl:w-auto min-w-0">
-            <div className="flex gap-4 w-full xl:w-auto min-w-0">
-              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center bg-white shrink-0 overflow-hidden">
+            <div className="flex w-full min-w-0 gap-3 xl:w-auto xl:gap-4">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white flex items-center justify-center md:h-12 md:w-12">
                 {brandLogoUrl && !logoLoadError ? (
                   <img
                     src={brandLogoUrl}
                     alt={jobState.vehicle.brand || "vehicle brand"}
-                    className="h-9 w-9 object-contain"
+                    className="h-8 w-8 object-contain md:h-9 md:w-9"
                     onError={() => setLogoLoadError(true)}
                   />
                 ) : (
-                  <Car size={24} className="text-slate-800" />
+                  <Car size={22} className="text-slate-800 md:h-6 md:w-6" />
                 )}
               </div>
 
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-bold text-slate-900 leading-tight truncate">
-                  {jobState.vehicle.brand}
-                </h2>
-                <p className="text-slate-500 text-sm truncate">
-                  {jobState.vehicle.model}
-                </p>
+              <div className="min-w-0 flex-1">
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1">
+                  <h2 className="col-start-1 row-start-1 truncate pb-0.5 text-base font-bold leading-normal text-slate-900 md:text-lg">
+                    {jobState.vehicle.brand}
+                  </h2>
+
+                  <div className="col-start-2 row-start-1 min-w-0 self-center overflow-x-auto pb-0.5 hide-scrollbar md:hidden">
+                    <StageStepper
+                      job={jobState}
+                      checkpointIndex={checkpointIndex}
+                      onChange={handleStageChange}
+                    />
+                  </div>
+
+                  <p className="col-start-1 row-start-2 truncate text-[13px] text-slate-500 md:text-sm">
+                    {jobState.vehicle.model}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 xl:mt-6 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar">
+            <div className="mt-2 hidden overflow-x-auto pb-1 hide-scrollbar md:block xl:mt-6 xl:pb-0">
               <StageStepper
                 job={jobState}
                 checkpointIndex={checkpointIndex}
-                onChange={(idx) => {
-                  setFollowMode(false);
-                  if (isDoneStatus) {
-                    setCheckpointIndex(idx);
-                    return;
-                  }
-
-                  if (idx <= checkpointIndex) {
-                    setCheckpointIndex(idx);
-                    return;
-                  }
-
-                  if (!isStageDone) {
-                    toast.error(
-                      "กรุณาดำเนินการในขั้นตอนปัจจุบันให้ครบถ้วนก่อนไปยังขั้นตอนถัดไป",
-                    );
-                    return;
-                  }
-
-                  setCheckpointIndex(idx);
-                }}
+                onChange={handleStageChange}
               />
             </div>
           </div>
 
-          <div className="w-full xl:w-auto xl:text-right border-t xl:border-t-0 border-slate-100 pt-4 xl:pt-0">
-            <div className="flex justify-between xl:block items-center mb-4 xl:mb-0">
-              <div className="text-xs text-black mb-1">ทะเบียนรถ</div>
-              <div className="text-xl font-bold text-slate-900">
+          <div className="mt-2 w-full border-t border-slate-200/80 pt-4 xl:mt-0 xl:w-auto xl:border-t-0 xl:pt-0 xl:text-right">
+            <div className="mb-4 hidden items-center justify-between md:flex xl:mb-0 xl:block">
+              <div className="mb-1 text-xs text-black">ทะเบียนรถ</div>
+              <div className="text-lg font-bold text-slate-900 md:text-xl">
                 {jobState.vehicle.registration}
               </div>
             </div>
 
-            <div className="mt-4 xl:mt-8 flex gap-3 w-full xl:w-auto">
+            <div className="mt-1 grid w-full grid-cols-2 gap-2 md:mt-4 xl:mt-8 xl:flex xl:w-auto xl:gap-3">
               {canPrintBillingPdf && (
                 <button
                   onClick={handleDownloadPdf}
-                  className="flex-1 xl:flex-none px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors inline-flex items-center justify-center gap-2"
+                  className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700 md:text-sm xl:col-span-1 xl:flex-none xl:rounded-lg xl:py-2"
                 >
                   <Printer size={16} />
                   พิมพ์ PDF
@@ -146,7 +158,7 @@ export default function StationProgressPage({
                   setCheckpointIndex((i) => Math.max(0, i - 1));
                 }}
                 disabled={checkpointIndex <= 0}
-                className="flex-1 xl:flex-none px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
+                className="rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-200 md:text-sm xl:flex-none xl:rounded-lg xl:py-2"
               >
                 ย้อนกลับ
               </button>
@@ -164,8 +176,8 @@ export default function StationProgressPage({
                   checkpointIndex >= stages.length - 1 ||
                   (!isDoneStatus && !isStageDone)
                 }
-                className="flex-1 xl:flex-none px-6 py-2 bg-blue-600 text-white rounded-lg
-                text-sm font-medium hover:bg-blue-700 shadow-sm shadow-blue-200
+                className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-medium text-white
+                shadow-sm shadow-blue-200 hover:bg-blue-700 md:text-sm xl:flex-none xl:rounded-lg xl:py-2
                 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ถัดไป
