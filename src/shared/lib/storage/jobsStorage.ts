@@ -9,7 +9,7 @@
 //     if (!raw) return null;
 //     return JSON.parse(raw) as T;
 //   } catch (err) {
-//     console.warn("[jobsStorage] loadJobs failed:", err);
+//     console.warn("[jobsStorage] โหลดข้อมูลงานไม่สำเร็จ:", err);
 //     return null;
 //   }
 // }
@@ -18,7 +18,7 @@
 //   try {
 //     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 //   } catch (err) {
-//     console.warn("[jobsStorage] saveJobs failed:", err);
+//     console.warn("[jobsStorage] บันทึกข้อมูลงานไม่สำเร็จ:", err);
 //   }
 // }
 
@@ -26,6 +26,6 @@
 //   try {
 //     localStorage.removeItem(STORAGE_KEY);
 //   } catch (err) {
-//     console.warn("[jobsStorage] clearJobs failed:", err);
+//     console.warn("[jobsStorage] ล้างข้อมูลงานไม่สำเร็จ:", err);
 //   }
 // }

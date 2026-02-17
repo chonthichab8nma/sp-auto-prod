@@ -40,7 +40,7 @@ export default function StageStepper({
       : computedActiveStageIndex;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="inline-flex w-fit items-center gap-0 md:gap-2">
       {stages.map((s, idx) => {
         const isActive = idx === activeStageIndex;
         const isCompleted = Boolean(s.isCompleted);
@@ -50,11 +50,11 @@ export default function StageStepper({
             <button
               type="button"
               onClick={() => onChange?.(idx)}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-1 text-left md:gap-2"
               aria-current={isActive ? "step" : undefined}
             >
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors
+                className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold transition-colors md:h-6 md:w-6 md:text-xs
                   ${
                     isCompleted
                       ? "bg-green-600 text-white"
@@ -67,7 +67,7 @@ export default function StageStepper({
                 {idx + 1}
               </div>
               <span
-                className={`text-sm font-medium transition-colors
+                className={`text-[11px] font-medium transition-colors md:text-sm
                   ${
                     isCompleted
                       ? "text-slate-900"
@@ -81,14 +81,14 @@ export default function StageStepper({
               </span>
 
               {isActive && (
-                <span className="ml-auto text-blue-600 text-xs font-semibold">
+                <span className="ml-0 text-[9px] font-semibold text-blue-600 md:ml-auto md:text-xs">
                   ●
                 </span>
               )}
             </button>
 
             {idx < stages.length - 1 && (
-              <ChevronRight size={16} className="mx-2 text-slate-300" />
+              <ChevronRight size={10} className="mx-0 text-slate-300 md:mx-2 md:h-4 md:w-4" />
             )}
           </div>
         );

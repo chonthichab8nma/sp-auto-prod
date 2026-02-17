@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { JobsQuery, JobsListApiResponse } from "../api/job.api";
 import { getJobsApi } from "../api/job.api";
+import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 
 export function useDashboardQuery(
   query: JobsQuery,
@@ -31,7 +32,7 @@ export function useDashboardQuery(
         setData(res);
       } catch (e: unknown) {
         if (!alive) return;
-        setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
+        setError(toThaiErrorMessage(e, "โหลดข้อมูลไม่สำเร็จ"));
       } finally {
         if (alive) setLoading(false);
       }

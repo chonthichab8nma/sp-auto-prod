@@ -8,6 +8,7 @@ import { useStationAlertsQuery } from "../hooks/useStationAlertsQuery";
 import { resolveAgingBand } from "../utils/aging";
 
 import Pagination from "../../shared/components/ui/Pagination";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 import type { JobsQuery } from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
@@ -84,9 +85,7 @@ export default function StationsPage() {
         setAlertModeJobs(merged);
       } catch (e: unknown) {
         if (!alive) return;
-        setAlertModeError(
-          e instanceof Error ? e.message : "โหลดข้อมูลแจ้งเตือนล่าช้าไม่สำเร็จ",
-        );
+        setAlertModeError(toThaiErrorMessage(e, "โหลดข้อมูลแจ้งเตือนไม่สำเร็จ"));
       } finally {
         if (alive) setAlertModeLoading(false);
       }
@@ -203,8 +202,8 @@ export default function StationsPage() {
   return (
     <div className="bg-white min-h-screen p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">สถานะ</h1>
-        <p className="text-slate-500 text-sm">งานที่อยู่ในแต่ละสถานะ</p>
+        <h1 className="mb-1 text-xl font-bold text-slate-800 md:text-2xl">สถานะ</h1>
+        <p className="text-xs text-slate-500 md:text-sm">งานที่อยู่ในแต่ละสถานะ</p>
       </div>
 
       <StationsFilters

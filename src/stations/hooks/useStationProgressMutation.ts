@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import type { StepStatus } from "../../Type";
 import { patchJobStepStatus } from "../api/jobSteps.api";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 export type SaveStepInput = {
   stepId: string;
@@ -15,13 +16,7 @@ type UseStationProgressMutationResult = {
 };
 
 function toErrorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === "string") return err;
-  try {
-    return JSON.stringify(err);
-  } catch {
-    return "Unknown error";
-  }
+  return toThaiErrorMessage(err, "บันทึกข้อมูลไม่สำเร็จ");
 }
 
 function requireEmployeeId(status: StepStatus): boolean {
@@ -38,11 +33,11 @@ export function useStationProgressMutation(): UseStationProgressMutationResult {
     try {
       const stepIdNum = Number(input.stepId);
       if (!Number.isFinite(stepIdNum) || stepIdNum <= 0) {
-        throw new Error(`Invalid stepId: ${input.stepId}`);
+        throw new Error("รหัสขั้นตอนไม่ถูกต้อง");
       }
 
       if (requireEmployeeId(input.status) && input.employeeId == null) {
-        throw new Error("employeeId is required when status is completed or in_progress");
+        throw new Error("กรุณาเลือกผู้ดำเนินการก่อนบันทึกสถานะ");
       }
 
       await patchJobStepStatus(stepIdNum, {

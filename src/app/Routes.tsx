@@ -22,7 +22,7 @@ function JobDetailWrapper() {
   const { jobId } = useParams();
   const navigate = useNavigate();
 
-  const { data: job, loading, error } = useJobQuery(jobId);
+  const { data: job, loading, error, refetch } = useJobQuery(jobId);
 
   if (loading) return <JobDetailSkeleton />;
 
@@ -40,7 +40,7 @@ function JobDetailWrapper() {
     );
   }
 
-  return <JobDetailPage job={job} />;
+  return <JobDetailPage job={job} onRefresh={refetch} />;
 }
 function StationWrapper({
   onUpdateStep,

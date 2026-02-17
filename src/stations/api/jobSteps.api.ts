@@ -15,9 +15,7 @@ export async function patchJobStepStatus(
     (body.status === "completed" || body.status === "in_progress") &&
     !body.employeeId
   ) {
-    throw new Error(
-      "employeeId is required when status is completed or in_progress",
-    );
+    throw new Error("กรุณาเลือกผู้ดำเนินการก่อนบันทึกสถานะ");
   }
 
   const res = await http.patch(`/private/jobs/steps/${stepId}`, body);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import type { JobApi } from "../api/job.api";
 import { getJobByIdApi } from "../api/job.api";
+import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 
 export function useJobQuery(jobId: string | undefined) {
   const [data, setData] = useState<JobApi | null>(null);
@@ -14,7 +15,7 @@ export function useJobQuery(jobId: string | undefined) {
 
     const id = Number(jobId);
     if (!Number.isFinite(id)) {
-      setError("jobId ไม่ถูกต้อง");
+      setError("รหัสงานไม่ถูกต้อง");
       return;
     }
 
@@ -30,7 +31,7 @@ export function useJobQuery(jobId: string | undefined) {
       setData(res);
       hasFetchedOnce.current = true;
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
+      setError(toThaiErrorMessage(e, "โหลดข้อมูลไม่สำเร็จ"));
     } finally {
       setLoading(false);
       setIsRefetching(false);

@@ -21,6 +21,7 @@ import {
   type VehicleBrandApi,
   type VehicleModelApi,
 } from "../services/vehicles.service";
+import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 
 export type CreateJobFormState = JobFormData & {
   insuranceCompanyId?: number | null;
@@ -86,7 +87,7 @@ export function useCreateJobForm() {
         if (!alive) return;
         setBrands(brandList);
       } catch (err) {
-        console.error("Fetch vehicle meta failed:", err);
+        console.error("โหลดข้อมูลรถไม่สำเร็จ:", err);
       }
     })();
 
@@ -120,7 +121,7 @@ export function useCreateJobForm() {
         if (!alive) return;
         setBrandModels(brandDetail.models ?? []);
       } catch (e) {
-        console.error("load brand models failed", e);
+        console.error("โหลดรุ่นรถไม่สำเร็จ", e);
         if (alive) setBrandModels([]);
       } finally {
         if (alive) setIsLoadingModels(false);
@@ -142,7 +143,7 @@ export function useCreateJobForm() {
         if (!alive) return;
         setInsurances(list.data);
       } catch (e) {
-        console.error("Fetch insurances failed:", e);
+        console.error("โหลดข้อมูลประกันไม่สำเร็จ:", e);
         if (alive) setInsurances([]);
       } finally {
         if (alive) setIsLoadingInsurances(false);
@@ -201,7 +202,7 @@ export function useCreateJobForm() {
           prev.customerAddress,
       }));
     } catch (err) {
-      console.error("Lookup registration failed:", err);
+      console.error("ค้นหาทะเบียนรถไม่สำเร็จ:", err);
       setFormData((prev) => ({
         ...prev,
         vehicleId: null,
@@ -360,7 +361,7 @@ export function useCreateJobForm() {
       setIsSubmitting(true);
       const res = await jobsService.create(payload);
       if (!res.ok) {
-        toast.error(res.error || "บันทึกไม่สำเร็จ");
+        toast.error(toThaiErrorMessage(res.error, "บันทึกข้อมูลไม่สำเร็จ"));
         return;
       }
       onSuccess();

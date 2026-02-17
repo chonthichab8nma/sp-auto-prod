@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  CarFront,
+  CalendarIcon,
+} from "lucide-react";
 
 import type { JobApi } from "../api/job.api";
 import { formatThaiDate } from "../../../shared/lib/date";
@@ -13,6 +19,12 @@ import {
   resolveBrandLogoUrl,
   resolveVehicleTypeFromCatalog,
 } from "../lib/vehicleCatalog";
+import FormInput from "../../../shared/components/form/FormInput";
+import FormSelect from "../../../shared/components/form/FormSelect";
+import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
+import EmployeeAutocomplete from "../../../shared/components/ui/EmployeeAutocomplete";
+import { useJobDetailEditForm } from "../hooks/useJobDetailEditForm";
+import type { JobDetailEditForm } from "../types/jobDetailEdit";
 
 const Section = ({
   title,
@@ -68,14 +80,51 @@ const StackItem = ({
   </div>
 );
 
-export default function JobDetailPage({ job }: { job: JobApi | null }) {
+const LabelWithStar = ({ text }: { text: string }) => (
+  <span className="inline-flex items-center gap-1">
+    {text}
+    <span className="text-red-500">*</span>
+  </span>
+);
+
+export default function JobDetailPage({
+  job,
+  onRefresh,
+}: {
+  job: JobApi | null;
+  onRefresh?: () => void;
+}) {
   const navigate = useNavigate();
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [logoLoadError, setLogoLoadError] = useState(false);
   const [vehicleTypeFromDb, setVehicleTypeFromDb] = useState<string>("");
+  const [savedPreview, setSavedPreview] = useState<JobDetailEditForm | null>(
+    null,
+  );
+
+  const {
+    editing,
+    saving,
+    errors,
+    form,
+    brandOptions,
+    modelOptions,
+    yearOptions,
+    insuranceOptions,
+    isLoadingModels,
+    receiverEmployee,
+    handleInputChange,
+    onChangeField,
+    onChangeEmployee,
+    startEdit,
+    cancelEdit,
+    submit,
+  } = useJobDetailEditForm(job, (savedForm) => {
+    setSavedPreview(savedForm);
+    onRefresh?.();
+  });
 
   const handleBack = () => navigate(-1);
-
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
 
   const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
@@ -116,6 +165,10 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
   }, [brandLogoUrl]);
 
   useEffect(() => {
+    setSavedPreview(null);
+  }, [job?.id, job?.updatedAt]);
+
+  useEffect(() => {
     let alive = true;
     const registration = job?.vehicle?.registration?.trim();
 
@@ -142,6 +195,36 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
 
   const displayVehicleType =
     vehicleTypeFromDb || job?.vehicle?.type || vehicleTypeFromCatalog || "-";
+
+  const selectedInsuranceOption = useMemo(() => {
+    if (!form?.insuranceCompanyId) return "";
+    return (
+      insuranceOptions.find((o) => o.startsWith(`${form.insuranceCompanyId}::`)) ||
+      ""
+    );
+  }, [form?.insuranceCompanyId, insuranceOptions]);
+
+  const displayCustomerName = savedPreview?.customerName || job?.customer?.name || "ไม่ระบุ";
+  const displayCustomerPhone = savedPreview?.customerPhone || job?.customer?.phone || "ไม่ระบุ";
+  const displayCustomerAddress = savedPreview?.customerAddress || job?.customer?.address || "ไม่ระบุ";
+  const displayPaymentType =
+    (savedPreview?.paymentType || job?.paymentType) === "Insurance"
+      ? "ประกันภัย (เคลม)"
+      : "เงินสด";
+  const displayInsuranceCompanyName = (() => {
+    const selectedId = savedPreview?.insuranceCompanyId ?? job?.insuranceCompanyId;
+    if (!selectedId) return "-";
+    const matched = insuranceOptions.find((o) => o.startsWith(`${selectedId}::`));
+    return matched ? matched.split("::").slice(1).join("::") : job?.insuranceCompany?.name ?? "-";
+  })();
+
+  if (!job || !form) {
+    return (
+      <div className="p-6 min-h-screen bg-white">
+        <p className="text-slate-500">ไม่พบข้อมูลงาน</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 min-h-screen bg-white">
@@ -190,12 +273,40 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
           </div>
         </div>
 
-        <button
-          onClick={handleCheckStation}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700"
-        >
-          เช็กสถานะรถ
-        </button>
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <>
+              <button
+                onClick={cancelEdit}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                disabled={saving}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={submit}
+                className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-60"
+                disabled={saving}
+              >
+                {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={startEdit}
+              className="px-5 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              แก้ไขข้อมูล
+            </button>
+          )}
+
+          <button
+            onClick={handleCheckStation}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700"
+          >
+            เช็กสถานะรถ
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 text-slate-500 text-sm">
@@ -207,90 +318,243 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
 
       <div className="bg-white py-2">
         <Section title="รายละเอียดรถ" subtitle="ข้อมูลรถ">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              {brandLogoUrl && !logoLoadError ? (
-                <img
-                  src={brandLogoUrl}
-                  alt={job?.vehicle.brand || "vehicle brand"}
-                  className="h-10 w-10 object-contain"
-                  onError={() => setLogoLoadError(true)}
-                />
-              ) : (
-                <CarFront size={40} className="text-slate-800" />
-              )}
-              <div>
-                <h1 className="text-lg font-bold text-slate-900">
-                  {job?.vehicle.brand}
-                </h1>
-                <p className="text-slate-400 text-sm">
-                  {job?.vehicle.model} {job?.vehicle.year} {displayVehicleType}
-                </p>
+          {!editing ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  {brandLogoUrl && !logoLoadError ? (
+                    <img
+                      src={brandLogoUrl}
+                      alt={job?.vehicle.brand || "vehicle brand"}
+                      className="h-10 w-10 object-contain"
+                      onError={() => setLogoLoadError(true)}
+                    />
+                  ) : (
+                    <CarFront size={40} className="text-slate-800" />
+                  )}
+                  <div>
+                    <h1 className="text-lg font-bold text-slate-900">
+                      {job?.vehicle.brand}
+                    </h1>
+                    <p className="text-slate-400 text-sm">
+                      {job?.vehicle.model} {job?.vehicle.year} {displayVehicleType}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8">
-            <RowItem label="ทะเบียนรถ" value={job?.vehicle.registration} />
-            <RowItem
-              label="เลขตัวถัง"
-              value={job?.vehicle.chassisNumber ?? "-"}
-            />
-            <RowItem label="ยี่ห้อ/แบรนด์" value={job?.vehicle.brand} />
-            <RowItem label="รุ่น" value={job?.vehicle.model} />
-            <RowItem label="ประเภทรถ" value={displayVehicleType} />
-            <RowItem label="ปี" value={job?.vehicle.year} />
-            <RowItem label="สี" value={job?.vehicle.color} />
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8">
+                <RowItem label="ทะเบียนรถ" value={job?.vehicle.registration} />
+                <RowItem
+                  label="เลขตัวถัง"
+                  value={job?.vehicle.chassisNumber ?? "-"}
+                />
+                <RowItem label="ยี่ห้อ/แบรนด์" value={job?.vehicle.brand} />
+                <RowItem label="รุ่น" value={job?.vehicle.model} />
+                <RowItem label="ประเภทรถ" value={displayVehicleType} />
+                <RowItem label="ปี" value={job?.vehicle.year} />
+                <RowItem label="สี" value={job?.vehicle.color} />
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormInput
+                label={<LabelWithStar text="ทะเบียนรถ" />}
+                name="registration"
+                value={form.registration}
+                onChange={handleInputChange}
+                error={errors.registration}
+              />
+              <FormInput
+                label={<LabelWithStar text="เลขตัวถัง" />}
+                name="chassisNumber"
+                value={form.chassisNumber}
+                onChange={handleInputChange}
+                error={errors.chassisNumber}
+              />
+              <FormInput
+                label="VIN"
+                name="vinNumber"
+                value={form.vinNumber}
+                onChange={handleInputChange}
+                error={errors.vinNumber}
+              />
+              <FormSelect
+                options={brandOptions}
+                label={<LabelWithStar text="ยี่ห้อ/แบรนด์" />}
+                name="brand"
+                value={form.brand}
+                onChange={handleInputChange}
+                placeholder="เลือกยี่ห้อ"
+                error={errors.brand}
+              />
+              <FormSelect
+                options={modelOptions}
+                label={<LabelWithStar text="รุ่น" />}
+                name="model"
+                value={form.model}
+                onChange={handleInputChange}
+                placeholder={isLoadingModels ? "กำลังโหลดรุ่น..." : "เลือกรุ่น"}
+                error={errors.model}
+              />
+              <FormInput
+                label={<LabelWithStar text="ประเภทรถ" />}
+                name="type"
+                value={form.type}
+                onChange={handleInputChange}
+                error={errors.type}
+              />
+              <FormSelect
+                options={yearOptions}
+                label={<LabelWithStar text="ปี" />}
+                name="year"
+                value={form.year}
+                onChange={handleInputChange}
+                placeholder="ปี"
+                error={errors.year}
+              />
+              <FormInput
+                label={<LabelWithStar text="สี" />}
+                name="color"
+                value={form.color}
+                onChange={handleInputChange}
+                error={errors.color}
+              />
+            </div>
+          )}
         </Section>
 
         <Section title="รายละเอียดการซ่อม" subtitle="ข้อมูลการซ่อม">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-            <StackItem
-              label="วันที่นำรถเข้าจอดซ่อม"
-              value={formatThaiDate(job?.startDate)}
-            />
-            <StackItem
-              label="กำหนดซ่อมเสร็จ/นัดรับรถ"
-              value={formatThaiDate(job?.estimatedEndDate)}
-            />
-            <StackItem
-              label="ค่าความเสียหายส่วนแรก"
-              value={`฿ ${Number(job?.excessFee ?? 0).toLocaleString("th-TH")}`}
-            />
-            <StackItem
-              label="เจ้าหน้าที่รับรถ"
-              value={job?.receiver?.name ?? "-"}
-            />
-            <div className="md:col-span-2">
+          {!editing ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               <StackItem
-                label="ความต้องการซ่อม"
-                value={job?.repairDescription ?? ""}
+                label="วันที่นำรถเข้าจอดซ่อม"
+                value={formatThaiDate(job?.startDate)}
               />
+              <StackItem
+                label="กำหนดซ่อมเสร็จ/นัดรับรถ"
+                value={formatThaiDate(job?.estimatedEndDate)}
+              />
+              <StackItem
+                label="ค่าความเสียหายส่วนแรก"
+                value={`฿ ${Number(job?.excessFee ?? 0).toLocaleString("th-TH")}`}
+              />
+              <StackItem
+                label="เจ้าหน้าที่รับรถ"
+                value={job?.receiver?.name ?? "-"}
+              />
+              <div className="md:col-span-2">
+                <StackItem
+                  label="ความต้องการซ่อม"
+                  value={job?.repairDescription ?? ""}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <StackItem label="หมายเหตุ" value={job?.notes ?? ""} />
+              </div>
             </div>
-            <div className="md:col-span-2">
-              <StackItem label="หมายเหตุ" value={job?.notes ?? ""} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DatePickerPopover
+                mode="single"
+                label="วันที่นำรถเข้าจอดซ่อม"
+                value={form.startDate}
+                onChange={(v) => onChangeField("startDate", v)}
+                error={errors.startDate}
+                icon={<CalendarIcon className="h-4 w-4" />}
+              />
+              <DatePickerPopover
+                mode="single"
+                label="กำหนดซ่อมเสร็จ/นัดรับรถ"
+                value={form.estimatedEndDate}
+                onChange={(v) => onChangeField("estimatedEndDate", v)}
+                error={errors.estimatedEndDate}
+                icon={<CalendarIcon className="h-4 w-4" />}
+              />
+              <FormInput
+                label={<LabelWithStar text="ค่าความเสียหายส่วนแรก" />}
+                name="excessFee"
+                type="number"
+                value={String(form.excessFee)}
+                onChange={handleInputChange}
+                error={errors.excessFee}
+              />
+              <EmployeeAutocomplete
+                label={<LabelWithStar text="เจ้าหน้าที่รับรถ" />}
+                value={receiverEmployee}
+                onChange={onChangeEmployee}
+                error={errors.receiverName ?? null}
+                placeholder="เลือกพนักงาน"
+              />
+              <div className="md:col-span-2 flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-800">ความต้องการซ่อม</label>
+                <textarea
+                  name="repairDescription"
+                  rows={3}
+                  value={form.repairDescription}
+                  onChange={(e) => onChangeField("repairDescription", e.target.value)}
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:bg-slate-50 hover:border-slate-300 focus:border-blue-600 resize-y min-h-[88px]"
+                />
+              </div>
+              <div className="md:col-span-2 flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-800">หมายเหตุ</label>
+                <textarea
+                  name="notes"
+                  rows={3}
+                  value={form.notes}
+                  onChange={(e) => onChangeField("notes", e.target.value)}
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:bg-slate-50 hover:border-slate-300 focus:border-blue-600 resize-y min-h-[88px]"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </Section>
 
         <Section title="รายละเอียดลูกค้า" subtitle="ข้อมูลลูกค้า">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-            <StackItem
-              label="ชื่อ-นามสกุล"
-              value={job?.customer.name || "ไม่ระบุ"}
-            />
-            <StackItem
-              label="เบอร์โทรศัพท์"
-              value={job?.customer.phone || "ไม่ระบุ"}
-            />
-            <div className="md:col-span-2">
+          {!editing ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               <StackItem
-                label="ที่อยู่"
-                value={job?.customer.address || "ไม่ระบุ"}
+                label="ชื่อ-นามสกุล"
+                value={displayCustomerName}
               />
+              <StackItem
+                label="เบอร์โทรศัพท์"
+                value={displayCustomerPhone}
+              />
+              <div className="md:col-span-2">
+                <StackItem
+                  label="ที่อยู่"
+                  value={displayCustomerAddress}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormInput
+                label={<LabelWithStar text="ชื่อ-นามสกุล" />}
+                name="customerName"
+                value={form.customerName}
+                onChange={handleInputChange}
+                error={errors.customerName}
+              />
+              <FormInput
+                label={<LabelWithStar text="เบอร์โทรศัพท์" />}
+                name="customerPhone"
+                value={form.customerPhone}
+                onChange={handleInputChange}
+                error={errors.customerPhone}
+              />
+              <div className="md:col-span-2">
+                <FormInput
+                  label={<LabelWithStar text="ที่อยู่" />}
+                  name="customerAddress"
+                  value={form.customerAddress}
+                  onChange={handleInputChange}
+                  error={errors.customerAddress}
+                />
+              </div>
+            </div>
+          )}
         </Section>
 
         <Section
@@ -298,18 +562,92 @@ export default function JobDetailPage({ job }: { job: JobApi | null }) {
           subtitle="ข้อมูลการชำระเงิน"
           hasBorder={false}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-            <StackItem
-              label="ประเภทการชำระเงิน"
-              value={
-                job?.paymentType === "Insurance" ? "ประกันภัย (เคลม)" : "เงินสด"
-              }
-            />
-            <StackItem
-              label="ชื่อบริษัทประกันภัย"
-              value={job?.insuranceCompany?.name ?? "-"}
-            />
-          </div>
+          {!editing ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+              <StackItem
+                label="ประเภทการชำระเงิน"
+                value={displayPaymentType}
+              />
+              <StackItem
+                label="ชื่อบริษัทประกันภัย"
+                value={displayInsuranceCompanyName}
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label
+                  className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+                    form.paymentType === "Insurance"
+                      ? "border-blue-600 bg-white"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="font-medium text-slate-800 text-sm">ประกันภัย (เคลม)</span>
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    value="Insurance"
+                    checked={form.paymentType === "Insurance"}
+                    onChange={handleInputChange}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                      form.paymentType === "Insurance"
+                        ? "border-blue-600"
+                        : "border-slate-300"
+                    }`}
+                  >
+                    {form.paymentType === "Insurance" && (
+                      <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />
+                    )}
+                  </div>
+                </label>
+
+                <label
+                  className={`relative flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+                    form.paymentType === "Cash"
+                      ? "border-blue-600 bg-white"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="font-medium text-slate-800 text-sm">เงินสด</span>
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    value="Cash"
+                    checked={form.paymentType === "Cash"}
+                    onChange={handleInputChange}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                      form.paymentType === "Cash"
+                        ? "border-blue-600"
+                        : "border-slate-300"
+                    }`}
+                  >
+                    {form.paymentType === "Cash" && (
+                      <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />
+                    )}
+                  </div>
+                </label>
+              </div>
+
+              {form.paymentType === "Insurance" ? (
+                <FormSelect
+                  label={<LabelWithStar text="บริษัทประกันภัย" />}
+                  name="insuranceCompanyId"
+                  value={selectedInsuranceOption}
+                  options={insuranceOptions}
+                  placeholder="เลือกบริษัทประกัน"
+                  onChange={handleInputChange}
+                  error={errors.insuranceCompanyId}
+                />
+              ) : null}
+            </div>
+          )}
         </Section>
       </div>
     </div>
