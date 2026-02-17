@@ -100,7 +100,29 @@ export default function Dashboard() {
         <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
       </div>
 
-      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col gap-10">
+      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-8 flex flex-col gap-6 md:gap-10">
+        <div className="md:hidden">
+          <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
+            <DashboardSearchInput
+              value={searchTerm}
+              onChange={(v) => {
+                setSearchTerm(v);
+              }}
+              onSubmit={() => setCurrentPage(1)}
+              label="ค้นหาด่วน"
+              placeholder="ค้นหาทะเบียนรถ / ชื่อลูกค้า"
+            />
+
+            <button
+              type="button"
+              onClick={() => navigate("/create")}
+              className="h-11 bg-blue-600 text-white rounded-xl text-[13px] font-semibold inline-flex items-center justify-center px-3.5 hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm whitespace-nowrap"
+            >
+              รับรถเข้า
+            </button>
+          </div>
+        </div>
+
         <DashboardFilters
           startDate={startDate}
           endDate={endDate}
@@ -131,7 +153,26 @@ export default function Dashboard() {
             โหลดข้อมูลไม่สำเร็จ: {String(error)}
           </div>
         )}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+        <div className="hidden md:flex lg:hidden gap-3 items-end">
+          <div className="flex-1">
+            <DashboardSearchInput
+              value={searchTerm}
+              onChange={(v) => {
+                setSearchTerm(v);
+              }}
+              onSubmit={() => setCurrentPage(1)}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/create")}
+            className="h-11 bg-blue-600 text-white rounded-xl text-sm font-semibold inline-flex items-center justify-center px-5 hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm whitespace-nowrap"
+          >
+            รับรถเข้า
+          </button>
+        </div>
+
+        <div className="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
           <div className="lg:col-span-6">
             <DashboardSearchInput
               value={searchTerm}
