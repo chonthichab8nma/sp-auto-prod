@@ -1,7 +1,6 @@
 import {
   AlertTriangle,
   ArrowUpCircle,
-  CheckCircle2,
   List,
   Search,
 } from "lucide-react";
@@ -53,7 +52,6 @@ export default function StationsFilters({
             toneClass: "border-slate-200 bg-white",
             countClass: "text-slate-900",
             subTitleClass: "text-slate-500",
-            badgeLabel: "",
           },
           {
             key: "warning" as const,
@@ -65,7 +63,6 @@ export default function StationsFilters({
             toneClass: "border-amber-200 bg-amber-50/45",
             countClass: "text-amber-700",
             subTitleClass: "text-amber-700/80",
-            badgeLabel: "แจ้งเตือน",
           },
           {
             key: "critical" as const,
@@ -77,7 +74,6 @@ export default function StationsFilters({
             toneClass: "border-rose-200 bg-rose-50/45",
             countClass: "text-rose-700",
             subTitleClass: "text-rose-700/80",
-            badgeLabel: "เร่งด่วน",
           },
         ].map((item) => {
           const active = selectedAlert === item.key;
@@ -93,12 +89,6 @@ export default function StationsFilters({
                 active ? "shadow-md bg-white/95" : "opacity-95",
               ].join(" ")}
             >
-              {active ? (
-                <span className="absolute right-2.5 top-2 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                  <CheckCircle2 className="h-3 w-3" />
-                  เลือกอยู่
-                </span>
-              ) : null}
               <div className="flex items-center gap-3">
                 <span
                   className={[
@@ -116,11 +106,6 @@ export default function StationsFilters({
                     {item.subTitle ? (
                       <span className={`mt-0.5 block text-[13px] leading-tight font-semibold ${item.subTitleClass}`}>
                         {item.subTitle}
-                      </span>
-                    ) : null}
-                    {item.badgeLabel ? (
-                      <span className="mt-1 inline-flex rounded-full bg-white/85 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200/80">
-                        {item.badgeLabel}
                       </span>
                     ) : null}
                   </span>

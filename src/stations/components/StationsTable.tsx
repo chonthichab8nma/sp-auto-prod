@@ -120,7 +120,7 @@ export default function StationsTable({
                     </div>
                   ) : null}
                 </div>
-                <StatusBadge job={job} />
+                <StatusBadge job={job} forceWhiteBackground={hasAlert} />
               </div>
 
               <div className="mt-3 flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function StationsTable({
                     </td>
 
                     <td className="box-border px-6 py-4 text-center">
-                      <StatusBadge job={job} />
+                      <StatusBadge job={job} forceWhiteBackground={hasAlert} />
                     </td>
 
                     <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">

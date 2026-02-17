@@ -2,23 +2,31 @@ import type { JobApi } from "../../../features/jobs/api/job.api";
 
 type BadgeConfig = {
   label: string;
-  className: string;
+  bgClassName: string;
+  textClassName: string;
 };
 
 const STATUS_BADGE: Record<string, BadgeConfig> = {
-  CLAIM: { label: "เคลม", className: "bg-blue-50 text-blue-600" },
-  REPAIR: { label: "ซ่อม", className: "bg-orange-50 text-[#fa731a]" },
-  BILLING: { label: "ตั้งเบิก", className: "bg-yellow-50 text-[#f6b51e]" },
+  CLAIM: { label: "เคลม", bgClassName: "bg-blue-50", textClassName: "text-blue-600" },
+  REPAIR: { label: "ซ่อม", bgClassName: "bg-orange-50", textClassName: "text-[#fa731a]" },
+  BILLING: { label: "ตั้งเบิก", bgClassName: "bg-yellow-50", textClassName: "text-[#f6b51e]" },
 
-  DONE: { label: "เสร็จสิ้น", className: "bg-emerald-50 text-emerald-600" },
-  FINISHED: { label: "เสร็จสิ้น", className: "bg-emerald-50 text-emerald-600" },
+  DONE: { label: "เสร็จสิ้น", bgClassName: "bg-emerald-50", textClassName: "text-emerald-600" },
+  FINISHED: { label: "เสร็จสิ้น", bgClassName: "bg-emerald-50", textClassName: "text-emerald-600" },
 };
 
-export default function StatusBadge({ job }: { job: JobApi }) {
-
+export default function StatusBadge({
+  job,
+  forceWhiteBackground = false,
+}: {
+  job: JobApi;
+  forceWhiteBackground?: boolean;
+}) {
   if (job.isFinished) {
     return (
-      <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-600 min-w-[80px]">
+      <span
+        className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold min-w-[80px] text-emerald-600 ${forceWhiteBackground ? "bg-white" : "bg-emerald-50"}`}
+      >
         เสร็จสิ้น
       </span>
     );
@@ -26,12 +34,13 @@ export default function StatusBadge({ job }: { job: JobApi }) {
 
   const config = STATUS_BADGE[job.status] ?? {
     label: "รอดำเนินการ",
-    className: "bg-slate-50 text-slate-600",
+    bgClassName: "bg-slate-50",
+    textClassName: "text-slate-600",
   };
 
   return (
     <span
-      className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold min-w-[80px] ${config.className}`}
+      className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold min-w-[80px] ${config.textClassName} ${forceWhiteBackground ? "bg-white" : config.bgClassName}`}
     >
       {config.label}
     </span>
