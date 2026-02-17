@@ -2,12 +2,23 @@ import { useEffect, useState } from "react";
 import type { JobsQuery, JobsListApiResponse } from "../api/job.api";
 import { getJobsApi } from "../api/job.api";
 
-export function useDashboardQuery(query: JobsQuery) {
+export function useDashboardQuery(
+  query: JobsQuery,
+  options?: { enabled?: boolean },
+) {
   const [data, setData] = useState<JobsListApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const enabled = options?.enabled ?? true;
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setError("");
+      setData(null);
+      return;
+    }
+
     let alive = true;
 
     (async () => {
@@ -29,7 +40,7 @@ export function useDashboardQuery(query: JobsQuery) {
     return () => {
       alive = false;
     };
-  }, [query]);
+  }, [enabled, query]);
 
   return { data, loading, error };
 }

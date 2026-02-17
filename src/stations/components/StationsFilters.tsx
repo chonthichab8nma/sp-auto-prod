@@ -1,4 +1,10 @@
-import { Search, ChevronDown } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpCircle,
+  List,
+  Search,
+} from "lucide-react";
+import FormSelect from "../../shared/components/form/FormSelect";
 
 export type AlertFilterValue = "all" | "warning" | "critical";
 
@@ -7,6 +13,7 @@ export default function StationsFilters({
   selectedStatus,
   statusOptions,
   selectedAlert,
+  summaryCounts,
   onSearchTermChange,
   onStatusChange,
   onAlertChange,
@@ -16,6 +23,11 @@ export default function StationsFilters({
   selectedStatus: string;
   statusOptions: string[];
   selectedAlert: AlertFilterValue;
+  summaryCounts: {
+    all: number;
+    warning: number;
+    critical: number;
+  };
 
   onSearchTermChange: (v: string) => void;
   onStatusChange: (v: string) => void;
@@ -27,40 +39,78 @@ export default function StationsFilters({
   };
 
   return (
-    <div className="mb-6 space-y-3">
-      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+    <div className="mb-6 space-y-4">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {[
-          { key: "all" as const, label: "ทั้งหมด" },
-          { key: "warning" as const, label: "เกินกำหนด 15 วันขึ้นไป" },
-          { key: "critical" as const, label: "เกินกำหนด 30 วันขึ้นไป" },
+          {
+            key: "all" as const,
+            title: "งานทั้งหมด",
+            subTitle: "",
+            count: summaryCounts.all,
+            icon: List,
+            iconWrapClass: "bg-blue-100 text-blue-600",
+          },
+          {
+            key: "warning" as const,
+            title: "เกินกำหนด",
+            subTitle: "15 วัน",
+            count: summaryCounts.warning,
+            icon: ArrowUpCircle,
+            iconWrapClass: "bg-amber-100 text-amber-600",
+          },
+          {
+            key: "critical" as const,
+            title: "เกินกำหนด",
+            subTitle: "30 วัน",
+            count: summaryCounts.critical,
+            icon: AlertTriangle,
+            iconWrapClass: "bg-rose-100 text-rose-600",
+          },
         ].map((item) => {
           const active = selectedAlert === item.key;
+          const Icon = item.icon;
           return (
             <button
               key={item.key}
               type="button"
               onClick={() => onAlertChange(item.key)}
               className={[
-                "rounded-xl border px-3 py-2 text-xs sm:text-sm font-medium transition",
+                "w-full rounded-3xl border bg-white px-5 py-4 text-left shadow-sm transition",
                 active
-                  ? item.key === "critical"
-                    ? "border-red-300 bg-red-50 text-red-700"
-                    : item.key === "warning"
-                      ? "border-amber-300 bg-amber-50 text-amber-700"
-                      : "border-blue-300 bg-blue-50 text-blue-700"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                  ? "border-blue-500 ring-1 ring-blue-500/30 shadow-[0_6px_16px_rgba(37,99,235,0.16)]"
+                  : "border-slate-200 hover:border-slate-300",
               ].join(" ")}
             >
-              {item.label}
+              <div className="flex items-center gap-4">
+                <span
+                  className={[
+                    "flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl",
+                    item.iconWrapClass,
+                  ].join(" ")}
+                >
+                  <Icon className="h-8 w-8" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xl leading-tight font-semibold text-slate-600">
+                    {item.title}
+                    {item.subTitle && (
+                      <span className="ml-2 inline text-slate-500">
+                        {item.subTitle}
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-2 block text-5xl leading-none font-extrabold text-slate-900">
+                    {item.count}
+                  </span>
+                </span>
+              </div>
             </button>
           );
         })}
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
-      {/* Search */}
-      <div className="flex flex-1 gap-4 w-full md:w-auto">
-        <div className="relative flex-1 md:max-w-md">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+        <div className="relative w-full xl:flex-1 xl:max-w-3xl">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-slate-400" />
           </div>
@@ -74,26 +124,39 @@ export default function StationsFilters({
             onKeyDown={handleKeyDown}
           />
         </div>
-      </div>
 
-      {/* Dropdowns */}
-      <div className="flex gap-3 w-full md:w-auto">
-        {/* Status */}
-        <div className="relative">
-          <select
-            value={selectedStatus}
-            onChange={(e) => onStatusChange(e.target.value)}
-            className="appearance-none pl-4 pr-10 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer min-w-40"
-          >
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+        <FormSelect
+          options={statusOptions}
+          placeholder="สถานะ"
+          value={selectedStatus}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="w-full xl:w-auto xl:min-w-44"
+        />
+
+        <div className="inline-flex w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 xl:w-auto">
+          {[
+            { key: "all" as const, label: "ทั้งหมด" },
+            { key: "warning" as const, label: "เกิน 15 วัน" },
+            { key: "critical" as const, label: "เกิน 30 วัน" },
+          ].map((item) => {
+            const active = selectedAlert === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onAlertChange(item.key)}
+                className={[
+                  "flex-1 px-4 py-2.5 text-sm font-semibold transition xl:flex-none",
+                  active
+                    ? "bg-blue-500 text-white"
+                    : "text-slate-700 hover:bg-white",
+                ].join(" ")}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
-      </div>
       </div>
     </div>
   );

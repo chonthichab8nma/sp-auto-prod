@@ -2,7 +2,7 @@ import type { JobApi } from "../../features/jobs/api/job.api";
 import StatusBadge from "../../shared/components/ui/StatusBadge";
 import Skeleton from "../../shared/components/ui/Skeleton";
 import { formatThaiDate } from "../../shared/lib/date";
-import { getDelayBadgeClass, resolveAgingBand } from "../utils/aging";
+import { resolveAgingBand } from "../utils/aging";
 
 const columns = [
   { key: "reg", label: "ทะเบียนรถ", width: 190, align: "left" },
@@ -104,34 +104,35 @@ export default function StationsTable({
           ) : (
             jobs.map((job) => {
               const delayDays = delayDaysByJobId[job.id];
-              const hasAlert =
-                typeof delayDays === "number" &&
-                resolveAgingBand(delayDays) !== "normal";
+              const delayBand =
+                typeof delayDays === "number"
+                  ? resolveAgingBand(delayDays)
+                  : "normal";
+              const hasAlert = delayBand !== "normal";
+              const rowClass =
+                delayBand === "critical"
+                  ? "bg-red-50 hover:bg-red-100/70"
+                  : delayBand === "warning"
+                    ? "bg-amber-50 hover:bg-amber-100/70"
+                    : "hover:bg-slate-50/50";
+              const delayTextClass =
+                delayBand === "critical" ? "text-red-700" : "text-amber-700";
 
               return (
                 <tr
                   key={job.id}
-                  className="h-15 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                  className={`h-15 transition-colors cursor-pointer ${rowClass}`}
                   onClick={() => onRowClick(job.id)}
                 >
                   <td className="box-border px-6 py-4">
                     <div className="font-medium text-slate-700">
                       {job.vehicle.registration}
                     </div>
-                    <div className="mt-1.5">
-                      {hasAlert ? (
-                        <span
-                          className={[
-                            "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
-                            getDelayBadgeClass(delayDays),
-                          ].join(" ")}
-                        >
-                          ล่าช้า {delayDays} วัน
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400">-</span>
-                      )}
-                    </div>
+                    {hasAlert ? (
+                      <div className={`mt-1 text-xs font-medium ${delayTextClass}`}>
+                        ล่าช้า {delayDays} วัน
+                      </div>
+                    ) : null}
                   </td>
 
                   <td
@@ -171,4 +172,3 @@ export default function StationsTable({
     </div>
   );
 }
-
