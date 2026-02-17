@@ -1,27 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
 
 import type { StepStatus } from "../../Type";
-import type {
-  JobApi,
-  JobStepStatusApi,
-} from "../../features/jobs/api/job.api";
+import type { JobApi } from "../../features/jobs/api/job.api";
 
 import StageStepper from "../components/StageStepper";
-import StepTimeline, { type StepVM } from "../components/StepTimeline";
+import StepTimeline from "../components/StepTimeline";
 import StepActionPanel from "../components/StepActionPanel";
-import { useStationProgressMutation } from "../hooks/useStationProgressMutation";
 import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
-import { printWorkOrder } from "../pdf/workOrderPrint";
-import {
-  vehiclesService,
-  type VehicleBrandApi,
-} from "../../features/jobs/services/vehicles.service";
-import { sortJobStages } from "../../features/jobs/lib/stage";
-import { resolveBrandLogoUrl } from "../../features/jobs/lib/vehicleCatalog";
+import { useStationProgressViewModel } from "../hooks/useStationProgressViewModel";
 
 export default function StationProgressPage({
   job,
@@ -37,386 +26,36 @@ export default function StationProgressPage({
   ) => void;
 }) {
   const navigate = useNavigate();
-
-  const [jobState, setJobState] = useState<JobApi>(job);
-  const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
-  const [logoLoadError, setLogoLoadError] = useState(false);
-
-  useEffect(() => {
-    setJobState(job);
-  }, [job]);
-
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      try {
-        const data = await vehiclesService.listBrands();
-        if (!alive) return;
-        setBrands(data);
-      } catch {
-        if (!alive) return;
-        setBrands([]);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const stages = useMemo(
-    () => sortJobStages(jobState.jobStages ?? []),
-    [jobState.jobStages],
-  );
-
-  const stageIdx = useMemo(() => {
-    if (stages.length === 0) return 0;
-    const raw = jobState.currentStageIndex ?? 0;
-    const clamped =
-      typeof raw === "number"
-        ? Math.min(Math.max(raw, 0), stages.length - 1)
-        : null;
-
-    const byStatusCode = stages.findIndex(
-      (s) =>
-        (s.stage.code ?? "").toLowerCase() === jobState.status.toLowerCase(),
-    );
-
-    if (byStatusCode >= 0) return byStatusCode;
-
-    return clamped ?? 0;
-  }, [stages, jobState.status, jobState.currentStageIndex]);
-
-  /**
-   * checkpointIndex = ตำแหน่งสเตชั่นที่ผู้ใช้กำลังเปิดดู
-   */
-
-  const [checkpointIndex, setCheckpointIndex] = useState(stageIdx);
-  const [followMode, setFollowMode] = useState(true);
-
-  useEffect(() => {
-    setFollowMode(true);
-  }, [jobState.id]);
-
-  useEffect(() => {
-    if (!followMode) return;
-    setCheckpointIndex(stageIdx);
-  }, [stageIdx, followMode]);
-
-  const isStageDone = useMemo(() => {
-    const st = stages[checkpointIndex];
-    const steps = st?.jobSteps ?? [];
-    if (steps.length === 0) return false;
-    return steps.every(
-      (s) => s.status === "completed" || s.status === "skipped",
-    );
-  }, [stages, checkpointIndex]);
-
-  const stepsVm: StepVM[] = useMemo(() => {
-    const viewingStage = stages[checkpointIndex];
-    const steps = (viewingStage?.jobSteps ?? [])
-      .slice()
-      .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
-
-    return steps.map((s) => ({
-      ...s,
-      id: String(s.id),
-      name: s.stepTemplate?.name ?? "-",
-      status: (s.status ?? "pending") as StepStatus,
-      timestamp: s.completedAt,
-      isSkippable: Boolean(s.stepTemplate?.isSkippable),
-      employee: s.employee ? { name: s.employee.name } : undefined,
-      // remark: s.remark ?? null,
-    }));
-  }, [stages, checkpointIndex]);
-
-  const [activeStepId, setActiveStepId] = useState<string>("");
-
-  useEffect(() => {
-    if (!stepsVm.length) {
-      setActiveStepId("");
-      return;
-    }
-
-    const nextPending = stepsVm.find(
-      (s) => s.status !== "completed" && s.status !== "skipped",
-    );
-
-    setActiveStepId(nextPending?.id ?? stepsVm[stepsVm.length - 1]?.id ?? "");
-  }, [checkpointIndex, stepsVm]);
-
-  const activeStep = stepsVm.find((s) => s.id === activeStepId);
-
-
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeApi | null>(
-    null,
-  );
-
-  const [selectedAction, setSelectedAction] = useState<StepStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const { saveStep, saving, saveError } = useStationProgressMutation();
-
-  useEffect(() => {
-    if (saveError) toast.error(`บันทึกไม่สำเร็จ: ${saveError}`);
-  }, [saveError]);
-
-  const [showBulkSkipConfirm, setShowBulkSkipConfirm] = useState(false);
-
-  const isRepairStage = jobState.status === "REPAIR";
-  const stepsToSkip = useMemo(() => {
-    if (!isRepairStage) return [];
-    const allSteps = stepsVm.slice(0, -2);
-    return allSteps.filter(
-      (s) => s.status !== "completed" && s.status !== "skipped",
-    );
-  }, [isRepairStage, stepsVm]);
-
-  const lastStepIdForViewingStage = useMemo(() => {
-    const viewingStage = stages[checkpointIndex];
-    const sorted = (viewingStage?.jobSteps ?? [])
-      .slice()
-      .sort((a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex);
-    return sorted.length ? String(sorted[sorted.length - 1].id) : null;
-  }, [stages, checkpointIndex]);
-
-//   const lastStepIdForViewingStage = useMemo(() => {
-//   return stepsVm.length ? stepsVm[stepsVm.length - 1].id : null;
-// }, [stepsVm]);
-
-  const isSavingLastStepNow =
-    lastStepIdForViewingStage != null &&
-    String(activeStepId) === String(lastStepIdForViewingStage);
-
-  const billingStageIndex = useMemo(
-    () =>
-      stages.findIndex(
-        (s) => (s.stage.code ?? "").toUpperCase() === "BILLING",
-      ),
-    [stages],
-  );
-
-  const isRepairCustomerReceiveStep = useMemo(() => {
-    if (jobState.status !== "REPAIR") return false;
-    const rawName = activeStep?.name ?? "";
-    const normalized = rawName.replace(/\s+/g, "");
-    return (
-      normalized.includes("ลูกค้ารับรถ") ||
-      normalized.includes("ถูกค้ารับรถ")
-    );
-  }, [jobState.status, activeStep?.name]);
-
-  const isViewingBillingStage = useMemo(() => {
-    const currentStageCode = stages[checkpointIndex]?.stage.code ?? "";
-    return currentStageCode.toUpperCase() === "BILLING";
-  }, [stages, checkpointIndex]);
-
-  const brandLogoUrl = useMemo(() => {
-    return resolveBrandLogoUrl(brands, jobState.vehicle?.brand);
-  }, [brands, jobState.vehicle?.brand]);
-
-  useEffect(() => {
-    setLogoLoadError(false);
-  }, [brandLogoUrl]);
-
-  const canPrintBillingPdf = isViewingBillingStage && isSavingLastStepNow;
-  const isDoneStatus = jobState.status === "DONE";
-
-  const handleDownloadPdf = async () => {
-    const toastId = toast.loading("กำลังสร้างไฟล์ PDF...");
-    try {
-      await printWorkOrder(jobState);
-      toast.success("ดาวน์โหลด PDF เรียบร้อย", { id: toastId });
-    } catch {
-      toast.error("สร้าง PDF ไม่สำเร็จ", { id: toastId });
-    }
-  };
-
-  const handleBulkSkip = async () => {
-    if (stepsToSkip.length === 0) {
-      toast.error("ไม่มีขั้นตอนที่ต้องข้าม");
-      setShowBulkSkipConfirm(false);
-      return;
-    }
-
-    const willBeStageDone =
-      stepsVm.length > 0 &&
-      stepsVm.every((s) => {
-        if (String(s.id) === String(activeStepId)) {
-          return selectedAction === "completed" || selectedAction === "skipped";
-        }
-        return s.status === "completed" || s.status === "skipped";
-      });
-
-    const tId = toast.loading("กำลังข้ามขั้นตอน...");
-
-    try {
-      for (const step of stepsToSkip) {
-        await saveStep({
-          stepId: step.id,
-          status: "skipped",
-        });
-      }
-
-      onUpdateStep(checkpointIndex, stepsToSkip[0].id, "skipped", null);
-
-      if (isSavingLastStepNow && willBeStageDone) {
-        setCheckpointIndex((i) => Math.min(stages.length - 1, i + 1));
-      }
-
-      toast.dismiss(tId);
-      toast.success(`ข้าม ${stepsToSkip.length} ขั้นตอนสำเร็จ`);
-      setShowBulkSkipConfirm(false);
-
-      const qcStep = stepsVm[stepsVm.length - 2];
-      if (qcStep) setActiveStepId(qcStep.id);
-    } catch {
-      toast.dismiss(tId);
-      toast.error("ข้ามขั้นตอนไม่สำเร็จ");
-    }
-  };
-
-  const handleSave = async () => {
-    setError(null);
-
-    if (!selectedAction || selectedAction === "pending") {
-      toast.error("กรุณาเลือกสถานะก่อนบันทึก");
-      return;
-    }
-
-    const needEmployee =
-      selectedAction === "completed" || selectedAction === "in_progress";
-
-    if (needEmployee && selectedEmployee == null) {
-      setError("กรุณาระบุชื่อผู้ดำเนินการ");
-      toast.error("กรุณาระบุชื่อผู้ดำเนินการ");
-      return;
-    }
-
-    if (!activeStepId) {
-      toast.error("กรุณาเลือกรายการก่อนบันทึก");
-      return;
-    }
-
-    const tId = toast.loading("กำลังบันทึก...");
-    try {
-      await saveStep({
-        stepId: activeStepId,
-        status: selectedAction,
-        employeeId: selectedEmployee?.id,
-      });
-
-      onUpdateStep(
-        checkpointIndex,
-        activeStepId,
-        selectedAction,
-        selectedEmployee?.id ?? null,
-      );
-
-      const stageDoneNow =
-        stepsVm.length > 0 &&
-        stepsVm.every((s) => {
-          if (String(s.id) === String(activeStepId)) {
-            return (
-              selectedAction === "completed" || selectedAction === "skipped"
-            );
-          }
-          return s.status === "completed" || s.status === "skipped";
-        });
-
-      const shouldAutoAdvance =
-        isSavingLastStepNow && stageDoneNow && checkpointIndex === stageIdx;
-
-      const shouldJumpToBilling =
-        isRepairCustomerReceiveStep &&
-        selectedAction === "completed" &&
-        billingStageIndex >= 0;
-
-      setJobState((prev) => {
-        const sortedStages = (prev.jobStages ?? [])
-          .slice()
-          .sort((a, b) => a.stage.orderIndex - b.stage.orderIndex);
-        const st = sortedStages[checkpointIndex];
-        if (!st) return prev;
-
-        const sortedSteps = (st.jobSteps ?? [])
-          .slice()
-          .sort(
-            (a, b) => a.stepTemplate.orderIndex - b.stepTemplate.orderIndex,
-          );
-
-        const lastStepId = sortedSteps[sortedSteps.length - 1]?.id
-          ? String(sortedSteps[sortedSteps.length - 1].id)
-          : null;
-
-        const updatedSteps = (st.jobSteps ?? []).map((s) =>
-          String(s.id) === String(activeStepId)
-            ? {
-                ...s,
-                status: selectedAction as JobStepStatusApi,
-                employeeId: selectedEmployee?.id ?? null,
-                completedAt:
-                  selectedAction === "completed" || selectedAction === "skipped"
-                    ? new Date().toISOString()
-                    : s.completedAt,
-              }
-            : s,
-        );
-
-        const stageDone =
-          updatedSteps.length > 0 &&
-          updatedSteps.every(
-            (x) => x.status === "completed" || x.status === "skipped",
-          );
-
-        const isSavingLastStep =
-          lastStepId != null && String(activeStepId) === String(lastStepId);
-
-        const newStages = sortedStages.map((x, i) =>
-          i === checkpointIndex ? { ...x, jobSteps: updatedSteps } : x,
-        );
-        const prevIdx = prev.currentStageIndex ?? 0;
-        return {
-          ...prev,
-          jobStages: newStages,
-          currentStageIndex:
-            isSavingLastStep && stageDone
-              ? Math.min(prevIdx + 1, newStages.length - 1)
-              : prevIdx,
-        };
-      });
-      if (shouldJumpToBilling) {
-        setFollowMode(false);
-        setCheckpointIndex(billingStageIndex);
-      } else if (shouldAutoAdvance) {
-        setCheckpointIndex((i) => Math.min(i + 1, stages.length - 1));
-      }
-
-      setSelectedEmployee(null);
-
-      toast.dismiss(tId);
-      toast.success("บันทึกสำเร็จ");
-    } catch {
-      toast.dismiss(tId);
-    }
-  };
-
-  const handleSelectStep = (id: string) => {
-    setActiveStepId(id);
-
-    setSelectedAction(null);
-    setError(null);
-
-    if (window.innerWidth < 1280) {
-      setTimeout(() => {
-        document.getElementById("action-panel-section")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 100);
-    }
-  };
+  const {
+    jobState,
+    logoLoadError,
+    setLogoLoadError,
+    checkpointIndex,
+    setCheckpointIndex,
+    setFollowMode,
+    stages,
+    isStageDone,
+    stepsVm,
+    activeStepId,
+    activeStep,
+    selectedEmployee,
+    setSelectedEmployee,
+    selectedAction,
+    setSelectedAction,
+    error,
+    saving,
+    showBulkSkipConfirm,
+    setShowBulkSkipConfirm,
+    isRepairStage,
+    stepsToSkip,
+    canPrintBillingPdf,
+    brandLogoUrl,
+    isDoneStatus,
+    handleDownloadPdf,
+    handleBulkSkip,
+    handleSave,
+    handleSelectStep,
+  } = useStationProgressViewModel({ job, onUpdateStep });
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] text-slate-800">
