@@ -150,7 +150,9 @@ export function normalizeCreateJobPayload(
     repairDescription,
     excessFee: Number(form.excessFee) || 0,
     notes: notes ?? null,
-    startDate: form.startDate ? toIsoDateTime(form.startDate) : null,
+    startDate: form.startDate
+      ? toIsoDateTime(form.startDate)
+      : new Date().toISOString(),
     estimatedEndDate: form.estimatedEndDate
       ? toIsoDateTime(form.estimatedEndDate)
       : null,

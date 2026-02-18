@@ -115,8 +115,20 @@ export default function StepTimeline({
                           <StatusBadge status={step.status} />
                         </div>
 
-                        <div className="text-xs text-slate-400 mt-1">
+                        <div className="mt-1 text-xs text-slate-400">
                           {formatThaiDateTime(step.timestamp)}
+                          {step.remark?.trim() ? (
+                            <>
+                              {" "}
+                              <span className="text-slate-300">|</span>{" "}
+                              <span className="text-slate-500">
+                                หมายเหตุ:{" "}
+                                <span className="font-medium text-slate-700">
+                                  {step.remark}
+                                </span>
+                              </span>
+                            </>
+                          ) : null}
                         </div>
                         <div className="text-xs text-slate-500 mt-0.5">
                           ผู้ดำเนินการ:{" "}

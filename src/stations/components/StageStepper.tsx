@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import type { JobApi } from "../../features/jobs/api/job.api";
+import { isStageCompletedByProgress } from "../../features/jobs/lib/stage";
 
 type JobStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 type StageCode = "claim" | "repair" | "billing";
@@ -43,7 +44,7 @@ export default function StageStepper({
     <div className="inline-flex w-fit items-center gap-0 md:gap-2">
       {stages.map((s, idx) => {
         const isActive = idx === activeStageIndex;
-        const isCompleted = Boolean(s.isCompleted);
+        const isCompleted = isStageCompletedByProgress(s, job.status);
 
         return (
           <div key={s.id} className="flex items-center">

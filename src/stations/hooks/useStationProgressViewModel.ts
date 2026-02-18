@@ -362,6 +362,22 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
     }
   };
 
+  const handleRemarkSaved = (stepId: string, remark: string) => {
+    setJobState((prev) => {
+      const newStages = (prev.jobStages ?? []).map((stage) => ({
+        ...stage,
+        jobSteps: (stage.jobSteps ?? []).map((step) =>
+          String(step.id) === String(stepId) ? { ...step, remark } : step,
+        ),
+      }));
+
+      return {
+        ...prev,
+        jobStages: newStages,
+      };
+    });
+  };
+
   return {
     jobState,
     setJobState,
@@ -394,5 +410,6 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
     handleBulkSkip,
     handleSave,
     handleSelectStep,
+    handleRemarkSaved,
   };
 }

@@ -126,6 +126,7 @@ export default function JobDetailPage({
 
   const handleBack = () => navigate(-1);
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
+  const canEditVehicleDetails = false;
 
   const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
 
@@ -318,7 +319,7 @@ export default function JobDetailPage({
 
       <div className="bg-white py-2">
         <Section title="รายละเอียดรถ" subtitle="ข้อมูลรถ">
-          {!editing ? (
+          {!editing || !canEditVehicleDetails ? (
             <>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">

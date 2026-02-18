@@ -44,17 +44,13 @@ export default function StationProgressPage({
     setSelectedAction,
     error,
     saving,
-    showBulkSkipConfirm,
-    setShowBulkSkipConfirm,
-    isRepairStage,
-    stepsToSkip,
     canPrintBillingPdf,
     brandLogoUrl,
     isDoneStatus,
     handleDownloadPdf,
-    handleBulkSkip,
     handleSave,
     handleSelectStep,
+    handleRemarkSaved,
   } = useStationProgressViewModel({ job, onUpdateStep });
   const handleStageChange = (idx: number) => {
     setFollowMode(false);
@@ -236,19 +232,8 @@ export default function StationProgressPage({
                 error={error}
                 onSave={handleSave}
                 saving={saving}
-                canSkip={
-                  activeStep.isSkippable &&
-                  jobState.status !== "CLAIM" &&
-                  jobState.status !== "BILLING"
-                }
-                skipLabel={
-                  isRepairStage && stepsToSkip.length > 0 ? "ข้าม" : "ข้าม"
-                }
-                onBulkSkip={
-                  isRepairStage && stepsToSkip.length > 0
-                    ? () => setShowBulkSkipConfirm(true)
-                    : undefined
-                }
+                canSkip={false}
+                onRemarkSaved={handleRemarkSaved}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-48 xl:h-100 text-slate-400 text-sm p-6 text-center bg-slate-50">
@@ -265,34 +250,6 @@ export default function StationProgressPage({
           </div>
         </div>
       </div>
-      {showBulkSkipConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900 mb-2">
-              ยืนยันข้ามขั้นตอน
-            </h3>
-            <p className="text-slate-500 text-sm mb-6">
-              ระบบจะข้าม {stepsToSkip.length} ขั้นตอน และไปยังขั้นตอน QC โดยตรง
-              <br />
-              ขั้นตอนที่เสร็จสิ้นแล้วจะไม่ถูกเปลี่ยนแปลง
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowBulkSkipConfirm(false)}
-                className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleBulkSkip}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-              >
-                ยืนยัน
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

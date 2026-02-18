@@ -322,9 +322,10 @@ export function useCreateJobForm() {
       repairDescription: formData.repairDescription?.trim() || "",
       excessFee: formData.excessFee,
       notes: formData.notes?.trim() ? formData.notes.trim() : null,
+      // Backend currently rejects null for startDate, so default to "now" when left blank.
       startDate: formData.startDate
         ? new Date(formData.startDate).toISOString()
-        : null,
+        : new Date().toISOString(),
       estimatedEndDate: formData.estimatedEndDate
         ? new Date(formData.estimatedEndDate).toISOString()
         : null,

@@ -169,7 +169,7 @@ export default function CreateJobForm() {
             </div>
             {formData.isExistingVehicle && formData.vehicleId ? (
               <div className="md:col-span-3 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                พบรถในระบบแล้ว (Vehicle ID: {formData.vehicleId})
+                พบรถในระบบแล้ว 
               </div>
             ) : null}
           </div>
