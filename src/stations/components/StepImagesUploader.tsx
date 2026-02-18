@@ -12,6 +12,9 @@ import { confirmToast } from "../../shared/components/ui/ConfirmToast";
 import toast from "react-hot-toast";
 import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
+type UploadCategory = "image" | "receipt";
+const RECEIPT_PREFIX = "__receipt__";
+
 function getErrorMessage(error: unknown): string {
   if (isErrorWithMessage(error)) {
     return toThaiErrorMessage(error.message, "จัดการรูปภาพไม่สำเร็จ");
@@ -28,7 +31,40 @@ function isErrorWithMessage(error: unknown): error is { message: string } {
   );
 }
 
-export default function StepImagesUploader({ stepId }: { stepId: string }) {
+function isReceiptFile(fileName: string): boolean {
+  return fileName.startsWith(RECEIPT_PREFIX);
+}
+
+function removeReceiptPrefix(fileName: string): string {
+  return isReceiptFile(fileName)
+    ? fileName.slice(RECEIPT_PREFIX.length)
+    : fileName;
+}
+
+function formatFileForCategory(file: File, category: UploadCategory): File {
+  const hasPrefix = isReceiptFile(file.name);
+  if (category === "receipt" && !hasPrefix) {
+    return new File([file], `${RECEIPT_PREFIX}${file.name}`, {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+  }
+  if (category === "image" && hasPrefix) {
+    return new File([file], removeReceiptPrefix(file.name), {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+  }
+  return file;
+}
+
+export default function StepImagesUploader({
+  stepId,
+  category = "image",
+}: {
+  stepId: string;
+  category?: UploadCategory;
+}) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
 
@@ -60,14 +96,18 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
       if (!opts?.silent) setLoading(true);
       try {
         const data = await getJobStepImages(stepId);
-        setImages(data.images);
+        const filtered =
+          category === "receipt"
+            ? data.images.filter((img) => isReceiptFile(img.fileName))
+            : data.images.filter((img) => !isReceiptFile(img.fileName));
+        setImages(filtered);
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
         if (!opts?.silent) setLoading(false);
       }
     },
-    [stepId],
+    [stepId, category],
   );
 
   useEffect(() => {
@@ -81,7 +121,10 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
       setError(null);
       setUploading(true);
       try {
-        const result = await uploadJobStepImages(stepId, Array.from(files));
+        const normalizedFiles = Array.from(files).map((file) =>
+          formatFileForCategory(file, category),
+        );
+        const result = await uploadJobStepImages(stepId, normalizedFiles);
 
         if (result.failed > 0) {
           const message = result.errors
@@ -97,7 +140,7 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
         setUploading(false);
       }
     },
-    [stepId, loadImages],
+    [stepId, loadImages, category],
   );
 
   const openAt = useCallback((idx: number) => {
@@ -149,9 +192,12 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
   const handleDelete = useCallback(
     (imageId: number) => {
       confirmToast({
-        title: "ลบรูปภาพ",
-        description: "การลบรูปไม่สามารถกู้คืนได้",
-        confirmText: "ลบรูป",
+        title: category === "receipt" ? "ลบใบเสร็จ" : "ลบรูปภาพ",
+        description:
+          category === "receipt"
+            ? "การลบใบเสร็จไม่สามารถกู้คืนได้"
+            : "การลบรูปไม่สามารถกู้คืนได้",
+        confirmText: category === "receipt" ? "ลบใบเสร็จ" : "ลบรูป",
         onConfirm: async () => {
           try {
             setDeletingId(imageId);
@@ -183,7 +229,7 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
         },
       });
     },
-    [stepId, loadImages, images, activeIdx, open],
+    [stepId, loadImages, images, activeIdx, open, category],
   );
 
   const modal = open && srcList.length > 0 && (
@@ -308,14 +354,30 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
   const MAX_PREVIEW = 4;
   const previewImages = images.slice(0, MAX_PREVIEW);
   const hiddenCount = Math.max(0, images.length - MAX_PREVIEW);
+  const isReceipt = category === "receipt";
+  const labels = isReceipt
+    ? {
+        title: "ใบเสร็จ",
+        uploadingText: "กำลังอัปโหลดใบเสร็จ...",
+        idleText: "กดรูปเพื่อดูใบเสร็จแบบเต็ม",
+        addButton: "แนบใบเสร็จ",
+        emptyText: "แตะเพื่อเพิ่มใบเสร็จ",
+      }
+    : {
+        title: "รูปภาพ",
+        uploadingText: "กำลังอัปโหลด...",
+        idleText: "กดรูปเพื่อดูแบบเต็ม",
+        addButton: "เพิ่มรูป",
+        emptyText: "แตะเพื่อเพิ่มรูป",
+      };
 
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-800">รูปภาพ</div>
+          <div className="text-sm font-semibold text-slate-800">{labels.title}</div>
           <div className="text-xs text-slate-500">
-            {uploading ? "กำลังอัปโหลด..." : "กดรูปเพื่อดูแบบเต็ม"}
+            {uploading ? labels.uploadingText : labels.idleText}
           </div>
         </div>
 
@@ -333,7 +395,7 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
           <span className="grid h-6 w-6 place-items-center rounded-md bg-slate-100 text-slate-600">
             <ImagePlus className="h-3.5 w-3.5" />
           </span>
-          เพิ่มรูป
+          {labels.addButton}
         </button>
       </div>
 
@@ -359,7 +421,7 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
             className="cursor-pointer rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500 hover:bg-slate-50"
             onClick={() => inputRef.current?.click()}
           >
-            แตะเพื่อเพิ่มรูป
+            {labels.emptyText}
           </div>
         ) : (
           <>
@@ -383,7 +445,7 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
                         >
                           <img
                             src={src}
-                            alt={img.fileName}
+                            alt={removeReceiptPrefix(img.fileName)}
                             className="h-full w-full object-cover transition group-hover:scale-[1.02]"
                             loading="lazy"
                           />
@@ -424,7 +486,9 @@ export default function StepImagesUploader({ stepId }: { stepId: string }) {
             </div>
 
             <div className="mt-1.5 flex items-center justify-between text-xs text-slate-500">
-              <span>ทั้งหมด {images.length} รูป</span>
+              <span>
+                ทั้งหมด {images.length} {isReceipt ? "ใบเสร็จ" : "รูป"}
+              </span>
               <button
                 type="button"
                 className="rounded-lg px-2 py-1 hover:bg-slate-50"

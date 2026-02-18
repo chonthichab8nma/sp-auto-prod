@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,6 +12,7 @@ import StepActionPanel from "../components/StepActionPanel";
 import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
 import { useStationProgressViewModel } from "../hooks/useStationProgressViewModel";
+import { useAuth } from "../../shared/auth/useAuth";
 
 export default function StationProgressPage({
   job,
@@ -26,6 +28,20 @@ export default function StationProgressPage({
   ) => void;
 }) {
   const navigate = useNavigate();
+  const { user, role } = useAuth();
+  const isStaff = role === "staff";
+  const authEmployee = useMemo<EmployeeApi | null>(() => {
+    if (!user) return null;
+    return {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      phone: "",
+      isActive: true,
+    };
+  }, [user]);
+
   const {
     jobState,
     logoLoadError,
@@ -51,7 +67,11 @@ export default function StationProgressPage({
     handleSave,
     handleSelectStep,
     handleRemarkSaved,
-  } = useStationProgressViewModel({ job, onUpdateStep });
+  } = useStationProgressViewModel({
+    job,
+    onUpdateStep,
+    forcedEmployee: isStaff ? authEmployee : null,
+  });
   const handleStageChange = (idx: number) => {
     setFollowMode(false);
     if (isDoneStatus) {
@@ -73,6 +93,8 @@ export default function StationProgressPage({
 
     setCheckpointIndex(idx);
   };
+  const isViewingBillingStage =
+    (stages[checkpointIndex]?.stage.code ?? "").toUpperCase() === "BILLING";
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] p-3 text-slate-800 md:p-0">
@@ -234,6 +256,9 @@ export default function StationProgressPage({
                 saving={saving}
                 canSkip={false}
                 onRemarkSaved={handleRemarkSaved}
+                showReceiptUploader={isViewingBillingStage}
+                lockEmployee={isStaff}
+                lockedEmployeeName={authEmployee?.name}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-48 xl:h-100 text-slate-400 text-sm p-6 text-center bg-slate-50">

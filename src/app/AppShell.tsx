@@ -5,7 +5,7 @@ import { useAuth } from "../shared/auth/useAuth";
 import { PanelLeft } from "lucide-react";
 
 export default function AppShell() {
-  const { logout } = useAuth();
+  const { logout, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,6 +34,7 @@ export default function AppShell() {
           onToggle={() => setIsCollapsed(!isCollapsed)}
           onLogout={handleLogout}
           activePath={location.pathname}
+          role={role}
           onNavigate={() => setMobileOpen(false)}
         />
       </div>
@@ -53,6 +54,7 @@ export default function AppShell() {
               onToggle={() => {}}
               onLogout={handleLogout}
               activePath={location.pathname}
+              role={role}
               onNavigate={() => setMobileOpen(false)}
             />
           </div>
