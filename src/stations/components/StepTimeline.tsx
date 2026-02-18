@@ -119,11 +119,11 @@ export default function StepTimeline({
                           {formatThaiDateTime(step.timestamp)}
                           {step.remark?.trim() ? (
                             <>
-                              {" "}
-                              <span className="text-slate-300">|</span>{" "}
-                              <span className="text-slate-500">
-                                หมายเหตุ:{" "}
-                                <span className="font-medium text-slate-700">
+                              <span className="ml-2 inline-flex items-center gap-1 text-[11px] text-amber-800">
+                                <span className="font-medium text-amber-700">
+                                  หมายเหตุ
+                                </span>
+                                <span className="text-amber-900/90">
                                   {step.remark}
                                 </span>
                               </span>
