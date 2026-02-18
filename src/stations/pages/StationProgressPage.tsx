@@ -72,6 +72,22 @@ export default function StationProgressPage({
     onUpdateStep,
     forcedEmployee: isStaff ? authEmployee : null,
   });
+  const billingStageIndex = stages.findIndex(
+    (stage) => (stage.stage.code ?? "").toUpperCase() === "BILLING",
+  );
+  const hasPassedCustomerReceive = stages.some((stage) => {
+    if ((stage.stage.code ?? "").toUpperCase() !== "REPAIR") return false;
+    return (stage.jobSteps ?? []).some((step) => {
+      const normalized = (step.stepTemplate?.name ?? "").replace(/\s+/g, "");
+      const isCustomerReceiveStep =
+        normalized.includes("ลูกค้ารับรถ") || normalized.includes("ถูกค้ารับรถ");
+      return isCustomerReceiveStep && step.status === "completed";
+    });
+  });
+
+  const canOpenBillingDirectly =
+    billingStageIndex >= 0 && hasPassedCustomerReceive;
+
   const handleStageChange = (idx: number) => {
     setFollowMode(false);
     if (isDoneStatus) {
@@ -80,6 +96,10 @@ export default function StationProgressPage({
     }
 
     if (idx <= checkpointIndex) {
+      setCheckpointIndex(idx);
+      return;
+    }
+    if (idx === billingStageIndex && canOpenBillingDirectly) {
       setCheckpointIndex(idx);
       return;
     }
@@ -182,17 +202,28 @@ export default function StationProgressPage({
               </button>
               <button
                 onClick={() => {
+                  const targetIndex = Math.min(stages.length - 1, checkpointIndex + 1);
                   if (!isDoneStatus && !isStageDone) {
+                    const canBypassLockForBilling =
+                      targetIndex === billingStageIndex && canOpenBillingDirectly;
+                    if (canBypassLockForBilling) {
+                      setCheckpointIndex(targetIndex);
+                      return;
+                    }
                     toast.error(
                       "ต้องทำขั้นตอนของสถานีนี้ให้เสร็จก่อน ถึงจะไปสถานีถัดไปได้",
                     );
                     return;
                   }
-                  setCheckpointIndex((i) => Math.min(stages.length - 1, i + 1));
+                  setCheckpointIndex(targetIndex);
                 }}
                 disabled={
                   checkpointIndex >= stages.length - 1 ||
-                  (!isDoneStatus && !isStageDone)
+                  (!isDoneStatus &&
+                    !isStageDone &&
+                    !(Math.min(stages.length - 1, checkpointIndex + 1) ===
+                      billingStageIndex &&
+                      canOpenBillingDirectly))
                 }
                 className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-medium text-white
                 shadow-sm shadow-blue-200 hover:bg-blue-700 md:text-sm xl:flex-none xl:rounded-lg xl:py-2
