@@ -188,7 +188,7 @@ export default function StationProgressPage({
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 items-start">
-        <div className="xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="order-2 xl:order-1 xl:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <StepTimeline
             title={stages[checkpointIndex]?.stage.name ?? "รายการ"}
             steps={stepsVm}
@@ -199,7 +199,7 @@ export default function StationProgressPage({
 
         <div
           id="action-panel-section"
-          className="xl:col-span-1 xl:sticky xl:top-6"
+          className="order-1 xl:order-2 xl:col-span-1 xl:sticky xl:top-6"
         >
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
             {jobState.status === "DONE" ? (
