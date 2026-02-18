@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,6 +12,7 @@ import StepActionPanel from "../components/StepActionPanel";
 import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
 import { useStationProgressViewModel } from "../hooks/useStationProgressViewModel";
+import { useAuth } from "../../shared/auth/useAuth";
 
 export default function StationProgressPage({
   job,
@@ -26,6 +28,20 @@ export default function StationProgressPage({
   ) => void;
 }) {
   const navigate = useNavigate();
+  const { user, role } = useAuth();
+  const isStaff = role === "staff";
+  const authEmployee = useMemo<EmployeeApi | null>(() => {
+    if (!user) return null;
+    return {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      phone: "",
+      isActive: true,
+    };
+  }, [user]);
+
   const {
     jobState,
     logoLoadError,
@@ -51,7 +67,27 @@ export default function StationProgressPage({
     handleSave,
     handleSelectStep,
     handleRemarkSaved,
-  } = useStationProgressViewModel({ job, onUpdateStep });
+  } = useStationProgressViewModel({
+    job,
+    onUpdateStep,
+    forcedEmployee: isStaff ? authEmployee : null,
+  });
+  const billingStageIndex = stages.findIndex(
+    (stage) => (stage.stage.code ?? "").toUpperCase() === "BILLING",
+  );
+  const hasPassedCustomerReceive = stages.some((stage) => {
+    if ((stage.stage.code ?? "").toUpperCase() !== "REPAIR") return false;
+    return (stage.jobSteps ?? []).some((step) => {
+      const normalized = (step.stepTemplate?.name ?? "").replace(/\s+/g, "");
+      const isCustomerReceiveStep =
+        normalized.includes("ลูกค้ารับรถ") || normalized.includes("ถูกค้ารับรถ");
+      return isCustomerReceiveStep && step.status === "completed";
+    });
+  });
+
+  const canOpenBillingDirectly =
+    billingStageIndex >= 0 && hasPassedCustomerReceive;
+
   const handleStageChange = (idx: number) => {
     setFollowMode(false);
     if (isDoneStatus) {
@@ -60,6 +96,10 @@ export default function StationProgressPage({
     }
 
     if (idx <= checkpointIndex) {
+      setCheckpointIndex(idx);
+      return;
+    }
+    if (idx === billingStageIndex && canOpenBillingDirectly) {
       setCheckpointIndex(idx);
       return;
     }
@@ -73,6 +113,8 @@ export default function StationProgressPage({
 
     setCheckpointIndex(idx);
   };
+  const isViewingBillingStage =
+    (stages[checkpointIndex]?.stage.code ?? "").toUpperCase() === "BILLING";
 
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] p-3 text-slate-800 md:p-0">
@@ -160,17 +202,28 @@ export default function StationProgressPage({
               </button>
               <button
                 onClick={() => {
+                  const targetIndex = Math.min(stages.length - 1, checkpointIndex + 1);
                   if (!isDoneStatus && !isStageDone) {
+                    const canBypassLockForBilling =
+                      targetIndex === billingStageIndex && canOpenBillingDirectly;
+                    if (canBypassLockForBilling) {
+                      setCheckpointIndex(targetIndex);
+                      return;
+                    }
                     toast.error(
                       "ต้องทำขั้นตอนของสถานีนี้ให้เสร็จก่อน ถึงจะไปสถานีถัดไปได้",
                     );
                     return;
                   }
-                  setCheckpointIndex((i) => Math.min(stages.length - 1, i + 1));
+                  setCheckpointIndex(targetIndex);
                 }}
                 disabled={
                   checkpointIndex >= stages.length - 1 ||
-                  (!isDoneStatus && !isStageDone)
+                  (!isDoneStatus &&
+                    !isStageDone &&
+                    !(Math.min(stages.length - 1, checkpointIndex + 1) ===
+                      billingStageIndex &&
+                      canOpenBillingDirectly))
                 }
                 className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-medium text-white
                 shadow-sm shadow-blue-200 hover:bg-blue-700 md:text-sm xl:flex-none xl:rounded-lg xl:py-2
@@ -234,6 +287,9 @@ export default function StationProgressPage({
                 saving={saving}
                 canSkip={false}
                 onRemarkSaved={handleRemarkSaved}
+                showReceiptUploader={isViewingBillingStage}
+                lockEmployee={isStaff}
+                lockedEmployeeName={authEmployee?.name}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-48 xl:h-100 text-slate-400 text-sm p-6 text-center bg-slate-50">

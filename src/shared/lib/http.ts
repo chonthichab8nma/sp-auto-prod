@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAccessToken, clearAccessToken } from "../auth/auth";
+import { getAccessToken, clearAuthSession } from "../auth/auth";
 
 export const http = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
@@ -19,7 +19,7 @@ http.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error?.response?.status === 401) {
-      clearAccessToken();
+      clearAuthSession();
 
       window.location.href = "/login";
     }

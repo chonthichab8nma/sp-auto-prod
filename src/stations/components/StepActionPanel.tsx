@@ -23,6 +23,9 @@ export default function StepActionPanel({
   skipLabel = "ข้าม",
   onBulkSkip,
   onRemarkSaved,
+  showReceiptUploader = false,
+  lockEmployee = false,
+  lockedEmployeeName,
 }: {
   stepId: string;
   stepName: string;
@@ -41,6 +44,9 @@ export default function StepActionPanel({
   skipLabel?: string;
   onBulkSkip?: () => void;
   onRemarkSaved?: (stepId: string, remark: string) => void;
+  showReceiptUploader?: boolean;
+  lockEmployee?: boolean;
+  lockedEmployeeName?: string;
 }) {
   const getBadge = () => {
     if (stepStatus === "completed")
@@ -79,26 +85,42 @@ export default function StepActionPanel({
       </div>
 
       <div className="flex-1 space-y-3 pt-3">
-        <EmployeeAutocomplete
-          label={
-            <>
+        {lockEmployee ? (
+          <div className="pb-3">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
               ผู้ดำเนินการ <span className="text-red-500">*</span>
-            </>
-          }
-          value={selectedEmployee}
-          onChange={onSelectEmployee}
-          error={error}
-          placeholder="กรุณากรอกชื่อพนักงาน"
-          limit={50}
-          minQueryLength={1}
-          debounceMs={250}
-          className="pb-3"
-          inputClassName="border-slate-200 bg-slate-50 py-3"
-        />
+            </label>
+            <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              {lockedEmployeeName || selectedEmployee?.name || "-"}
+            </div>
+          </div>
+        ) : (
+          <EmployeeAutocomplete
+            label={
+              <>
+                ผู้ดำเนินการ <span className="text-red-500">*</span>
+              </>
+            }
+            value={selectedEmployee}
+            onChange={onSelectEmployee}
+            error={error}
+            placeholder="กรุณากรอกชื่อพนักงาน"
+            limit={50}
+            minQueryLength={1}
+            debounceMs={250}
+            className="pb-3"
+            inputClassName="border-slate-200 bg-slate-50 py-3"
+          />
+        )}
 
         <div className="border-t border-slate-100 pt-3">
           <StepImagesUploader stepId={stepId} />
         </div>
+        {showReceiptUploader && (
+          <div className="border-t border-slate-100 pt-3">
+            <StepImagesUploader stepId={stepId} category="receipt" />
+          </div>
+        )}
 
         <div className="border-t border-slate-100 pt-3">
           <StepRemarkPanel

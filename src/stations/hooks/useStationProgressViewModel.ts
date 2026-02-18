@@ -23,6 +23,7 @@ function isDone(status: StepStatus | JobStepStatusApi) {
 
 type Params = {
   job: JobApi;
+  forcedEmployee?: EmployeeApi | null;
   onUpdateStep: (
     stageIdx: number,
     stepId: string,
@@ -31,7 +32,11 @@ type Params = {
   ) => void;
 };
 
-export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
+export function useStationProgressViewModel({
+  job,
+  forcedEmployee = null,
+  onUpdateStep,
+}: Params) {
   const [jobState, setJobState] = useState<JobApi>(job);
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [logoLoadError, setLogoLoadError] = useState(false);
@@ -50,6 +55,12 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
   useEffect(() => {
     setJobState(job);
   }, [job]);
+
+  useEffect(() => {
+    if (!forcedEmployee) return;
+    if (selectedEmployee?.id === forcedEmployee.id) return;
+    setSelectedEmployee(forcedEmployee);
+  }, [forcedEmployee, selectedEmployee?.id]);
 
   useEffect(() => {
     let alive = true;
@@ -239,6 +250,7 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
 
   const handleSave = async () => {
     setError(null);
+    const employeeForSave = forcedEmployee ?? selectedEmployee;
 
     if (!selectedAction || selectedAction === "pending") {
       toast.error("กรุณาเลือกสถานะก่อนบันทึก");
@@ -247,7 +259,7 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
 
     const needEmployee =
       selectedAction === "completed" || selectedAction === "in_progress";
-    if (needEmployee && selectedEmployee == null) {
+    if (needEmployee && employeeForSave == null) {
       setError("กรุณาระบุชื่อผู้ดำเนินการ");
       toast.error("กรุณาระบุชื่อผู้ดำเนินการ");
       return;
@@ -263,14 +275,14 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
       await saveStep({
         stepId: activeStepId,
         status: selectedAction,
-        employeeId: selectedEmployee?.id,
+        employeeId: employeeForSave?.id,
       });
 
       onUpdateStep(
         checkpointIndex,
         activeStepId,
         selectedAction,
-        selectedEmployee?.id ?? null,
+        employeeForSave?.id ?? null,
       );
 
       const stageDoneNow =
@@ -304,7 +316,7 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
             ? {
                 ...step,
                 status: selectedAction as JobStepStatusApi,
-                employeeId: selectedEmployee?.id ?? null,
+                employeeId: employeeForSave?.id ?? null,
                 completedAt:
                   selectedAction === "completed" || selectedAction === "skipped"
                     ? new Date().toISOString()
@@ -339,7 +351,7 @@ export function useStationProgressViewModel({ job, onUpdateStep }: Params) {
         setCheckpointIndex((index) => Math.min(index + 1, stages.length - 1));
       }
 
-      setSelectedEmployee(null);
+      setSelectedEmployee(forcedEmployee ?? null);
       toast.dismiss(tId);
       toast.success("บันทึกสำเร็จ");
     } catch {

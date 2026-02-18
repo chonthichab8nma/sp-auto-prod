@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { PanelLeft, LayoutDashboard, RadioTower, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalPortal from "../../shared/components/ui/ModalPortal";
+import type { UserRole } from "../../shared/auth/auth";
 
 interface SidebarProps {
   onLogout: () => void;
   activePath: string;
   isCollapsed: boolean;
+  role: UserRole | null;
   onToggle: () => void;
   onNavigate?: () => void;
 }
@@ -14,6 +16,7 @@ interface SidebarProps {
 export default function Sidebar({
   activePath,
   isCollapsed,
+  role,
   onToggle,
   onLogout,
   onNavigate,
@@ -44,6 +47,7 @@ export default function Sidebar({
     setConfirmOpen(false);
     onNavigate?.();
   };
+  const canAccessDashboard = role === "super_admin";
 
   return (
     <>
@@ -92,22 +96,24 @@ export default function Sidebar({
 
         {/* Menu */}
         <nav className="flex-1 px-4 space-y-1 overflow-x-hidden">
-          <Link
-            to="/"
-            onClick={handleNavigate}
-            className={[
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-              isCollapsed ? "justify-center" : "",
-              activePath === "/"
-                ? "text-blue-600 bg-blue-50 font-medium"
-                : "text-gray-600 hover:bg-gray-50",
-            ].join(" ")}
-          >
-            <LayoutDashboard size={18} />
-            {!isCollapsed && (
-              <span className="whitespace-nowrap">แดชบอร์ด</span>
-            )}
-          </Link>
+          {canAccessDashboard && (
+            <Link
+              to="/"
+              onClick={handleNavigate}
+              className={[
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                isCollapsed ? "justify-center" : "",
+                activePath === "/"
+                  ? "text-blue-600 bg-blue-50 font-medium"
+                  : "text-gray-600 hover:bg-gray-50",
+              ].join(" ")}
+            >
+              <LayoutDashboard size={18} />
+              {!isCollapsed && (
+                <span className="whitespace-nowrap">แดชบอร์ด</span>
+              )}
+            </Link>
+          )}
 
           <Link
             to="/stations"

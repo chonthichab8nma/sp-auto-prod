@@ -12,6 +12,38 @@ const STATUS_TO_STAGE_CODE: Record<JobStatus, StageCode | null> = {
   DONE: null,
 };
 
+function normalizeStepName(name: string) {
+  return name.replace(/\s+/g, "");
+}
+
+function isCustomerReceiveCompleted(job: JobApi, stageCode: string): boolean {
+  if (stageCode.toUpperCase() !== "REPAIR") return false;
+  const repairStage = (job.jobStages ?? []).find(
+    (stage) => (stage.stage.code ?? "").toUpperCase() === "REPAIR",
+  );
+  if (!repairStage) return false;
+
+  return (repairStage.jobSteps ?? []).some((step) => {
+    const normalizedName = normalizeStepName(step.stepTemplate?.name ?? "");
+    const isCustomerReceiveStep =
+      normalizedName.includes("ลูกค้ารับรถ") || normalizedName.includes("ถูกค้ารับรถ");
+    return isCustomerReceiveStep && step.status === "completed";
+  });
+}
+
+function isQcStepCompleted(job: JobApi, stageCode: string): boolean {
+  if (stageCode.toUpperCase() !== "REPAIR") return false;
+  const repairStage = (job.jobStages ?? []).find(
+    (stage) => (stage.stage.code ?? "").toUpperCase() === "REPAIR",
+  );
+  if (!repairStage) return false;
+
+  return (repairStage.jobSteps ?? []).some((step) => {
+    const normalizedName = normalizeStepName(step.stepTemplate?.name ?? "");
+    return normalizedName.includes("คิวซี") && step.status === "completed";
+  });
+}
+
 export default function StageStepper({
   job,
   checkpointIndex,
@@ -44,7 +76,10 @@ export default function StageStepper({
     <div className="inline-flex w-fit items-center gap-0 md:gap-2">
       {stages.map((s, idx) => {
         const isActive = idx === activeStageIndex;
-        const isCompleted = isStageCompletedByProgress(s, job.status);
+        const isCompleted =
+          isStageCompletedByProgress(s, job.status) ||
+          isQcStepCompleted(job, s.stage.code ?? "") ||
+          isCustomerReceiveCompleted(job, s.stage.code ?? "");
 
         return (
           <div key={s.id} className="flex items-center">

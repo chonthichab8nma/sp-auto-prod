@@ -93,32 +93,41 @@ function StationWrapper({
 }
 
 function LoginGate() {
-  const { isAuthed } = useAuth();
-  if (isAuthed) return <Navigate to="/" replace />;
+  const { isAuthed, role } = useAuth();
+  if (isAuthed) {
+    return <Navigate to={role === "staff" ? "/stations" : "/"} replace />;
+  }
   return <LoginPage />;
+}
+
+function HomeRedirect() {
+  const { isAuthed, role } = useAuth();
+  if (!isAuthed) return <Navigate to="/login" replace />;
+  return <Navigate to={role === "staff" ? "/stations" : "/"} replace />;
 }
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginGate />} />
-      <Route element={<RequireAuth />}>
+      <Route element={<RequireAuth allowedRoles={["super_admin"]} />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
-
-          <Route path="/stations" element={<StationsPage />} />
-
           <Route path="/create" element={<CreateJobForm />} />
-
           <Route path="/job/:jobId" element={<JobDetailWrapper />} />
+        </Route>
+      </Route>
 
+      <Route element={<RequireAuth allowedRoles={["staff", "super_admin"]} />}>
+        <Route element={<AppShell />}>
+          <Route path="/stations" element={<StationsPage />} />
           <Route
             path="/stations/:jobId"
             element={<StationWrapper onUpdateStep={() => {}} />}
           />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );
 }

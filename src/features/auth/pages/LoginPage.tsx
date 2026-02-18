@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthed } = useAuth();
+  const { login, isAuthed, role } = useAuth();
 
   type LocationState = {
     from?: {
@@ -25,9 +25,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthed) {
-      navigate(from, { replace: true });
+      if (role === "staff") {
+        navigate("/stations", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
-  }, [isAuthed, from, navigate]);
+  }, [isAuthed, role, from, navigate]);
 
   const isFormValid = email.trim() !== "" && password.trim() !== "";
 
@@ -38,7 +42,7 @@ export default function LoginPage() {
     try {
       const token = await login(email, password);
       if (token) {
-        navigate("/", { replace: true });
+        // redirect is handled in the auth effect above
       }
     } catch (err: unknown) {
       setError(toThaiErrorMessage(err, "เข้าสู่ระบบไม่สำเร็จ"));
