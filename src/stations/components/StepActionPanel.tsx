@@ -63,21 +63,22 @@ export default function StepActionPanel({
   };
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+    <div className="flex h-full flex-col bg-white p-4">
+      <div className="border-b border-slate-100 pb-3">
         <div>
-          <h3 className="text-sm font-medium text-slate-500 mb-1">
+          <h3 className="mb-1 text-xs font-semibold tracking-wide text-slate-500">
             เช็กรายการ
           </h3>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-slate-900">{stepName}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xl font-bold leading-tight text-slate-900">
+              {stepName}
+            </span>
             {getBadge()}
           </div>
         </div>
       </div>
 
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-3 pt-3">
         <EmployeeAutocomplete
           label={
             <>
@@ -91,15 +92,15 @@ export default function StepActionPanel({
           limit={50}
           minQueryLength={1}
           debounceMs={250}
+          className="pb-3"
+          inputClassName="border-slate-200 bg-slate-50 py-3"
         />
-        <div className="space-y-2">
-          {/* <label className="block text-sm font-medium text-slate-700">
-            รูปภาพ
-          </label> */}
+
+        <div className="border-t border-slate-100 pt-3">
           <StepImagesUploader stepId={stepId} />
         </div>
 
-        <div className="mt-3">
+        <div className="border-t border-slate-100 pt-3">
           <StepRemarkPanel
             stepId={Number(stepId)}
             status={stepStatus}
@@ -110,13 +111,16 @@ export default function StepActionPanel({
           />
         </div>
 
-        {/* Status */}
-        <div className="space-y-2">
-          <label className="block mb-2 text-sm font-medium text-slate-700">
+        <div className="border-t border-slate-100 pt-3">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             สถานะ
           </label>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div
+            className={`grid gap-3 ${
+              canSkip ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+            }`}
+          >
             {canSkip && (
               <button
                 type="button"
@@ -124,11 +128,11 @@ export default function StepActionPanel({
                   if (onBulkSkip) onBulkSkip();
                   else onSelectAction("skipped");
                 }}
-                className={`flex items-center gap-3 p-4 rounded-xl border transition-all text-left
+                className={`flex min-h-11 items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all
                   ${
                     selectedAction === "skipped"
-                      ? "border-slate-500 bg-slate-50 ring-1 ring-slate-500"
-                      : "border-slate-200 hover:border-slate-300"
+                      ? "border-slate-500 bg-white ring-1 ring-slate-400"
+                      : "border-slate-200 bg-slate-50 hover:border-slate-300"
                   }`}
               >
                 <div
@@ -151,17 +155,17 @@ export default function StepActionPanel({
             <button
               type="button"
               onClick={() => onSelectAction("completed")}
-              className={`flex items-center gap-3 p-4 rounded-xl border transition-all text-left
+              className={`flex min-h-11 items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all
                 ${
                   selectedAction === "completed"
-                    ? "border-green-500 bg-green-50 ring-1 ring-green-500"
-                    : "border-slate-200 hover:border-slate-300"
+                    ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-400"
+                    : "border-slate-200 bg-slate-50 hover:border-slate-300"
                 }`}
             >
               <div
                 className={`w-5 h-5 rounded border flex items-center justify-center ${
                   selectedAction === "completed"
-                    ? "bg-green-500 border-green-500"
+                    ? "bg-emerald-500 border-emerald-500"
                     : "border-slate-300 bg-white"
                 }`}
               >
@@ -178,12 +182,12 @@ export default function StepActionPanel({
         </div>
       </div>
 
-      <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+      <div className="mt-4 flex justify-end border-t border-slate-100 pt-3">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-8 py-2.5 bg-slate-100 hover:bg-blue-700 hover:text-white text-slate-600 font-medium rounded-lg text-sm transition-colors shadow-blue-200"
+          className="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>

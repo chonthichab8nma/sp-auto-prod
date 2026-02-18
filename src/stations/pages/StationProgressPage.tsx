@@ -201,7 +201,7 @@ export default function StationProgressPage({
           id="action-panel-section"
           className="xl:col-span-1 xl:sticky xl:top-6"
         >
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
             {jobState.status === "DONE" ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-green-100">

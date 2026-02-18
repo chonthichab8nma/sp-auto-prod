@@ -158,9 +158,7 @@ export default function StepRemarkPanel({
   if (variant === "minimal") {
     return (
       <div>
-        <div className="text-sm font-semibold text-slate-600">
-          หมายเหตุ
-        </div>
+        <div className="text-sm font-semibold text-slate-700">หมายเหตุ</div>
 
         <textarea
           ref={textareaRef}
@@ -169,18 +167,18 @@ export default function StepRemarkPanel({
           rows={1}
           placeholder="ระบุรายละเอียดคำขอถึงร้าน"
           className={[
-            "mt-3 w-full resize-none bg-transparent text-sm leading-relaxed",
-            "border-0 border-b border-slate-200",
-            "px-0 py-2",
-            "text-slate-700 placeholder:text-slate-300",
+            "mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 text-sm leading-relaxed",
+            "px-3 py-2",
+            "text-slate-700 placeholder:text-slate-400",
+            "overflow-hidden",
             "outline-none",
             "focus:border-slate-300",
             "focus:ring-0",
           ].join(" ")}
         />
 
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs">
-          <div className="min-h-4.5">
+        <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
+          <div className="min-h-4">
             {needsEmployee && !employeeId ? (
               <span className="text-red-600">
                 ต้องเลือกผู้ดำเนินการก่อนจึงจะบันทึกหมายเหตุได้
@@ -197,10 +195,10 @@ export default function StepRemarkPanel({
             onClick={() => void onSave()}
             disabled={!canSave}
             className={[
-              "rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-medium transition",
+              "rounded-lg border px-3.5 py-1.5 text-xs font-semibold transition",
               !canSave
-                ? "cursor-not-allowed text-slate-300"
-                : "text-slate-700 hover:bg-slate-100",
+                ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300"
+                : "border-blue-600 bg-blue-600 text-white hover:bg-blue-700",
             ].join(" ")}
           >
             {saving ? "กำลังบันทึก..." : "บันทึก"}
