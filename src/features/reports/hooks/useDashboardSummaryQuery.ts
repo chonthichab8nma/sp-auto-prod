@@ -2,11 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 import {
   getDashboardSummaryApi,
+  getInsuranceStatsApi,
   type DashboardSummary,
+  type InsuranceStatItem,
 } from "../services/report.service";
 
 export function useDashboardSummaryQuery() {
   const [data, setData] = useState<DashboardSummary | null>(null);
+  const [insuranceStats, setInsuranceStats] = useState<InsuranceStatItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -15,8 +18,12 @@ export function useDashboardSummaryQuery() {
     setError("");
 
     try {
-      const res = await getDashboardSummaryApi();
-      setData(res);
+      const [summaryRes, insuranceRes] = await Promise.all([
+        getDashboardSummaryApi(),
+        getInsuranceStatsApi(10),
+      ]);
+      setData(summaryRes);
+      setInsuranceStats(insuranceRes?.data ?? []);
     } catch (e: unknown) {
       setError(toThaiErrorMessage(e, "โหลดข้อมูลสรุปรายงานไม่สำเร็จ"));
     } finally {
@@ -28,5 +35,5 @@ export function useDashboardSummaryQuery() {
     fetchSummary();
   }, [fetchSummary]);
 
-  return { data, loading, error, refetch: fetchSummary };
+  return { data, insuranceStats, loading, error, refetch: fetchSummary };
 }

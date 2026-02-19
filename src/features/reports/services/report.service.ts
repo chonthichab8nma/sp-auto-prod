@@ -18,7 +18,37 @@ export type DashboardSummary = {
   statusCounts: JobStatusSummary;
 };
 
+export type InsuranceStatItem = {
+  insuranceCompanyId: number;
+  insuranceCompanyName: string;
+  jobCount: number;
+  totalClaimAmount: number;
+  totalApprovedAmount: number;
+  totalDisbursedAmount: number;
+};
+
+export type InsuranceStatsResponse = {
+  data: InsuranceStatItem[];
+  count: number;
+  filters: {
+    sortBy: string;
+    limit: number;
+  };
+};
+
 export async function getDashboardSummaryApi(): Promise<DashboardSummary> {
   const { data } = await http.get<DashboardSummary>("private/dashboard/summary");
+  return data;
+}
+
+export async function getInsuranceStatsApi(
+  limit = 10,
+): Promise<InsuranceStatsResponse> {
+  const { data } = await http.get<InsuranceStatsResponse>(
+    "private/dashboard/insurance-stats",
+    {
+      params: { limit },
+    },
+  );
   return data;
 }
