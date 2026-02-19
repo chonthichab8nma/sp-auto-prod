@@ -1,87 +1,195 @@
 import type { ReactNode } from "react";
-import { Activity, CircleCheck, Clock3, FileText, RefreshCw } from "lucide-react";
+import {
+  BadgeCheck,
+  BriefcaseBusiness,
+  Coins,
+  Crown,
+  HandCoins,
+  RefreshCw,
+  Wallet,
+} from "lucide-react";
 import { useDashboardSummaryQuery } from "../hooks/useDashboardSummaryQuery";
 
-type SummaryCardProps = {
+type StatCardProps = {
   label: string;
   value: string;
-  hint?: string;
   icon: ReactNode;
+  tone?: "blue" | "green" | "amber";
 };
 
-const numberFormatter = new Intl.NumberFormat("th-TH");
 const amountFormatter = new Intl.NumberFormat("th-TH", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+const numberFormatter = new Intl.NumberFormat("th-TH");
+const compactNumberFormatter = new Intl.NumberFormat("th-TH", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
-function SummaryCard({ label, value, hint, icon }: SummaryCardProps) {
+const monthNameFormatter = new Intl.DateTimeFormat("th-TH", { month: "long" });
+
+function formatMonthName(monthNumber: number) {
+  if (!Number.isFinite(monthNumber) || monthNumber < 1 || monthNumber > 12) {
+    return "-";
+  }
+  const date = new Date(2026, monthNumber - 1, 1);
+  return monthNameFormatter.format(date);
+}
+
+function formatAmount(value: number) {
+  return amountFormatter.format(value || 0);
+}
+
+function shortMonthLabel(value: string) {
+  if (!value) return "-";
+  return value.length > 4 ? value.slice(0, 3) : value;
+}
+
+function StatCard({ label, value, icon, tone = "blue" }: StatCardProps) {
+  const toneClass =
+    tone === "green"
+      ? "bg-emerald-50 text-emerald-700"
+      : tone === "amber"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-sky-50 text-sky-700";
+
   return (
-    <article className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-slate-500">{label}</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
-          {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 text-sm font-medium leading-tight text-slate-500">{label}</p>
+        <div
+          className={`shrink-0 rounded-lg p-2 [&>svg]:h-4 [&>svg]:w-4 md:rounded-xl md:p-2.5 md:[&>svg]:h-[18px] md:[&>svg]:w-[18px] ${toneClass}`}
+        >
+          {icon}
         </div>
-        <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">{icon}</div>
       </div>
+      <p
+        title={value}
+        className="mt-2 truncate text-[clamp(1.7rem,2.2vw,2.35rem)] leading-none font-semibold tracking-tight text-slate-900"
+      >
+        {value}
+      </p>
     </article>
   );
 }
 
 export default function ReportSummaryPage() {
-  const { data, insuranceStats, loading, error, refetch } =
-    useDashboardSummaryQuery();
+  const {
+    data,
+    financialSummary,
+    insuranceStats,
+    monthlyTrends,
+    topInsurance,
+    selectedYear,
+    setSelectedYear,
+    loading,
+    error,
+    refetch,
+  } = useDashboardSummaryQuery();
 
-  const totalJobs = data?.totalJobs ?? 0;
-  const completedJobs = data?.completedJobs ?? 0;
-  const completionRate = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
-  const maxInsuranceJobCount = Math.max(
-    ...insuranceStats.map((item) => item.jobCount),
+  const insuranceRevenue = financialSummary?.totalClaimAmount ?? data?.totalClaimAmount ?? 0;
+  const cashRevenue = financialSummary?.totalExcessFee ?? data?.totalExcessFee ?? 0;
+  const totalRevenue = financialSummary?.totalCashAndClaim ?? data?.totalCashAndClaim ?? 0;
+  const approvedAmount = data?.totalApprovedAmount ?? 0;
+  const disbursedAmount = data?.totalDisbursedAmount ?? 0;
+  const processingAmount = Math.max(insuranceRevenue - approvedAmount, 0);
+
+  const fallbackSortedCompanies = [...insuranceStats].sort(
+    (a, b) => b.jobCount - a.jobCount,
+  );
+  const statsByCompanyId = new Map(
+    insuranceStats.map((item) => [item.insuranceCompanyId, item]),
+  );
+
+  const rankedCompanies = (() => {
+    if (!topInsurance.length) return fallbackSortedCompanies;
+
+    const topIds = new Set(topInsurance.map((item) => item.insuranceCompanyId));
+    const topWithAmounts = topInsurance
+      .map((item) => {
+        const stat = statsByCompanyId.get(item.insuranceCompanyId);
+        return {
+          insuranceCompanyId: item.insuranceCompanyId,
+          insuranceCompanyName: item.insuranceCompanyName,
+          jobCount: item.jobCount,
+          totalClaimAmount: stat?.totalClaimAmount ?? 0,
+          totalApprovedAmount: stat?.totalApprovedAmount ?? 0,
+          totalDisbursedAmount: stat?.totalDisbursedAmount ?? 0,
+        };
+      })
+      .sort((a, b) => b.jobCount - a.jobCount);
+
+    const remaining = fallbackSortedCompanies.filter(
+      (item) => !topIds.has(item.insuranceCompanyId),
+    );
+    return [...topWithAmounts, ...remaining];
+  })();
+
+  const topTotalJobs = rankedCompanies.reduce((sum, item) => sum + item.jobCount, 0);
+
+  const monthlyRows = monthlyTrends?.data ?? [];
+  const monthlyChartData = monthlyRows.map((month) => {
+    const processing = Math.max(
+      month.totalClaimAmount - month.totalApprovedAmount,
+      0,
+    );
+
+    return {
+      key: `${month.year}-${month.month}`,
+      month: month.monthName || formatMonthName(month.month),
+      total: month.totalClaimAmount,
+      disbursed: month.totalDisbursedAmount,
+      processing,
+      jobCount: month.jobCount,
+    };
+  });
+  const maxChartValue = Math.max(
+    ...monthlyChartData.flatMap((item) => [
+      item.total,
+      item.disbursed,
+      item.processing,
+    ]),
     1,
   );
-  const topInsurance = insuranceStats[0];
-  const insuranceJobsTotal = insuranceStats.reduce(
-    (sum, item) => sum + item.jobCount,
-    0,
-  );
-  const insuranceCompaniesCount = insuranceStats.length;
-
-  const statusCounts = data?.statusCounts ?? {
-    CLAIM: 0,
-    REPAIR: 0,
-    BILLING: 0,
-    DONE: 0,
-  };
-
-  const statusItems = [
-    { key: "CLAIM", label: "CLAIM", value: statusCounts.CLAIM, color: "bg-amber-500" },
-    { key: "REPAIR", label: "REPAIR", value: statusCounts.REPAIR, color: "bg-cyan-500" },
-    { key: "BILLING", label: "BILLING", value: statusCounts.BILLING, color: "bg-violet-500" },
-    { key: "DONE", label: "DONE", value: statusCounts.DONE, color: "bg-emerald-500" },
-  ];
+  const years = Array.from({ length: 5 }, (_, index) => new Date().getFullYear() - index);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-xl bg-white p-5 md:p-8 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+      <section className="rounded-3xl border border-slate-200/80 bg-gradient-to-r from-sky-50 via-white to-emerald-50 p-6 shadow-sm md:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">รายงานภาพรวม</h1>
-            <p className="mt-1 text-sm text-slate-500">สรุปสถานะงานและยอดการเคลมจากระบบล่าสุด</p>
+            <h1 className="text-2xl font-semibold text-slate-900">รายงานรายได้และบริษัทลูกค้า</h1>
           </div>
 
-          <button
-            type="button"
-            onClick={refetch}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            รีเฟรช
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-sm text-slate-600" htmlFor="report-year">
+              ปีรายงาน
+            </label>
+            <select
+              id="report-year"
+              value={selectedYear}
+              onChange={(event) => setSelectedYear(Number(event.target.value))}
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-500"
+            >
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={refetch}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+              รีเฟรช
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
       {error && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -89,162 +197,225 @@ export default function ReportSummaryPage() {
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          label="งานทั้งหมด"
-          value={numberFormatter.format(data?.totalJobs ?? 0)}
-          icon={<FileText size={18} />}
-        />
-        <SummaryCard
-          label="งานที่กำลังดำเนินการ"
-          value={numberFormatter.format(data?.activeJobs ?? 0)}
-          icon={<Activity size={18} />}
-        />
-        <SummaryCard
-          label="งานที่เสร็จแล้ว"
-          value={numberFormatter.format(data?.completedJobs ?? 0)}
-          hint={`คิดเป็น ${completionRate.toFixed(1)}% ของงานทั้งหมด`}
-          icon={<CircleCheck size={18} />}
-        />
-        <SummaryCard
-          label="รอเบิกจ่าย"
-          value={numberFormatter.format(data?.pendingDisbursement ?? 0)}
-          icon={<Clock3 size={18} />}
-        />
-      </section>
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+            <h2 className="text-lg font-semibold text-slate-900">สรุปรายได้</h2>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <StatCard
+                label="รายได้ประกัน"
+                value={`฿${formatAmount(insuranceRevenue)}`}
+                icon={<BriefcaseBusiness size={18} />}
+                tone="blue"
+              />
+              <StatCard
+                label="เงินสด/ส่วนต่าง"
+                value={`฿${formatAmount(cashRevenue)}`}
+                icon={<Wallet size={18} />}
+                tone="amber"
+              />
+              <StatCard
+                label="รายได้รวม"
+                value={`฿${formatAmount(totalRevenue)}`}
+                icon={<Coins size={18} />}
+                tone="green"
+              />
+              <StatCard
+                label="อนุมัติแล้ว"
+                value={`฿${formatAmount(approvedAmount)}`}
+                icon={<BadgeCheck size={18} />}
+              />
+              <StatCard
+                label="ได้รับเงินแล้ว"
+                value={`฿${formatAmount(disbursedAmount)}`}
+                icon={<HandCoins size={18} />}
+                tone="green"
+              />
+              <StatCard
+                label="กำลังดำเนินการ"
+                value={`฿${formatAmount(processingAmount)}`}
+                icon={<RefreshCw size={18} />}
+                tone="amber"
+              />
+            </div>
+          </section>
+        </div>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <SummaryCard
-          label="ยอดเคลมรวม (บาท)"
-          value={amountFormatter.format(data?.totalClaimAmount ?? 0)}
-          icon={<FileText size={18} />}
-        />
-        <SummaryCard
-          label="ยอดอนุมัติรวม (บาท)"
-          value={amountFormatter.format(data?.totalApprovedAmount ?? 0)}
-          icon={<CircleCheck size={18} />}
-        />
-        <SummaryCard
-          label="ยอดจ่ายจริงรวม (บาท)"
-          value={amountFormatter.format(data?.totalDisbursedAmount ?? 0)}
-          icon={<Activity size={18} />}
-        />
-      </section>
-
-      <section className="rounded-2xl border border-slate-100 bg-white p-5 md:p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">จำนวนงานตามสถานะ</h2>
-        <p className="mt-1 text-sm text-slate-500">เปรียบเทียบสัดส่วนงานแต่ละสถานะจากงานทั้งหมด</p>
-
-        <div className="mt-5 space-y-4">
-          {statusItems.map((item) => {
-            const percent = totalJobs > 0 ? (item.value / totalJobs) * 100 : 0;
-
-            return (
-              <div key={item.key}>
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-700">{item.label}</span>
-                  <span className="text-slate-500">
-                    {numberFormatter.format(item.value)} งาน ({percent.toFixed(1)}%)
-                  </span>
-                </div>
-                <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className={["h-full rounded-full transition-all", item.color].join(" ")}
-                    style={{ width: `${Math.min(percent, 100)}%` }}
-                  />
-                </div>
+        <div className="lg:col-span-4">
+          <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:h-[29rem]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Top บริษัทลูกค้า</h2>
+                <p className="mt-1 text-sm text-slate-500">เดือนนี้</p>
               </div>
-            );
-          })}
+              <div className="rounded-lg bg-sky-50 p-2 text-sky-700 [&>svg]:h-4 [&>svg]:w-4 md:rounded-xl md:[&>svg]:h-[18px] md:[&>svg]:w-[18px]">
+                <Crown size={18} />
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              รวม {numberFormatter.format(topTotalJobs)} งาน
+            </div>
+
+            {rankedCompanies.length === 0 ? (
+              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                ยังไม่มีข้อมูลบริษัทประกัน
+              </div>
+            ) : (
+              <div className="mt-4 min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-1">
+                {rankedCompanies.map((item, index) => (
+                  <article
+                    key={item.insuranceCompanyId}
+                    className="rounded-xl border border-slate-200 bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-medium text-sky-700">อันดับ {index + 1}</p>
+                        <h3 className="text-[15px] font-semibold leading-tight text-slate-900">
+                          {item.insuranceCompanyName}
+                        </h3>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-slate-500">งาน</p>
+                        <p className="text-xl font-semibold leading-none text-slate-900">
+                          {numberFormatter.format(item.jobCount)}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-100 bg-white p-5 md:p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              อันดับบริษัทประกัน (Top 10)
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              จาก API insurance-stats จัดเรียงตามจำนวนงาน
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-2 text-right sm:grid-cols-3 sm:gap-4">
-            <div>
-              <div className="text-xs text-slate-500">บริษัทสูงสุด</div>
-              <div className="text-sm font-semibold text-slate-900">
-                {topInsurance?.insuranceCompanyName ?? "-"}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-slate-500">จำนวนบริษัท</div>
-              <div className="text-sm font-semibold text-slate-900">
-                {numberFormatter.format(insuranceCompaniesCount)}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-slate-500">รวมจำนวนงาน</div>
-              <div className="text-sm font-semibold text-slate-900">
-                {numberFormatter.format(insuranceJobsTotal)}
-              </div>
-            </div>
-          </div>
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">รายงานรายเดือน ปี {selectedYear}</h2>
         </div>
 
-        {insuranceStats.length === 0 ? (
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-            ยังไม่มีข้อมูลบริษัทประกัน
+        {monthlyRows.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+            ยังไม่มีข้อมูลรายเดือนสำหรับปี {selectedYear}
           </div>
         ) : (
-          <div className="mt-5 overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
-              <thead>
-                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-3">อันดับ</th>
-                  <th className="px-3 py-3">บริษัทประกัน</th>
-                  <th className="px-3 py-3">จำนวนงาน</th>
-                  <th className="px-3 py-3">สัดส่วน</th>
-                  <th className="px-3 py-3 text-right">ยอดเคลม (บาท)</th>
-                  <th className="px-3 py-3 text-right">ยอดอนุมัติ (บาท)</th>
-                  <th className="px-3 py-3 text-right">ยอดจ่ายจริง (บาท)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {insuranceStats.map((item, idx) => {
-                  const percent = (item.jobCount / maxInsuranceJobCount) * 100;
-                  return (
-                    <tr key={item.insuranceCompanyId} className="hover:bg-slate-50/70">
-                      <td className="px-3 py-3 text-sm text-slate-700">{idx + 1}</td>
-                      <td className="px-3 py-3">
-                        <div className="font-medium text-slate-900">
-                          {item.insuranceCompanyName}
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+              <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
+                  รายได้รวม
+                </span>
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  ได้รับเงินแล้ว
+                </span>
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                  กำลังดำเนินการ
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[720px]">
+                  <div className="flex h-56 items-end gap-3">
+                    {monthlyChartData.map((item) => {
+                      const totalHeight = Math.max((item.total / maxChartValue) * 100, 3);
+                      const disbursedHeight = Math.max(
+                        (item.disbursed / maxChartValue) * 100,
+                        3,
+                      );
+                      const processingHeight = Math.max(
+                        (item.processing / maxChartValue) * 100,
+                        3,
+                      );
+
+                      return (
+                        <div key={item.key} className="flex w-14 flex-col items-center gap-2">
+                          <div className="flex h-44 items-end gap-1">
+                            <div
+                              className="w-3 rounded-t bg-sky-500"
+                              style={{ height: `${item.total > 0 ? totalHeight : 2}%` }}
+                              title={`${item.month} | รายได้รวม: ${formatAmount(item.total)} บาท`}
+                            />
+                            <div
+                              className="w-3 rounded-t bg-emerald-500"
+                              style={{
+                                height: `${item.disbursed > 0 ? disbursedHeight : 2}%`,
+                              }}
+                              title={`${item.month} | ได้รับเงินแล้ว: ${formatAmount(item.disbursed)} บาท`}
+                            />
+                            <div
+                              className="w-3 rounded-t bg-amber-500"
+                              style={{
+                                height: `${item.processing > 0 ? processingHeight : 2}%`,
+                              }}
+                              title={`${item.month} | กำลังดำเนินการ: ${formatAmount(item.processing)} บาท`}
+                            />
+                          </div>
+                          <span className="text-xs text-slate-500">
+                            {shortMonthLabel(item.month)}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {compactNumberFormatter.format(item.total)}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-3 py-3 text-sm font-semibold text-slate-900">
-                        {numberFormatter.format(item.jobCount)}
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="h-2 w-40 overflow-hidden rounded-full bg-slate-100">
-                          <div
-                            className="h-full rounded-full bg-blue-500"
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 text-right text-sm text-slate-700">
-                        {amountFormatter.format(item.totalClaimAmount)}
-                      </td>
-                      <td className="px-3 py-3 text-right text-sm text-slate-700">
-                        {amountFormatter.format(item.totalApprovedAmount)}
-                      </td>
-                      <td className="px-3 py-3 text-right text-sm text-slate-700">
-                        {amountFormatter.format(item.totalDisbursedAmount)}
-                      </td>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <details className="rounded-xl border border-slate-200 bg-white">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700">
+                ดูตารางตัวเลขรายเดือน
+              </summary>
+              <div className="border-t border-slate-100 overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-100">
+                  <thead>
+                    <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <th className="px-3 py-3">เดือน</th>
+                      <th className="px-3 py-3">จำนวนงาน</th>
+                      <th className="px-3 py-3 text-right">รายได้รวม (บาท)</th>
+                      <th className="px-3 py-3 text-right">อนุมัติแล้ว</th>
+                      <th className="px-3 py-3 text-right">ได้รับเงินแล้ว</th>
+                      <th className="px-3 py-3 text-right">กำลังดำเนินการ</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {monthlyRows.map((month) => {
+                      const monthProcessing = Math.max(
+                        month.totalClaimAmount - month.totalApprovedAmount,
+                        0,
+                      );
+                      return (
+                        <tr key={`${month.year}-${month.month}`} className="hover:bg-slate-50/80">
+                          <td className="px-3 py-3 text-sm font-medium text-slate-900">
+                            {month.monthName || formatMonthName(month.month)}
+                          </td>
+                          <td className="px-3 py-3 text-sm text-slate-700">
+                            {numberFormatter.format(month.jobCount)} งาน
+                          </td>
+                          <td className="px-3 py-3 text-right text-sm font-medium text-slate-900">
+                            {formatAmount(month.totalClaimAmount)} บาท
+                          </td>
+                          <td className="px-3 py-3 text-right text-sm text-slate-700">
+                            {formatAmount(month.totalApprovedAmount)} บาท
+                          </td>
+                          <td className="px-3 py-3 text-right text-sm text-slate-700">
+                            {formatAmount(month.totalDisbursedAmount)} บาท
+                          </td>
+                          <td className="px-3 py-3 text-right text-sm text-amber-700">
+                            {formatAmount(monthProcessing)} บาท
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </details>
           </div>
         )}
       </section>
