@@ -82,10 +82,7 @@ export default function ReportSummaryPage() {
     monthlyTrends,
     topInsurance,
     selectedYear,
-    setSelectedYear,
-    loading,
     error,
-    refetch,
   } = useDashboardSummaryQuery();
 
   const insuranceRevenue = financialSummary?.totalClaimAmount ?? data?.totalClaimAmount ?? 0;
@@ -152,41 +149,12 @@ export default function ReportSummaryPage() {
     ]),
     1,
   );
-  const years = Array.from({ length: 5 }, (_, index) => new Date().getFullYear() - index);
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-      <section className="rounded-3xl border border-slate-200/80 bg-gradient-to-r from-sky-50 via-white to-emerald-50 p-6 shadow-sm md:p-8">
+      <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">รายงานรายได้และบริษัทลูกค้า</h1>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm text-slate-600" htmlFor="report-year">
-              ปีรายงาน
-            </label>
-            <select
-              id="report-year"
-              value={selectedYear}
-              onChange={(event) => setSelectedYear(Number(event.target.value))}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-500"
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={refetch}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-              รีเฟรช
-            </button>
           </div>
         </div>
       </section>
