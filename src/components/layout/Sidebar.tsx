@@ -53,7 +53,7 @@ export default function Sidebar({
     setConfirmOpen(false);
     onNavigate?.();
   };
-  const canAccessDashboard = role === "super_admin";
+  const canAccessDashboard = role === "superadmin" || role === "admin";
 
   return (
     <>

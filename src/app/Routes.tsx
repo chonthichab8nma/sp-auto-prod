@@ -111,7 +111,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginGate />} />
-      <Route element={<RequireAuth allowedRoles={["super_admin"]} />}>
+      <Route element={<RequireAuth allowedRoles={["superadmin", "admin"]} />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/reports/summary" element={<ReportSummaryPage />} />
@@ -120,7 +120,9 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      <Route element={<RequireAuth allowedRoles={["staff", "super_admin"]} />}>
+      <Route
+        element={<RequireAuth allowedRoles={["staff", "superadmin", "admin"]} />}
+      >
         <Route element={<AppShell />}>
           <Route path="/stations" element={<StationsPage />} />
           <Route

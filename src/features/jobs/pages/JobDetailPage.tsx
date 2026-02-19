@@ -25,6 +25,7 @@ import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopo
 import EmployeeAutocomplete from "../../../shared/components/ui/EmployeeAutocomplete";
 import { useJobDetailEditForm } from "../hooks/useJobDetailEditForm";
 import type { JobDetailEditForm } from "../types/jobDetailEdit";
+import { useAuth } from "../../../shared/auth/useAuth";
 
 const Section = ({
   title,
@@ -95,6 +96,7 @@ export default function JobDetailPage({
   onRefresh?: () => void;
 }) {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [logoLoadError, setLogoLoadError] = useState(false);
   const [vehicleTypeFromDb, setVehicleTypeFromDb] = useState<string>("");
@@ -126,6 +128,7 @@ export default function JobDetailPage({
 
   const handleBack = () => navigate(-1);
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
+  const canEditJob = role === "superadmin";
   const canEditVehicleDetails = false;
 
   const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
@@ -168,6 +171,12 @@ export default function JobDetailPage({
   useEffect(() => {
     setSavedPreview(null);
   }, [job?.id, job?.updatedAt]);
+
+  useEffect(() => {
+    if (!canEditJob && editing) {
+      cancelEdit();
+    }
+  }, [canEditJob, editing, cancelEdit]);
 
   useEffect(() => {
     let alive = true;
@@ -275,7 +284,7 @@ export default function JobDetailPage({
         </div>
 
         <div className="flex items-center gap-2">
-          {editing ? (
+          {canEditJob && editing ? (
             <>
               <button
                 onClick={cancelEdit}
@@ -292,14 +301,14 @@ export default function JobDetailPage({
                 {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
               </button>
             </>
-          ) : (
+          ) : canEditJob ? (
             <button
               onClick={startEdit}
               className="px-5 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               แก้ไขข้อมูล
             </button>
-          )}
+          ) : null}
 
           <button
             onClick={handleCheckStation}
