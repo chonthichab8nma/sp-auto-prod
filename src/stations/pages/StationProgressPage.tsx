@@ -59,6 +59,10 @@ export default function StationProgressPage({
     selectedAction,
     setSelectedAction,
     error,
+    receiptFile,
+    setReceiptFile,
+    uploadedReceipt,
+    showReceiptUploader,
     saving,
     canPrintBillingPdf,
     brandLogoUrl,
@@ -113,9 +117,6 @@ export default function StationProgressPage({
 
     setCheckpointIndex(idx);
   };
-  const isViewingBillingStage =
-    (stages[checkpointIndex]?.stage.code ?? "").toUpperCase() === "BILLING";
-
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] p-3 text-slate-800 md:p-0">
       <div className="mb-3 md:mb-6">
@@ -287,7 +288,10 @@ export default function StationProgressPage({
                 saving={saving}
                 canSkip={false}
                 onRemarkSaved={handleRemarkSaved}
-                showReceiptUploader={isViewingBillingStage}
+                showReceiptUploader={showReceiptUploader}
+                receiptFile={receiptFile}
+                onReceiptFileChange={setReceiptFile}
+                uploadedReceipt={uploadedReceipt}
                 lockEmployee={isStaff}
                 lockedEmployeeName={authEmployee?.name}
               />

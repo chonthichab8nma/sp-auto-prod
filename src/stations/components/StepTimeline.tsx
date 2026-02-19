@@ -1,6 +1,12 @@
-import { Check, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { StepStatus } from "../../Type";
 import { formatThaiDateTime } from "../../shared/lib/date";
+import toast from "react-hot-toast";
+import {
+  getJobStepImages,
+  getJobStepImageViewUrl,
+} from "../api/jobStepImages.api";
 
 export type StepVM = {
   id: string;
@@ -44,6 +50,87 @@ export default function StepTimeline({
   activeStepId: string;
   onSelectStep: (id: string) => void;
 }) {
+  const [loadingStepId, setLoadingStepId] = useState<string | null>(null);
+  const [stepHasImages, setStepHasImages] = useState<Record<string, boolean>>({});
+  const [openViewer, setOpenViewer] = useState(false);
+  const [viewerImages, setViewerImages] = useState<
+    { id: number; src: string; name: string }[]
+  >([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+
+  const openImages = async (stepId: string) => {
+    setLoadingStepId(stepId);
+    try {
+      const res = await getJobStepImages(stepId);
+      const images = res.images
+        .filter((img) => !img.fileName.startsWith("__receipt__"))
+        .map((img) => ({
+          id: img.id,
+          src: img.url || getJobStepImageViewUrl(stepId, img.id),
+          name: img.fileName,
+        }));
+
+      if (images.length === 0) {
+        toast("ขั้นตอนนี้ยังไม่มีรูปภาพ");
+        return;
+      }
+
+      setViewerImages(images);
+      setViewerIndex(0);
+      setOpenViewer(true);
+    } catch {
+      toast.error("โหลดรูปภาพไม่สำเร็จ");
+    } finally {
+      setLoadingStepId(null);
+    }
+  };
+
+  const prevImage = () => {
+    setViewerIndex((idx) =>
+      viewerImages.length ? (idx - 1 + viewerImages.length) % viewerImages.length : 0,
+    );
+  };
+
+  const nextImage = () => {
+    setViewerIndex((idx) =>
+      viewerImages.length ? (idx + 1) % viewerImages.length : 0,
+    );
+  };
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadImagePresence = async () => {
+      if (!steps.length) {
+        setStepHasImages({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        steps.map(async (step) => {
+          try {
+            const res = await getJobStepImages(step.id);
+            const hasImage = res.images.some(
+              (img) => !img.fileName.startsWith("__receipt__"),
+            );
+            return [step.id, hasImage] as const;
+          } catch {
+            return [step.id, false] as const;
+          }
+        }),
+      );
+
+      if (!alive) return;
+      setStepHasImages(Object.fromEntries(entries));
+    };
+
+    void loadImagePresence();
+
+    return () => {
+      alive = false;
+    };
+  }, [steps]);
+
   return (
     <div className="pb-4">
       <div className="px-6 py-5 bg-white border-b border-slate-100 mb-2">
@@ -90,15 +177,15 @@ export default function StepTimeline({
                       ${isActive ? "border-slate-100" : ""}
                     `}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex min-w-0 flex-1 items-start gap-4">
                       <div
                         className={`z-5 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${dotColor}`}
                       >
                         <Icon size={14} className={iconColor} strokeWidth={3} />
                       </div>
 
-                      <div>
-                        <div className="flex items-center">
+                      <div className="min-w-0">
+                        <div className="flex items-center min-w-0">
                           <span
                             className={`text-sm font-medium ${
                               isCompleted
@@ -110,8 +197,6 @@ export default function StepTimeline({
                           >
                             {step.name}
                           </span>
-
-                          
                           <StatusBadge status={step.status} />
                         </div>
 
@@ -138,6 +223,21 @@ export default function StepTimeline({
                         </div>
                       </div>
                     </div>
+                    {stepHasImages[step.id] && (
+                      <div className="ml-3 shrink-0 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void openImages(step.id);
+                          }}
+                          disabled={loadingStepId === step.id}
+                          className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          {loadingStepId === step.id ? "กำลังโหลด..." : "รูปภาพ"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -145,6 +245,58 @@ export default function StepTimeline({
           </div>
         )}
       </div>
+
+      {openViewer && viewerImages.length > 0 && (
+        <div className="fixed inset-0 z-[9999]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setOpenViewer(false)}
+            aria-label="close"
+          />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b px-3 py-2">
+                <div className="text-sm text-slate-700">
+                  รูปที่ {viewerIndex + 1} / {viewerImages.length}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpenViewer(false)}
+                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="relative h-[60vh] w-full bg-black">
+                <img
+                  src={viewerImages[viewerIndex]?.src}
+                  alt={viewerImages[viewerIndex]?.name ?? "preview"}
+                  className="absolute inset-0 h-full w-full object-contain"
+                />
+                {viewerImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={prevImage}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow hover:bg-white"
+                    >
+                      <ChevronLeft size={22} className="text-slate-800" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={nextImage}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow hover:bg-white"
+                    >
+                      <ChevronRight size={22} className="text-slate-800" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

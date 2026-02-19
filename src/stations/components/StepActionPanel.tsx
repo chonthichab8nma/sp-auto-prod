@@ -1,9 +1,10 @@
-import { Check } from "lucide-react";
+import { Check, ExternalLink, FileText, Paperclip, X } from "lucide-react";
 import type { StepStatus } from "../../Type";
 import type { EmployeeApi } from "../api/employees.api";
 import EmployeeAutocomplete from "../../shared/components/ui/EmployeeAutocomplete";
 import StepImagesUploader from "./StepImagesUploader";
 import StepRemarkPanel from "./StepRemarkPanel";
+import type { JobReceiptUploadResponse } from "../../features/jobs/api/receipt.api";
 
 export default function StepActionPanel({
   stepId,
@@ -24,6 +25,9 @@ export default function StepActionPanel({
   onBulkSkip,
   onRemarkSaved,
   showReceiptUploader = false,
+  receiptFile,
+  onReceiptFileChange,
+  uploadedReceipt,
   lockEmployee = false,
   lockedEmployeeName,
 }: {
@@ -45,9 +49,22 @@ export default function StepActionPanel({
   onBulkSkip?: () => void;
   onRemarkSaved?: (stepId: string, remark: string) => void;
   showReceiptUploader?: boolean;
+  receiptFile?: File | null;
+  onReceiptFileChange?: (file: File | null) => void;
+  uploadedReceipt?: JobReceiptUploadResponse | null;
   lockEmployee?: boolean;
   lockedEmployeeName?: string;
 }) {
+  const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+
+  const getReceiptHref = (receipt: JobReceiptUploadResponse): string | null => {
+    const raw = receipt.receiptViewUrl || receipt.receiptUrl;
+    if (!raw) return null;
+    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+    if (raw.startsWith("/")) return `${apiBase}${raw}`;
+    return raw;
+  };
+
   const getBadge = () => {
     if (stepStatus === "completed")
       return (
@@ -113,12 +130,63 @@ export default function StepActionPanel({
           />
         )}
 
-        <div className="border-t border-slate-100 pt-3">
-          <StepImagesUploader stepId={stepId} />
-        </div>
-        {showReceiptUploader && (
+        {!showReceiptUploader && (
           <div className="border-t border-slate-100 pt-3">
-            <StepImagesUploader stepId={stepId} category="receipt" />
+            <StepImagesUploader stepId={stepId} />
+          </div>
+        )}
+        {showReceiptUploader && onReceiptFileChange && (
+          <div className="space-y-2 border-t border-slate-100 pt-3">
+            <label className="block text-sm font-semibold text-slate-700">
+              ใบเสร็จวันจ่ายเงิน 
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-600">
+              <Paperclip size={14} />
+              <span>เลือกไฟล์ใบเสร็จ</span>
+              <input
+                type="file"
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  onReceiptFileChange(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
+            {receiptFile && (
+              <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                <span className="truncate">{receiptFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => onReceiptFileChange(null)}
+                  className="text-blue-700 hover:text-blue-900"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+            {uploadedReceipt && (
+              <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+                <div className="flex items-center gap-2">
+                <FileText size={14} />
+                <span className="truncate">
+                  อัปโหลดใบเสร็จแล้ว: {uploadedReceipt.receiptFileName}
+                </span>
+                </div>
+                {getReceiptHref(uploadedReceipt) && (
+                  <a
+                    href={getReceiptHref(uploadedReceipt) ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-flex items-center gap-1 text-green-800 underline hover:text-green-900"
+                  >
+                    เปิดใบเสร็จ
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         )}
 

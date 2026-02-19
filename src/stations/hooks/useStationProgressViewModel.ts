@@ -16,6 +16,11 @@ import type { EmployeeApi } from "../api/employees.api";
 import { printWorkOrder } from "../pdf/workOrderPrint";
 import { useStationProgressMutation } from "./useStationProgressMutation";
 import type { StepVM } from "../components/StepTimeline";
+import {
+  uploadJobReceipt,
+  type JobReceiptUploadResponse,
+} from "../../features/jobs/api/receipt.api";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 function isDone(status: StepStatus | JobStepStatusApi) {
   return status === "completed" || status === "skipped";
@@ -49,6 +54,9 @@ export function useStationProgressViewModel({
   const [selectedAction, setSelectedAction] = useState<StepStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBulkSkipConfirm, setShowBulkSkipConfirm] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploadedReceipt, setUploadedReceipt] =
+    useState<JobReceiptUploadResponse | null>(null);
 
   const { saveStep, saving, saveError } = useStationProgressMutation();
 
@@ -185,6 +193,10 @@ export function useStationProgressViewModel({
     const currentStageCode = stages[checkpointIndex]?.stage.code ?? "";
     return currentStageCode.toUpperCase() === "BILLING";
   }, [checkpointIndex, stages]);
+  const isPaymentDateStep = useMemo(() => {
+    const normalizedStepName = (activeStep?.name ?? "").replace(/\s+/g, "");
+    return normalizedStepName.includes("วันจ่ายเงิน");
+  }, [activeStep?.name]);
 
   const brandLogoUrl = useMemo(
     () => resolveBrandLogoUrl(brands, jobState.vehicle?.brand),
@@ -272,6 +284,38 @@ export function useStationProgressViewModel({
 
     const tId = toast.loading("กำลังบันทึก...");
     try {
+      if (isViewingBillingStage && isPaymentDateStep && receiptFile) {
+        const maxSize = 10 * 1024 * 1024;
+        const allowedTypes = [
+          "application/pdf",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ];
+
+        if (receiptFile.size > maxSize) {
+          toast.dismiss(tId);
+          toast.error("ไฟล์ใบเสร็จต้องไม่เกิน 10MB");
+          return;
+        }
+
+        if (!allowedTypes.includes(receiptFile.type)) {
+          toast.dismiss(tId);
+          toast.error("รองรับไฟล์ใบเสร็จเฉพาะ pdf, jpg, png, webp");
+          return;
+        }
+
+        try {
+          const receipt = await uploadJobReceipt(jobState.id, receiptFile);
+          setUploadedReceipt(receipt);
+          setReceiptFile(null);
+        } catch (uploadErr) {
+          toast.dismiss(tId);
+          toast.error(toThaiErrorMessage(uploadErr, "อัปโหลดใบเสร็จไม่สำเร็จ"));
+          return;
+        }
+      }
+
       await saveStep({
         stepId: activeStepId,
         status: selectedAction,
@@ -363,6 +407,8 @@ export function useStationProgressViewModel({
     setActiveStepId(id);
     setSelectedAction(null);
     setError(null);
+    setReceiptFile(null);
+    setUploadedReceipt(null);
 
     if (window.innerWidth < 1280) {
       setTimeout(() => {
@@ -410,6 +456,10 @@ export function useStationProgressViewModel({
     selectedAction,
     setSelectedAction,
     error,
+    receiptFile,
+    setReceiptFile,
+    uploadedReceipt,
+    showReceiptUploader: isViewingBillingStage && isPaymentDateStep,
     saving,
     showBulkSkipConfirm,
     setShowBulkSkipConfirm,
