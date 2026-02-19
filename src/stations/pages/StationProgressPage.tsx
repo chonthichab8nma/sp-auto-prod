@@ -30,6 +30,7 @@ export default function StationProgressPage({
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const isStaff = role === "staff";
+  const isSuperAdmin = role === "superadmin";
   const authEmployee = useMemo<EmployeeApi | null>(() => {
     if (!user) return null;
     return {
@@ -76,6 +77,7 @@ export default function StationProgressPage({
     onUpdateStep,
     forcedEmployee: isStaff ? authEmployee : null,
   });
+  const showDoneReadonlyCard = jobState.status === "DONE" && !isSuperAdmin;
   const billingStageIndex = stages.findIndex(
     (stage) => (stage.stage.code ?? "").toUpperCase() === "BILLING",
   );
@@ -252,7 +254,12 @@ export default function StationProgressPage({
           className="order-1 xl:order-2 xl:col-span-1 xl:sticky xl:top-6"
         >
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
-            {jobState.status === "DONE" ? (
+            {jobState.status === "DONE" && isSuperAdmin && (
+              <div className="mx-4 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                ซ่อมเสร็จสมบูรณ์
+              </div>
+            )}
+            {showDoneReadonlyCard ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-green-100">
                   <Check size={40} className="text-green-500" strokeWidth={3} />

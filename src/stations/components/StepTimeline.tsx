@@ -234,7 +234,7 @@ export default function StepTimeline({
                           disabled={loadingStepId === step.id}
                           className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
                         >
-                          {loadingStepId === step.id ? "กำลังโหลด..." : "รูปภาพ"}
+                          รูปภาพ
                         </button>
                       </div>
                     )}
