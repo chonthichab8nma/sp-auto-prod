@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { PanelLeft, LayoutDashboard, RadioTower, LogOut } from "lucide-react";
+import {
+  PanelLeft,
+  LayoutDashboard,
+  RadioTower,
+  LogOut,
+  ChartColumn,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalPortal from "../../shared/components/ui/ModalPortal";
 import type { UserRole } from "../../shared/auth/auth";
@@ -47,7 +53,7 @@ export default function Sidebar({
     setConfirmOpen(false);
     onNavigate?.();
   };
-  const canAccessDashboard = role === "super_admin";
+  const canAccessDashboard = role === "superadmin" || role === "admin";
 
   return (
     <>
@@ -112,6 +118,23 @@ export default function Sidebar({
               {!isCollapsed && (
                 <span className="whitespace-nowrap">แดชบอร์ด</span>
               )}
+            </Link>
+          )}
+
+          {canAccessDashboard && (
+            <Link
+              to="/reports/summary"
+              onClick={handleNavigate}
+              className={[
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                isCollapsed ? "justify-center" : "",
+                activePath.startsWith("/reports")
+                  ? "text-blue-600 bg-blue-50 font-medium"
+                  : "text-gray-600 hover:bg-gray-50",
+              ].join(" ")}
+            >
+              <ChartColumn size={18} />
+              {!isCollapsed && <span className="whitespace-nowrap">รายงาน</span>}
             </Link>
           )}
 

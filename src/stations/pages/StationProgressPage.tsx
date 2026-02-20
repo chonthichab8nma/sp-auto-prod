@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
@@ -29,7 +29,9 @@ export default function StationProgressPage({
 }) {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
   const isStaff = role === "staff";
+  const isSuperAdmin = role === "superadmin";
   const authEmployee = useMemo<EmployeeApi | null>(() => {
     if (!user) return null;
     return {
@@ -59,6 +61,12 @@ export default function StationProgressPage({
     selectedAction,
     setSelectedAction,
     error,
+    receiptFile,
+    setReceiptFile,
+    uploadedReceipt,
+    showReceiptUploader,
+    handleUploadReceiptNow,
+    handleDeleteUploadedReceipt,
     saving,
     canPrintBillingPdf,
     brandLogoUrl,
@@ -72,6 +80,8 @@ export default function StationProgressPage({
     onUpdateStep,
     forcedEmployee: isStaff ? authEmployee : null,
   });
+  const showDoneReadonlyCard = jobState.status === "DONE" && !isSuperAdmin;
+  const canManageReceipt = !(jobState.status === "DONE" && !isSuperAdmin);
   const billingStageIndex = stages.findIndex(
     (stage) => (stage.stage.code ?? "").toUpperCase() === "BILLING",
   );
@@ -113,9 +123,6 @@ export default function StationProgressPage({
 
     setCheckpointIndex(idx);
   };
-  const isViewingBillingStage =
-    (stages[checkpointIndex]?.stage.code ?? "").toUpperCase() === "BILLING";
-
   return (
     <div className="w-full max-w-full min-h-screen bg-[#ebebeb] p-3 text-slate-800 md:p-0">
       <div className="mb-3 md:mb-6">
@@ -243,6 +250,9 @@ export default function StationProgressPage({
             steps={stepsVm}
             activeStepId={activeStepId}
             onSelectStep={handleSelectStep}
+            jobId={jobState.id}
+            externalReceiptUrl={uploadedReceipt?.receiptViewUrl || uploadedReceipt?.receiptUrl || null}
+            refreshKey={timelineRefreshKey}
           />
         </div>
 
@@ -251,7 +261,12 @@ export default function StationProgressPage({
           className="order-1 xl:order-2 xl:col-span-1 xl:sticky xl:top-6"
         >
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
-            {jobState.status === "DONE" ? (
+            {jobState.status === "DONE" && isSuperAdmin && (
+              <div className="mx-4 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                ซ่อมเสร็จสมบูรณ์
+              </div>
+            )}
+            {showDoneReadonlyCard ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-green-100">
                   <Check size={40} className="text-green-500" strokeWidth={3} />
@@ -287,7 +302,16 @@ export default function StationProgressPage({
                 saving={saving}
                 canSkip={false}
                 onRemarkSaved={handleRemarkSaved}
-                showReceiptUploader={isViewingBillingStage}
+                onStepImagesChanged={() =>
+                  setTimelineRefreshKey((prev) => prev + 1)
+                }
+                showReceiptUploader={showReceiptUploader}
+                receiptFile={receiptFile}
+                onReceiptFileChange={setReceiptFile}
+                uploadedReceipt={uploadedReceipt}
+                onUploadReceiptNow={handleUploadReceiptNow}
+                onDeleteUploadedReceipt={handleDeleteUploadedReceipt}
+                canManageReceipt={canManageReceipt}
                 lockEmployee={isStaff}
                 lockedEmployeeName={authEmployee?.name}
               />

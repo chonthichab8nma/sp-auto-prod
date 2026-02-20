@@ -16,6 +16,13 @@ import type { EmployeeApi } from "../api/employees.api";
 import { printWorkOrder } from "../pdf/workOrderPrint";
 import { useStationProgressMutation } from "./useStationProgressMutation";
 import type { StepVM } from "../components/StepTimeline";
+import {
+  deleteJobReceipt,
+  getJobReceipt,
+  uploadJobReceipt,
+  type JobReceiptUploadResponse,
+} from "../../features/jobs/api/receipt.api";
+import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 function isDone(status: StepStatus | JobStepStatusApi) {
   return status === "completed" || status === "skipped";
@@ -49,6 +56,9 @@ export function useStationProgressViewModel({
   const [selectedAction, setSelectedAction] = useState<StepStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBulkSkipConfirm, setShowBulkSkipConfirm] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploadedReceipt, setUploadedReceipt] =
+    useState<JobReceiptUploadResponse | null>(null);
 
   const { saveStep, saving, saveError } = useStationProgressMutation();
 
@@ -185,6 +195,75 @@ export function useStationProgressViewModel({
     const currentStageCode = stages[checkpointIndex]?.stage.code ?? "";
     return currentStageCode.toUpperCase() === "BILLING";
   }, [checkpointIndex, stages]);
+  const isPaymentDateStep = useMemo(() => {
+    const normalizedStepName = (activeStep?.name ?? "").replace(/\s+/g, "");
+    return normalizedStepName.includes("วันจ่ายเงิน");
+  }, [activeStep?.name]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!isViewingBillingStage || !isPaymentDateStep) return;
+
+    (async () => {
+      try {
+        const receipt = await getJobReceipt(jobState.id);
+        if (!alive) return;
+        setUploadedReceipt(receipt);
+      } catch {
+        if (!alive) return;
+        const jobReceipt = jobState as JobApi & {
+          receiptFileName?: string;
+          receiptMimeType?: string;
+          receiptFileSize?: number;
+          receiptUploadedAt?: string;
+          receiptViewUrl?: string;
+          receiptUrl?: string;
+        };
+        const photoReceipt = (
+          jobState?.jobPhotos as Array<Record<string, unknown>> | undefined
+        )?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
+
+        const fallbackUrl =
+          (jobReceipt.receiptViewUrl as string | undefined) ||
+          (jobReceipt.receiptUrl as string | undefined) ||
+          (photoReceipt?.viewUrl as string | undefined) ||
+          (photoReceipt?.url as string | undefined) ||
+          "";
+
+        if (fallbackUrl) {
+          setUploadedReceipt({
+            jobId: jobState.id,
+            receiptFileName:
+              (jobReceipt.receiptFileName as string | undefined) ||
+              (photoReceipt?.fileName as string | undefined) ||
+              "receipt",
+            receiptUrl:
+              (jobReceipt.receiptUrl as string | undefined) ||
+              (photoReceipt?.url as string | undefined) ||
+              fallbackUrl,
+            receiptMimeType:
+              (jobReceipt.receiptMimeType as string | undefined) ||
+              (photoReceipt?.mimeType as string | undefined) ||
+              "application/octet-stream",
+            receiptFileSize:
+              (jobReceipt.receiptFileSize as number | undefined) ||
+              (photoReceipt?.fileSize as number | undefined) ||
+              0,
+            receiptUploadedAt:
+              (jobReceipt.receiptUploadedAt as string | undefined) ||
+              new Date().toISOString(),
+            receiptViewUrl: fallbackUrl,
+          });
+        } else {
+          setUploadedReceipt(null);
+        }
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [isViewingBillingStage, isPaymentDateStep, jobState]);
 
   const brandLogoUrl = useMemo(
     () => resolveBrandLogoUrl(brands, jobState.vehicle?.brand),
@@ -359,10 +438,60 @@ export function useStationProgressViewModel({
     }
   };
 
+  const validateReceiptFile = (file: File | null): string | null => {
+    if (!file) return "กรุณาเลือกไฟล์ใบเสร็จ";
+    const maxSize = 10 * 1024 * 1024;
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+    if (file.size > maxSize) return "ไฟล์ใบเสร็จต้องไม่เกิน 10MB";
+    if (!allowedTypes.includes(file.type)) {
+      return "รองรับไฟล์ใบเสร็จเฉพาะ pdf, jpg, png, webp";
+    }
+    return null;
+  };
+
+  const handleUploadReceiptNow = async (fileOverride?: File | null) => {
+    const targetFile = fileOverride ?? receiptFile;
+    const errorMessage = validateReceiptFile(targetFile);
+    if (errorMessage) {
+      toast.error(errorMessage);
+      return;
+    }
+
+    const tId = toast.loading("กำลังอัปโหลดใบเสร็จ...");
+    try {
+      const receipt = await uploadJobReceipt(jobState.id, targetFile as File);
+      setUploadedReceipt(receipt);
+      setReceiptFile(null);
+      toast.success("อัปโหลดใบเสร็จสำเร็จ", { id: tId });
+    } catch (err) {
+      toast.error(toThaiErrorMessage(err, "อัปโหลดใบเสร็จไม่สำเร็จ"), { id: tId });
+    }
+  };
+
+  const handleDeleteUploadedReceipt = async () => {
+    if (!uploadedReceipt) return;
+    const tId = toast.loading("กำลังลบใบเสร็จ...");
+    try {
+      await deleteJobReceipt(jobState.id);
+      setUploadedReceipt(null);
+      setReceiptFile(null);
+      toast.success("ลบใบเสร็จเรียบร้อย", { id: tId });
+    } catch (err) {
+      toast.error(toThaiErrorMessage(err, "ลบใบเสร็จไม่สำเร็จ"), { id: tId });
+    }
+  };
+
   const handleSelectStep = (id: string) => {
     setActiveStepId(id);
     setSelectedAction(null);
     setError(null);
+    setReceiptFile(null);
+    setUploadedReceipt(null);
 
     if (window.innerWidth < 1280) {
       setTimeout(() => {
@@ -410,6 +539,12 @@ export function useStationProgressViewModel({
     selectedAction,
     setSelectedAction,
     error,
+    receiptFile,
+    setReceiptFile,
+    uploadedReceipt,
+    showReceiptUploader: isViewingBillingStage && isPaymentDateStep,
+    handleUploadReceiptNow,
+    handleDeleteUploadedReceipt,
     saving,
     showBulkSkipConfirm,
     setShowBulkSkipConfirm,

@@ -3,6 +3,7 @@ import {
   clearAuthSession,
   getAccessToken,
   getAuthUser,
+  normalizeUserRole,
   parseUserFromToken,
   setAccessToken,
   setAuthUser,
@@ -30,7 +31,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       login: async (username: string, password: string) => {
         const data = await loginApi({ username, password });
-        const resolvedUser = data.user ?? parseUserFromToken(data.token);
+        const normalizedApiUser = data.user
+          ? (() => {
+              const role = normalizeUserRole(data.user.role);
+              if (!role) return null;
+              return {
+                ...data.user,
+                role,
+              };
+            })()
+          : null;
+        const resolvedUser = normalizedApiUser ?? parseUserFromToken(data.token);
 
         setAccessToken(data.token);
         setToken(data.token);

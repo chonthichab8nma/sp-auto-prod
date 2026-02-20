@@ -17,6 +17,7 @@ import { useAuth } from "../shared/auth/useAuth";
 import LoginPage from "../features/auth/pages/LoginPage";
 import { useJobQuery } from "../features/jobs/hooks/useJobQuery";
 import JobDetailSkeleton from "../components/layout/JobSkeleton";
+import ReportSummaryPage from "../features/reports/pages/ReportSummaryPage";
 
 function JobDetailWrapper() {
   const { jobId } = useParams();
@@ -110,15 +111,18 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginGate />} />
-      <Route element={<RequireAuth allowedRoles={["super_admin"]} />}>
+      <Route element={<RequireAuth allowedRoles={["superadmin", "admin"]} />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/reports/summary" element={<ReportSummaryPage />} />
           <Route path="/create" element={<CreateJobForm />} />
           <Route path="/job/:jobId" element={<JobDetailWrapper />} />
         </Route>
       </Route>
 
-      <Route element={<RequireAuth allowedRoles={["staff", "super_admin"]} />}>
+      <Route
+        element={<RequireAuth allowedRoles={["staff", "superadmin", "admin"]} />}
+      >
         <Route element={<AppShell />}>
           <Route path="/stations" element={<StationsPage />} />
           <Route

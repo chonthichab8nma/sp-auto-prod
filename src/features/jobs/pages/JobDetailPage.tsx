@@ -25,6 +25,8 @@ import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopo
 import EmployeeAutocomplete from "../../../shared/components/ui/EmployeeAutocomplete";
 import { useJobDetailEditForm } from "../hooks/useJobDetailEditForm";
 import type { JobDetailEditForm } from "../types/jobDetailEdit";
+import { useAuth } from "../../../shared/auth/useAuth";
+import { getJobReceipt } from "../api/receipt.api";
 
 const Section = ({
   title,
@@ -87,6 +89,13 @@ const LabelWithStar = ({ text }: { text: string }) => (
   </span>
 );
 
+function toAbsoluteUrl(raw?: string | null): string | null {
+  if (!raw) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("/")) return `${import.meta.env.VITE_API_BASE_URL}${raw}`;
+  return raw;
+}
+
 export default function JobDetailPage({
   job,
   onRefresh,
@@ -95,12 +104,15 @@ export default function JobDetailPage({
   onRefresh?: () => void;
 }) {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const [brands, setBrands] = useState<VehicleBrandApi[]>([]);
   const [logoLoadError, setLogoLoadError] = useState(false);
   const [vehicleTypeFromDb, setVehicleTypeFromDb] = useState<string>("");
   const [savedPreview, setSavedPreview] = useState<JobDetailEditForm | null>(
     null,
   );
+  const [receiptViewUrl, setReceiptViewUrl] = useState<string | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   const {
     editing,
@@ -126,6 +138,7 @@ export default function JobDetailPage({
 
   const handleBack = () => navigate(-1);
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
+  const canEditJob = role === "superadmin";
   const canEditVehicleDetails = false;
 
   const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
@@ -170,6 +183,12 @@ export default function JobDetailPage({
   }, [job?.id, job?.updatedAt]);
 
   useEffect(() => {
+    if (!canEditJob && editing) {
+      cancelEdit();
+    }
+  }, [canEditJob, editing, cancelEdit]);
+
+  useEffect(() => {
     let alive = true;
     const registration = job?.vehicle?.registration?.trim();
 
@@ -193,6 +212,47 @@ export default function JobDetailPage({
       alive = false;
     };
   }, [job?.vehicle?.registration]);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!job?.id) {
+      setReceiptViewUrl(null);
+      setReceiptLoading(false);
+      return;
+    }
+
+    (async () => {
+      setReceiptLoading(true);
+      try {
+        const receipt = await getJobReceipt(job.id);
+        if (!alive) return;
+        const rawUrl = receipt.receiptViewUrl || receipt.receiptUrl || "";
+        setReceiptViewUrl(toAbsoluteUrl(rawUrl));
+      } catch {
+        if (!alive) return;
+        const jobReceipt = (job as JobApi & {
+          receiptViewUrl?: string;
+          receiptUrl?: string;
+        });
+        const photoReceipt = (job?.jobPhotos as Array<Record<string, unknown>> | undefined)
+          ?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
+
+        const fallbackRaw = jobReceipt.receiptViewUrl
+          || jobReceipt.receiptUrl
+          || (photoReceipt?.viewUrl as string | undefined)
+          || (photoReceipt?.url as string | undefined)
+          || null;
+        setReceiptViewUrl(toAbsoluteUrl(fallbackRaw));
+      } finally {
+        if (alive) setReceiptLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [job]);
 
   const displayVehicleType =
     vehicleTypeFromDb || job?.vehicle?.type || vehicleTypeFromCatalog || "-";
@@ -275,7 +335,7 @@ export default function JobDetailPage({
         </div>
 
         <div className="flex items-center gap-2">
-          {editing ? (
+          {canEditJob && editing ? (
             <>
               <button
                 onClick={cancelEdit}
@@ -292,14 +352,14 @@ export default function JobDetailPage({
                 {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
               </button>
             </>
-          ) : (
+          ) : canEditJob ? (
             <button
               onClick={startEdit}
               className="px-5 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               แก้ไขข้อมูล
             </button>
-          )}
+          ) : null}
 
           <button
             onClick={handleCheckStation}
@@ -334,9 +394,25 @@ export default function JobDetailPage({
                     <CarFront size={40} className="text-slate-800" />
                   )}
                   <div>
-                    <h1 className="text-lg font-bold text-slate-900">
-                      {job?.vehicle.brand}
-                    </h1>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-lg font-bold text-slate-900">
+                        {job?.vehicle.brand}
+                      </h1>
+                      {receiptLoading ? (
+                        <span className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+                          กำลังโหลดใบเสร็จ...
+                        </span>
+                      ) : receiptViewUrl ? (
+                        <a
+                          href={receiptViewUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                        >
+                          ใบเสร็จ
+                        </a>
+                      ) : null}
+                    </div>
                     <p className="text-slate-400 text-sm">
                       {job?.vehicle.model} {job?.vehicle.year} {displayVehicleType}
                     </p>

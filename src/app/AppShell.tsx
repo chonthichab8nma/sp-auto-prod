@@ -20,6 +20,7 @@ export default function AppShell() {
   const getMobileSectionTitleTH = (pathname: string) => {
     if (pathname === "/" || pathname.startsWith("/dashboard"))
       return "แดชบอร์ด";
+    if (pathname.startsWith("/reports")) return "รายงาน";
     if (pathname.startsWith("/stations")) return "สเตชัน";
     return ""; // หน้าอื่นไม่โชว์
   };

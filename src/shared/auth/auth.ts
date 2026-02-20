@@ -1,13 +1,28 @@
 const TOKEN_KEY = "accessToken";
 const USER_KEY = "authUser";
 
-export type UserRole = "staff" | "super_admin";
+export type UserRole = "staff" | "admin" | "superadmin";
 export type AuthUser = {
   id: number;
   name: string;
   username: string;
   role: UserRole;
 };
+
+export function normalizeUserRole(role: unknown): UserRole | null {
+  if (typeof role !== "string") return null;
+  const normalized = role.trim().toLowerCase().replace(/\s+/g, "_");
+  if (normalized === "super_admin" || normalized === "superadmin") {
+    return "superadmin";
+  }
+  if (normalized === "staff") {
+    return "staff";
+  }
+  if (normalized === "admin") {
+    return "admin";
+  }
+  return null;
+}
 
 export function getAccessToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -25,14 +40,20 @@ export function getAuthUser(): AuthUser | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as AuthUser;
+    const parsed = JSON.parse(raw) as Partial<AuthUser> & { role?: unknown };
+    const normalizedRole = normalizeUserRole(parsed?.role);
     if (
       typeof parsed?.id === "number" &&
       typeof parsed?.name === "string" &&
       typeof parsed?.username === "string" &&
-      (parsed?.role === "staff" || parsed?.role === "super_admin")
+      normalizedRole
     ) {
-      return parsed;
+      return {
+        id: parsed.id,
+        name: parsed.name,
+        username: parsed.username,
+        role: normalizedRole,
+      };
     }
     return null;
   } catch {
@@ -63,8 +84,8 @@ export function parseUserFromToken(token: string): AuthUser | null {
       username?: string;
       role?: string;
     };
-    const role = payload.role;
-    if (role !== "staff" && role !== "super_admin") return null;
+    const role = normalizeUserRole(payload.role);
+    if (!role) return null;
 
     const idNumber =
       typeof payload.sub === "number"
