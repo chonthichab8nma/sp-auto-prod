@@ -51,6 +51,33 @@ export type CreateVehicleBrandInput = {
   logoUrl: string;
 };
 
+export type VehicleTypeItem = {
+  id: number;
+  code: string;
+  name: string;
+  nameEn?: string | null;
+};
+
+export type CreateVehicleTypeInput = {
+  code: string;
+  name: string;
+  nameEn: string;
+};
+
+export type VehicleModelItem = {
+  id: number;
+  name: string;
+  brandId?: number;
+  typeId?: number | null;
+  type?: VehicleTypeItem | null;
+};
+
+export type CreateVehicleModelInput = {
+  brandId: number;
+  name: string;
+  typeId?: number | null;
+};
+
 type WrappedListResponse<T> = {
   data?: T[];
 };
@@ -114,5 +141,35 @@ export const superadminService = {
 
   async deleteVehicleBrand(id: number): Promise<void> {
     await http.delete(`/private/vehicles/brands/${id}`);
+  },
+
+  async listVehicleTypes(): Promise<VehicleTypeItem[]> {
+    const { data } = await http.get<VehicleTypeItem[]>("/private/vehicles/types");
+    return data ?? [];
+  },
+
+  async createVehicleType(payload: CreateVehicleTypeInput): Promise<VehicleTypeItem> {
+    const { data } = await http.post<VehicleTypeItem>("/private/vehicles/types", payload);
+    return data;
+  },
+
+  async deleteVehicleType(id: number): Promise<void> {
+    await http.delete(`/private/vehicles/types/${id}`);
+  },
+
+  async listVehicleModelsByBrand(brandId: number): Promise<VehicleModelItem[]> {
+    const { data } = await http.get<VehicleBrandItem & { models?: VehicleModelItem[] }>(
+      `/private/vehicles/brands/${brandId}`,
+    );
+    return data?.models ?? [];
+  },
+
+  async createVehicleModel(payload: CreateVehicleModelInput): Promise<VehicleModelItem> {
+    const { data } = await http.post<VehicleModelItem>("/private/vehicles/models", payload);
+    return data;
+  },
+
+  async deleteVehicleModel(id: number): Promise<void> {
+    await http.delete(`/private/vehicles/models/${id}`);
   },
 };

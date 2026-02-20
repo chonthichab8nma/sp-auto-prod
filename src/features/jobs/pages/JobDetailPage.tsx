@@ -138,7 +138,7 @@ export default function JobDetailPage({
 
   const handleBack = () => navigate(-1);
   const handleCheckStation = () => navigate(`/stations/${job?.id}`);
-  const canEditJob = role === "superadmin";
+  const canEditJob = role === "superadmin" || role === "admin";
   const canEditVehicleDetails = false;
 
   const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
