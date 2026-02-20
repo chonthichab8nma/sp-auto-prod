@@ -286,7 +286,7 @@ export function useCreateJobForm() {
         paymentType: next,
         ...(next === "Insurance"
           ? {}
-          : { insuranceCompanyId: null, insuranceCompany: "" }),
+          : { insuranceCompanyId: null, insuranceCompany: "", claimAmount: 0 }),
       }));
       return;
     }
@@ -321,6 +321,8 @@ export function useCreateJobForm() {
       paymentType: formData.paymentType,
       repairDescription: formData.repairDescription?.trim() || "",
       excessFee: formData.excessFee,
+      claimAmount:
+        formData.paymentType === "Insurance" ? Number(formData.claimAmount) || 0 : 0,
       notes: formData.notes?.trim() ? formData.notes.trim() : null,
       // Backend currently rejects null for startDate, so default to "now" when left blank.
       startDate: formData.startDate

@@ -278,6 +278,7 @@ export default function JobDetailPage({
     const matched = insuranceOptions.find((o) => o.startsWith(`${selectedId}::`));
     return matched ? matched.split("::").slice(1).join("::") : job?.insuranceCompany?.name ?? "-";
   })();
+  const displayClaimAmount = `฿ ${Number(savedPreview?.claimAmount ?? job?.claimAmount ?? 0).toLocaleString("th-TH")}`;
 
   if (!job || !form) {
     return (
@@ -649,6 +650,10 @@ export default function JobDetailPage({
                 label="ชื่อบริษัทประกันภัย"
                 value={displayInsuranceCompanyName}
               />
+              <StackItem
+                label="จำนวนเงินประกัน"
+                value={displayPaymentType === "ประกันภัย (เคลม)" ? displayClaimAmount : "-"}
+              />
             </div>
           ) : (
             <div className="space-y-4">
@@ -713,15 +718,25 @@ export default function JobDetailPage({
               </div>
 
               {form.paymentType === "Insurance" ? (
-                <FormSelect
-                  label={<LabelWithStar text="บริษัทประกันภัย" />}
-                  name="insuranceCompanyId"
-                  value={selectedInsuranceOption}
-                  options={insuranceOptions}
-                  placeholder="เลือกบริษัทประกัน"
-                  onChange={handleInputChange}
-                  error={errors.insuranceCompanyId}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormSelect
+                    label={<LabelWithStar text="บริษัทประกันภัย" />}
+                    name="insuranceCompanyId"
+                    value={selectedInsuranceOption}
+                    options={insuranceOptions}
+                    placeholder="เลือกบริษัทประกัน"
+                    onChange={handleInputChange}
+                    error={errors.insuranceCompanyId}
+                  />
+                  <FormInput
+                    label={<LabelWithStar text="จำนวนเงินประกัน" />}
+                    name="claimAmount"
+                    type="number"
+                    value={String(form.claimAmount)}
+                    onChange={handleInputChange}
+                    error={errors.claimAmount}
+                  />
+                </div>
               ) : null}
             </div>
           )}

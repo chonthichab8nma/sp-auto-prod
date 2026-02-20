@@ -29,6 +29,7 @@ export interface JobFormData {
   startDate: string;
   estimatedEndDate: string;
   excessFee: number;
+  claimAmount: number;
   receiver: string;
   receiverId: number | null;
   paymentType: PaymentType;

@@ -21,6 +21,7 @@ export type JobDetailEditForm = {
   customerAddress: string;
   paymentType: "Insurance" | "Cash";
   insuranceCompanyId: number | null;
+  claimAmount: number;
 };
 
 function toYmd(isoLike: string | null | undefined): string {
@@ -62,6 +63,7 @@ export function mapJobToDetailEditForm(job: JobApi): JobDetailEditForm {
     customerAddress: job.customer?.address || "",
     paymentType: job.paymentType === "Insurance" ? "Insurance" : "Cash",
     insuranceCompanyId: job.insuranceCompanyId ?? null,
+    claimAmount: Number(job.claimAmount || 0),
   };
 }
 
@@ -72,6 +74,7 @@ export function buildJobUpdatePayload(job: JobApi, form: JobDetailEditForm) {
     paymentType: form.paymentType,
     insuranceCompanyId:
       form.paymentType === "Insurance" ? form.insuranceCompanyId : null,
+    claimAmount: form.paymentType === "Insurance" ? Number(form.claimAmount) || 0 : 0,
     repairDescription: form.repairDescription.trim(),
     excessFee: Number(form.excessFee) || 0,
     notes: form.notes.trim() ? form.notes.trim() : null,
@@ -127,6 +130,12 @@ export function validateJobDetailEdit(form: JobDetailEditForm) {
 
   if (form.paymentType === "Insurance" && !form.insuranceCompanyId) {
     errors.insuranceCompanyId = "กรุณาเลือกบริษัทประกัน";
+  }
+  if (
+    form.paymentType === "Insurance" &&
+    (!Number.isFinite(form.claimAmount) || Number(form.claimAmount) <= 0)
+  ) {
+    errors.claimAmount = "กรุณากรอกจำนวนเงินประกัน";
   }
 
   return {

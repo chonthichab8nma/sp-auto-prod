@@ -1,5 +1,5 @@
 export function parseFieldValue(name: string, value: string) {
-  if (name === "excessFee") return value === "" ? 0 : Number(value);
+  if (name === "excessFee" || name === "claimAmount") return value === "" ? 0 : Number(value);
   return value;
 }
 

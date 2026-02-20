@@ -393,22 +393,33 @@ export default function CreateJobForm() {
 
             {insuranceRequired && (
               <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                <FormSelect
-                  label={<LabelWithStar text="บริษัทประกันภัย" />}
-                  name="insuranceCompanyId"
-                  value={
-                    formData.insuranceCompanyId
-                      ? `${formData.insuranceCompanyId}::${formData.insuranceCompany || ""}`
-                      : ""
-                  }
-                  options={insuranceOptions}
-                  placeholder={
-                    isLoadingInsurances ? "กำลังโหลด..." : "เลือกบริษัทประกัน"
-                  }
-                  disabled={isLoadingInsurances}
-                  onChange={handleChange}
-                  error={errors.insuranceCompanyId}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormSelect
+                    label={<LabelWithStar text="บริษัทประกันภัย" />}
+                    name="insuranceCompanyId"
+                    value={
+                      formData.insuranceCompanyId
+                        ? `${formData.insuranceCompanyId}::${formData.insuranceCompany || ""}`
+                        : ""
+                    }
+                    options={insuranceOptions}
+                    placeholder={
+                      isLoadingInsurances ? "กำลังโหลด..." : "เลือกบริษัทประกัน"
+                    }
+                    disabled={isLoadingInsurances}
+                    onChange={handleChange}
+                    error={errors.insuranceCompanyId}
+                  />
+                  <FormInput
+                    label={<LabelWithStar text="จำนวนเงินประกัน" />}
+                    name="claimAmount"
+                    value={formData.claimAmount}
+                    onChange={handleChange}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    error={errors.claimAmount}
+                  />
+                </div>
               </div>
             )}
           </div>

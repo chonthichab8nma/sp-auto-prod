@@ -161,12 +161,17 @@ export function useJobDetailEditForm(
       onChangeField("paymentType", next);
       if (next === "Cash") {
         onChangeField("insuranceCompanyId", null);
+        onChangeField("claimAmount", 0);
       }
       return;
     }
 
     if (name === "excessFee") {
       onChangeField("excessFee", value === "" ? 0 : Number(value));
+      return;
+    }
+    if (name === "claimAmount") {
+      onChangeField("claimAmount", value === "" ? 0 : Number(value));
       return;
     }
 

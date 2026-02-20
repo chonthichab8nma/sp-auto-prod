@@ -42,6 +42,7 @@ export type CreateJobPayloadBase = {
   paymentType: string;
   repairDescription?: string;
   excessFee: number;
+  claimAmount: number;
   notes?: string | null;
   
 };
@@ -72,6 +73,7 @@ export const getDefaultCreateJobFormData = (): JobFormData => ({
   receiver: "",
   receiverId: null,
   excessFee: 0,
+  claimAmount: 0,
   paymentType: "Insurance",
   repairDescription: "",
   notes: "",
@@ -149,6 +151,8 @@ export function normalizeCreateJobPayload(
     paymentType: form.paymentType,
     repairDescription,
     excessFee: Number(form.excessFee) || 0,
+    claimAmount:
+      form.paymentType === "Insurance" ? Number(form.claimAmount) || 0 : 0,
     notes: notes ?? null,
     startDate: form.startDate
       ? toIsoDateTime(form.startDate)
@@ -268,6 +272,15 @@ export function validateCreateJob(
     errors.push({
       field: "insuranceCompanyId",
       message: "กรุณาเลือกบริษัทประกันภัย",
+    });
+  }
+  if (
+    form.paymentType === "Insurance" &&
+    (!Number.isFinite(Number(form.claimAmount)) || Number(form.claimAmount) <= 0)
+  ) {
+    errors.push({
+      field: "claimAmount",
+      message: "กรุณากรอกจำนวนเงินประกัน",
     });
   }
 

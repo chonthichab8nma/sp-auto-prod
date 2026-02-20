@@ -127,6 +127,7 @@ export type JobApi = {
   insuranceCompanyId: number | null;
   paymentType: string;
   excessFee: number;
+  claimAmount?: number;
   startDate: string | null;
   estimatedEndDate: string | null;
   actualEndDate: string | null;
