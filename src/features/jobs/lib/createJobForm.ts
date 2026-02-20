@@ -15,6 +15,6 @@ export function buildYearOptions() {
 }
 
 export function parseInsuranceOption(v: string) {
-  const [idStr, ...rest] = v.split("::");
-  return { id: Number(idStr), name: rest.join("::") };
+  const [idStr, ...rest] = v.split(".");
+  return { id: Number(idStr), name: rest.join(".") };
 }

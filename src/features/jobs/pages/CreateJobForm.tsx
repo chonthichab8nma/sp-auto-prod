@@ -399,7 +399,7 @@ export default function CreateJobForm() {
                     name="insuranceCompanyId"
                     value={
                       formData.insuranceCompanyId
-                        ? `${formData.insuranceCompanyId}::${formData.insuranceCompany || ""}`
+                        ? `${formData.insuranceCompanyId}.${formData.insuranceCompany || ""}`
                         : ""
                     }
                     options={insuranceOptions}

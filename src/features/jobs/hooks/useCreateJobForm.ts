@@ -62,7 +62,7 @@ export function useCreateJobForm() {
     [brands],
   );
   const insuranceOptions = useMemo(() => {
-    return insurances.map((i) => `${i.id}::${i.name}`);
+    return insurances.map((i) => `${i.id}.${i.name}`);
   }, [insurances]);
 
   const selectedBrand = useMemo(

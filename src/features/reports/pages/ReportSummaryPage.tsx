@@ -165,7 +165,7 @@ export default function ReportSummaryPage() {
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12 ">
         <div className="lg:col-span-8">
           <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
             <h2 className="text-lg font-semibold text-slate-900">สรุปรายได้</h2>
@@ -215,7 +215,7 @@ export default function ReportSummaryPage() {
         </div>
 
         <div className="lg:col-span-4">
-          <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:h-[29rem]">
+          <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:h-[20.3rem] h-[20.3rem]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Top บริษัทลูกค้า</h2>

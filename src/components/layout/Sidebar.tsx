@@ -5,6 +5,7 @@ import {
   RadioTower,
   LogOut,
   ChartColumn,
+  ShieldUser,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalPortal from "../../shared/components/ui/ModalPortal";
@@ -135,6 +136,25 @@ export default function Sidebar({
             >
               <ChartColumn size={18} />
               {!isCollapsed && <span className="whitespace-nowrap">รายงาน</span>}
+            </Link>
+          )}
+
+          {role === "superadmin" && (
+            <Link
+              to="/superadmin/manage"
+              onClick={handleNavigate}
+              className={[
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                isCollapsed ? "justify-center" : "",
+                activePath.startsWith("/superadmin/manage")
+                  ? "text-blue-600 bg-blue-50 font-medium"
+                  : "text-gray-600 hover:bg-gray-50",
+              ].join(" ")}
+            >
+              <ShieldUser size={18} />
+              {!isCollapsed && (
+                <span className="whitespace-nowrap">จัดการข้อมูล</span>
+              )}
             </Link>
           )}
 

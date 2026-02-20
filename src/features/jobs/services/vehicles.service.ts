@@ -141,7 +141,9 @@ export const vehiclesService = {
   }> {
     const { data } = await http.get<{
       data: InsuranceCompanyApi[];
-    }>("/private/insurances");
+    }>("/private/insurances",{
+      params: { page: 1, limit: 100 },
+    });
     return data ?? { data: [] };
   },
 };
@@ -149,6 +151,7 @@ export const insurancesService = {
   listInsurances: async (): Promise<InsuranceCompanyApi[]> => {
     const res = await http.get<{ data: InsuranceCompanyApi[] }>(
       "/private/insurances",
+      { params: { page: 1, limit: 100 } },
     );
     return res.data?.data ?? [];
   },

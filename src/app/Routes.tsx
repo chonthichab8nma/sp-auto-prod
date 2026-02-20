@@ -18,6 +18,7 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import { useJobQuery } from "../features/jobs/hooks/useJobQuery";
 import JobDetailSkeleton from "../components/layout/JobSkeleton";
 import ReportSummaryPage from "../features/reports/pages/ReportSummaryPage";
+import SuperAdminManagePage from "../features/superadmin/pages/SuperAdminManagePage";
 
 function JobDetailWrapper() {
   const { jobId } = useParams();
@@ -117,6 +118,11 @@ export default function AppRoutes() {
           <Route path="/reports/summary" element={<ReportSummaryPage />} />
           <Route path="/create" element={<CreateJobForm />} />
           <Route path="/job/:jobId" element={<JobDetailWrapper />} />
+        </Route>
+      </Route>
+      <Route element={<RequireAuth allowedRoles={["superadmin"]} />}>
+        <Route element={<AppShell />}>
+          <Route path="/superadmin/manage" element={<SuperAdminManagePage />} />
         </Route>
       </Route>
 
