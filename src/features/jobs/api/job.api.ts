@@ -128,6 +128,9 @@ export type JobApi = {
   paymentType: string;
   excessFee: number;
   claimAmount?: number;
+  approvedAmount?: number;
+  disbursedAmount?: number;
+  disbursementDate?: string | null;
   startDate: string | null;
   estimatedEndDate: string | null;
   actualEndDate: string | null;

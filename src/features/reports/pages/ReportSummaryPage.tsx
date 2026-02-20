@@ -206,6 +206,11 @@ export default function ReportSummaryPage() {
                 tone="amber"
               />
             </div>
+            {insuranceRevenue > 0 && disbursedAmount === 0 && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                ยังไม่มียอด "ได้รับเงินแล้ว" จากระบบการเงิน แม้มีรายได้ประกัน
+              </div>
+            )}
           </section>
         </div>
 

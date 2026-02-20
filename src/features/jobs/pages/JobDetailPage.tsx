@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import type { JobApi } from "../api/job.api";
-import { formatThaiDate } from "../../../shared/lib/date";
+import { formatThaiDate, formatThaiDateTime } from "../../../shared/lib/date";
 import {
   vehiclesService,
   type VehicleBrandApi,
@@ -279,6 +279,19 @@ export default function JobDetailPage({
     return matched ? matched.split("::").slice(1).join("::") : job?.insuranceCompany?.name ?? "-";
   })();
   const displayClaimAmount = `฿ ${Number(savedPreview?.claimAmount ?? job?.claimAmount ?? 0).toLocaleString("th-TH")}`;
+  const approvedAmount = Number(job?.approvedAmount ?? 0);
+  const disbursedAmount = Number(job?.disbursedAmount ?? 0);
+  const paymentStatus =
+    displayPaymentType !== "ประกันภัย (เคลม)"
+      ? "งานเงินสด (ไม่คิดยอดรับเงินประกัน)"
+      : disbursedAmount > 0
+        ? `ได้รับเงินแล้ว ฿ ${disbursedAmount.toLocaleString("th-TH")}`
+        : approvedAmount > 0
+          ? `อนุมัติแล้ว ฿ ${approvedAmount.toLocaleString("th-TH")} (รอรับเงินจริง)`
+          : "กำลังดำเนินการ";
+  const disbursementDateText = job?.disbursementDate
+    ? formatThaiDateTime(job.disbursementDate)
+    : "-";
 
   if (!job || !form) {
     return (
@@ -653,6 +666,14 @@ export default function JobDetailPage({
               <StackItem
                 label="จำนวนเงินประกัน"
                 value={displayPaymentType === "ประกันภัย (เคลม)" ? displayClaimAmount : "-"}
+              />
+              <StackItem
+                label="สถานะรับเงินประกัน"
+                value={paymentStatus}
+              />
+              <StackItem
+                label="วันที่รับเงิน"
+                value={displayPaymentType === "ประกันภัย (เคลม)" ? disbursementDateText : "-"}
               />
             </div>
           ) : (
