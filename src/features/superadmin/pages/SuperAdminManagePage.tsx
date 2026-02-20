@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSearchParams } from "react-router-dom";
 import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
+import Skeleton from "../../../shared/components/ui/Skeleton";
 import {
   superadminService,
   type CreateEmployeeInput,
@@ -52,17 +54,24 @@ const defaultBrandForm: CreateVehicleBrandInput = {
 function SectionWrapper({
   title,
   description,
+  headerAction,
   children,
 }: {
   title: string;
   description: string;
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
+        </div>
+        {description ? (
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        ) : null}
       </div>
       {children}
     </section>
@@ -96,14 +105,64 @@ function TextInput({
   );
 }
 
+function EmployeeSectionSkeleton() {
+  return (
+    <SectionWrapper
+      title="จัดการพนักงาน"
+      description="กำหนด role ได้เฉพาะ admin และ staff พร้อมเพิ่ม/ลบ"
+    >
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={`employee-input-skeleton-${index}`} className="space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        ))}
+        <div className="md:col-span-2 xl:col-span-5 flex justify-end">
+          <Skeleton className="h-10 w-32 rounded-lg" />
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
+        <div className="grid min-w-[720px] grid-cols-5 gap-3 bg-slate-50 px-3 py-3">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-20" />
+          <div className="flex justify-end">
+            <Skeleton className="h-4 w-16" />
+          </div>
+        </div>
+        <div className="space-y-0">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={`employee-row-skeleton-${index}`}
+              className="grid min-w-[720px] grid-cols-5 gap-3 border-t border-slate-200 px-3 py-3"
+            >
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-36" />
+              <div className="flex justify-end">
+                <Skeleton className="h-8 w-16 rounded-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SectionWrapper>
+  );
+}
+
 export default function SuperAdminManagePage() {
-  const [activeTab, setActiveTab] = useState<ManageTab>("employees");
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
 
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [employeeForm, setEmployeeForm] = useState<CreateEmployeeInput>(
     defaultEmployeeForm,
   );
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [creatingEmployee, setCreatingEmployee] = useState(false);
   const [deletingEmployeeId, setDeletingEmployeeId] = useState<number | null>(
     null,
@@ -112,6 +171,7 @@ export default function SuperAdminManagePage() {
   const [insurances, setInsurances] = useState<InsuranceCompanyItem[]>([]);
   const [insuranceForm, setInsuranceForm] =
     useState<CreateInsuranceCompanyInput>(defaultInsuranceForm);
+  const [showInsuranceForm, setShowInsuranceForm] = useState(false);
   const [creatingInsurance, setCreatingInsurance] = useState(false);
   const [deletingInsuranceId, setDeletingInsuranceId] = useState<number | null>(
     null,
@@ -120,8 +180,15 @@ export default function SuperAdminManagePage() {
   const [brands, setBrands] = useState<VehicleBrandItem[]>([]);
   const [brandForm, setBrandForm] =
     useState<CreateVehicleBrandInput>(defaultBrandForm);
+  const [showBrandForm, setShowBrandForm] = useState(false);
   const [creatingBrand, setCreatingBrand] = useState(false);
   const [deletingBrandId, setDeletingBrandId] = useState<number | null>(null);
+
+  const activeTabParam = searchParams.get("tab");
+  const activeTab: ManageTab =
+    activeTabParam === "insurances" || activeTabParam === "brands"
+      ? activeTabParam
+      : "employees";
 
   const activeLabel = useMemo(
     () => tabItems.find((tab) => tab.id === activeTab)?.label ?? "",
@@ -178,6 +245,7 @@ export default function SuperAdminManagePage() {
       const created = await superadminService.createEmployee(payload);
       setEmployees((prev) => [created, ...prev]);
       setEmployeeForm(defaultEmployeeForm);
+      setShowEmployeeForm(false);
       toast.success("เพิ่มพนักงานสำเร็จ");
     } catch (e) {
       toast.error(toThaiErrorMessage(e, "เพิ่มพนักงานไม่สำเร็จ"));
@@ -223,6 +291,7 @@ export default function SuperAdminManagePage() {
       const created = await superadminService.createInsurance(payload);
       setInsurances((prev) => [created, ...prev]);
       setInsuranceForm(defaultInsuranceForm);
+      setShowInsuranceForm(false);
       toast.success("เพิ่มบริษัทประกันภัยสำเร็จ");
     } catch (e) {
       toast.error(toThaiErrorMessage(e, "เพิ่มบริษัทประกันภัยไม่สำเร็จ"));
@@ -269,6 +338,7 @@ export default function SuperAdminManagePage() {
       const created = await superadminService.createVehicleBrand(payload);
       setBrands((prev) => [created, ...prev]);
       setBrandForm(defaultBrandForm);
+      setShowBrandForm(false);
       toast.success("เพิ่มยี่ห้อรถสำเร็จ");
     } catch (e) {
       toast.error(toThaiErrorMessage(e, "เพิ่มยี่ห้อรถไม่สำเร็จ"));
@@ -297,32 +367,11 @@ export default function SuperAdminManagePage() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
       <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
         <h1 className="text-2xl font-semibold text-slate-900">จัดการข้อมูลระบบ</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          สำหรับ superadmin: เพิ่ม/ลบพนักงาน, บริษัทประกันภัย และยี่ห้อรถ
-        </p>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="flex flex-wrap gap-2">
-          {tabItems.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={[
-                "rounded-lg px-4 py-2 text-sm font-medium transition",
-                activeTab === tab.id
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-              ].join(" ")}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      {loading && activeTab === "employees" ? <EmployeeSectionSkeleton /> : null}
 
-      {loading ? (
+      {loading && activeTab !== "employees" ? (
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -334,78 +383,103 @@ export default function SuperAdminManagePage() {
       {!loading && activeTab === "employees" ? (
         <SectionWrapper
           title="จัดการพนักงาน"
-          description="กำหนด role ได้เฉพาะ admin และ staff พร้อมเพิ่ม/ลบ"
-        >
-          <form
-            onSubmit={handleCreateEmployee}
-            className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5"
-          >
-            <TextInput
-              label="ชื่อ"
-              value={employeeForm.name}
-              onChange={(next) =>
-                setEmployeeForm((prev) => ({ ...prev, name: next }))
-              }
-              placeholder="Jane Doe"
-            />
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-800">Role</label>
-              <select
-                value={employeeForm.role}
-                onChange={(e) =>
-                  setEmployeeForm((prev) => ({
-                    ...prev,
-                    role: e.target.value as EmployeeRole,
-                  }))
-                }
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-blue-600"
-              >
-                <option value="staff">staff</option>
-                <option value="admin">admin</option>
-              </select>
-            </div>
-            <TextInput
-              label="เบอร์โทร"
-              value={employeeForm.phone}
-              onChange={(next) =>
-                setEmployeeForm((prev) => ({
-                  ...prev,
-                  phone: next.replace(/\D/g, "").slice(0, 10),
-                }))
-              }
-              placeholder="0811112222"
-            />
-            <TextInput
-              label="Username"
-              value={employeeForm.username}
-              onChange={(next) =>
-                setEmployeeForm((prev) => ({ ...prev, username: next }))
-              }
-              placeholder="janedoe"
-            />
-            <TextInput
-              label="Password"
-              value={employeeForm.password}
-              onChange={(next) =>
-                setEmployeeForm((prev) => ({ ...prev, password: next }))
-              }
-              placeholder="secret"
-              type="password"
-            />
-
-            <div className="md:col-span-2 xl:col-span-5 flex justify-end">
+          description=""
+          headerAction={
+            !showEmployeeForm ? (
               <button
-                type="submit"
-                disabled={creatingEmployee}
+                type="button"
+                onClick={() => setShowEmployeeForm(true)}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {creatingEmployee ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
                 เพิ่มพนักงาน
               </button>
-            </div>
-          </form>
+            ) : null
+          }
+        >
+          {showEmployeeForm ? (
+            <form
+              onSubmit={handleCreateEmployee}
+              className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5"
+            >
+              <TextInput
+                label="ชื่อ"
+                value={employeeForm.name}
+                onChange={(next) =>
+                  setEmployeeForm((prev) => ({ ...prev, name: next }))
+                }
+                placeholder="Jane Doe"
+              />
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-800">Role</label>
+                <select
+                  value={employeeForm.role}
+                  onChange={(e) =>
+                    setEmployeeForm((prev) => ({
+                      ...prev,
+                      role: e.target.value as EmployeeRole,
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-blue-600"
+                >
+                  <option value="staff">staff</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+              <TextInput
+                label="เบอร์โทร"
+                value={employeeForm.phone}
+                onChange={(next) =>
+                  setEmployeeForm((prev) => ({
+                    ...prev,
+                    phone: next.replace(/\D/g, "").slice(0, 10),
+                  }))
+                }
+                placeholder="0811112222"
+              />
+              <TextInput
+                label="Username"
+                value={employeeForm.username}
+                onChange={(next) =>
+                  setEmployeeForm((prev) => ({ ...prev, username: next }))
+                }
+                placeholder="janedoe"
+              />
+              <TextInput
+                label="Password"
+                value={employeeForm.password}
+                onChange={(next) =>
+                  setEmployeeForm((prev) => ({ ...prev, password: next }))
+                }
+                placeholder="secret"
+                type="password"
+              />
+
+              <div className="md:col-span-2 xl:col-span-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (creatingEmployee) return;
+                    setEmployeeForm(defaultEmployeeForm);
+                    setShowEmployeeForm(false);
+                  }}
+                  disabled={creatingEmployee}
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingEmployee}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {creatingEmployee ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null}
+                  บันทึกพนักงาน
+                </button>
+              </div>
+            </form>
+          ) : null}
 
           <div className="mt-5 overflow-x-auto">
             <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">
@@ -462,67 +536,92 @@ export default function SuperAdminManagePage() {
       {!loading && activeTab === "insurances" ? (
         <SectionWrapper
           title="จัดการบริษัทประกันภัย"
-          description="เพิ่ม/ลบบริษัทประกันภัย พร้อมสถานะเปิดใช้งาน"
-        >
-          <form
-            onSubmit={handleCreateInsurance}
-            className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <TextInput
-              label="ชื่อบริษัท"
-              value={insuranceForm.name}
-              onChange={(next) =>
-                setInsuranceForm((prev) => ({ ...prev, name: next }))
-              }
-              placeholder="ชื่อบริษัท"
-            />
-            <TextInput
-              label="เบอร์ติดต่อ"
-              value={insuranceForm.contactPhone}
-              onChange={(next) =>
-                setInsuranceForm((prev) => ({ ...prev, contactPhone: next }))
-              }
-              placeholder="02xxxxxxx"
-            />
-            <TextInput
-              label="Logo URL"
-              value={insuranceForm.logoUrl}
-              onChange={(next) =>
-                setInsuranceForm((prev) => ({ ...prev, logoUrl: next }))
-              }
-              placeholder="https://..."
-            />
-            <div className="flex items-center gap-2 pt-8">
-              <input
-                id="insurance-active"
-                type="checkbox"
-                checked={insuranceForm.isActive}
-                onChange={(e) =>
-                  setInsuranceForm((prev) => ({
-                    ...prev,
-                    isActive: e.target.checked,
-                  }))
-                }
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              <label htmlFor="insurance-active" className="text-sm text-slate-700">
-                เปิดใช้งาน
-              </label>
-            </div>
-
-            <div className="md:col-span-2 xl:col-span-4 flex justify-end">
+          description=""
+          headerAction={
+            !showInsuranceForm ? (
               <button
-                type="submit"
-                disabled={creatingInsurance}
+                type="button"
+                onClick={() => setShowInsuranceForm(true)}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {creatingInsurance ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
                 เพิ่มบริษัทประกันภัย
               </button>
-            </div>
-          </form>
+            ) : null
+          }
+        >
+          {showInsuranceForm ? (
+            <form
+              onSubmit={handleCreateInsurance}
+              className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4"
+            >
+              <TextInput
+                label="ชื่อบริษัท"
+                value={insuranceForm.name}
+                onChange={(next) =>
+                  setInsuranceForm((prev) => ({ ...prev, name: next }))
+                }
+                placeholder="ชื่อบริษัท"
+              />
+              <TextInput
+                label="เบอร์ติดต่อ"
+                value={insuranceForm.contactPhone}
+                onChange={(next) =>
+                  setInsuranceForm((prev) => ({ ...prev, contactPhone: next }))
+                }
+                placeholder="02xxxxxxx"
+              />
+              <TextInput
+                label="Logo URL"
+                value={insuranceForm.logoUrl}
+                onChange={(next) =>
+                  setInsuranceForm((prev) => ({ ...prev, logoUrl: next }))
+                }
+                placeholder="https://..."
+              />
+              <div className="flex items-center gap-2 pt-8">
+                <input
+                  id="insurance-active"
+                  type="checkbox"
+                  checked={insuranceForm.isActive}
+                  onChange={(e) =>
+                    setInsuranceForm((prev) => ({
+                      ...prev,
+                      isActive: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <label htmlFor="insurance-active" className="text-sm text-slate-700">
+                  เปิดใช้งาน
+                </label>
+              </div>
+
+              <div className="md:col-span-2 xl:col-span-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (creatingInsurance) return;
+                    setInsuranceForm(defaultInsuranceForm);
+                    setShowInsuranceForm(false);
+                  }}
+                  disabled={creatingInsurance}
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingInsurance}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {creatingInsurance ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null}
+                  บันทึกบริษัทประกันภัย
+                </button>
+              </div>
+            </form>
+          ) : null}
 
           <div className="mt-5 overflow-x-auto">
             <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">
@@ -575,64 +674,89 @@ export default function SuperAdminManagePage() {
       {!loading && activeTab === "brands" ? (
         <SectionWrapper
           title="จัดการยี่ห้อรถ"
-          description="เพิ่ม/ลบข้อมูลยี่ห้อรถสำหรับใช้งานในระบบ"
-        >
-          <form
-            onSubmit={handleCreateBrand}
-            className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5"
-          >
-            <TextInput
-              label="Code"
-              value={brandForm.code}
-              onChange={(next) =>
-                setBrandForm((prev) => ({ ...prev, code: next }))
-              }
-              placeholder="toyota"
-            />
-            <TextInput
-              label="ชื่อ"
-              value={brandForm.name}
-              onChange={(next) =>
-                setBrandForm((prev) => ({ ...prev, name: next }))
-              }
-              placeholder="โตโยต้า"
-            />
-            <TextInput
-              label="Name EN"
-              value={brandForm.nameEn}
-              onChange={(next) =>
-                setBrandForm((prev) => ({ ...prev, nameEn: next }))
-              }
-              placeholder="Toyota"
-            />
-            <TextInput
-              label="ประเทศ"
-              value={brandForm.country}
-              onChange={(next) =>
-                setBrandForm((prev) => ({ ...prev, country: next }))
-              }
-              placeholder="ญี่ปุ่น"
-            />
-            <TextInput
-              label="Logo URL"
-              value={brandForm.logoUrl}
-              onChange={(next) =>
-                setBrandForm((prev) => ({ ...prev, logoUrl: next }))
-              }
-              placeholder="https://..."
-            />
-
-            <div className="md:col-span-2 xl:col-span-5 flex justify-end">
+          description=""
+          headerAction={
+            !showBrandForm ? (
               <button
-                type="submit"
-                disabled={creatingBrand}
+                type="button"
+                onClick={() => setShowBrandForm(true)}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {creatingBrand ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 เพิ่มยี่ห้อรถ
               </button>
-            </div>
-          </form>
+            ) : null
+          }
+        >
+          {showBrandForm ? (
+            <form
+              onSubmit={handleCreateBrand}
+              className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5"
+            >
+              <TextInput
+                label="Code"
+                value={brandForm.code}
+                onChange={(next) =>
+                  setBrandForm((prev) => ({ ...prev, code: next }))
+                }
+                placeholder="toyota"
+              />
+              <TextInput
+                label="ชื่อ"
+                value={brandForm.name}
+                onChange={(next) =>
+                  setBrandForm((prev) => ({ ...prev, name: next }))
+                }
+                placeholder="โตโยต้า"
+              />
+              <TextInput
+                label="Name EN"
+                value={brandForm.nameEn}
+                onChange={(next) =>
+                  setBrandForm((prev) => ({ ...prev, nameEn: next }))
+                }
+                placeholder="Toyota"
+              />
+              <TextInput
+                label="ประเทศ"
+                value={brandForm.country}
+                onChange={(next) =>
+                  setBrandForm((prev) => ({ ...prev, country: next }))
+                }
+                placeholder="ญี่ปุ่น"
+              />
+              <TextInput
+                label="Logo URL"
+                value={brandForm.logoUrl}
+                onChange={(next) =>
+                  setBrandForm((prev) => ({ ...prev, logoUrl: next }))
+                }
+                placeholder="https://..."
+              />
+
+              <div className="md:col-span-2 xl:col-span-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (creatingBrand) return;
+                    setBrandForm(defaultBrandForm);
+                    setShowBrandForm(false);
+                  }}
+                  disabled={creatingBrand}
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingBrand}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {creatingBrand ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  บันทึกยี่ห้อรถ
+                </button>
+              </div>
+            </form>
+          ) : null}
 
           <div className="mt-5 overflow-x-auto">
             <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">

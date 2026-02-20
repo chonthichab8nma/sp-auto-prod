@@ -36,6 +36,7 @@ export default function AppShell() {
           onToggle={() => setIsCollapsed(!isCollapsed)}
           onLogout={handleLogout}
           activePath={location.pathname}
+          activeSearch={location.search}
           role={role}
           onNavigate={() => setMobileOpen(false)}
         />
@@ -56,6 +57,7 @@ export default function AppShell() {
               onToggle={() => {}}
               onLogout={handleLogout}
               activePath={location.pathname}
+              activeSearch={location.search}
               role={role}
               onNavigate={() => setMobileOpen(false)}
             />

@@ -14,6 +14,7 @@ import type { UserRole } from "../../shared/auth/auth";
 interface SidebarProps {
   onLogout: () => void;
   activePath: string;
+  activeSearch: string;
   isCollapsed: boolean;
   role: UserRole | null;
   onToggle: () => void;
@@ -22,6 +23,7 @@ interface SidebarProps {
 
 export default function Sidebar({
   activePath,
+  activeSearch,
   isCollapsed,
   role,
   onToggle,
@@ -55,6 +57,11 @@ export default function Sidebar({
     onNavigate?.();
   };
   const canAccessDashboard = role === "superadmin" || role === "admin";
+  const manageTabParam = new URLSearchParams(activeSearch).get("tab");
+  const activeManageTab =
+    manageTabParam === "insurances" || manageTabParam === "brands"
+      ? manageTabParam
+      : "employees";
 
   return (
     <>
@@ -139,25 +146,6 @@ export default function Sidebar({
             </Link>
           )}
 
-          {role === "superadmin" && (
-            <Link
-              to="/superadmin/manage"
-              onClick={handleNavigate}
-              className={[
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                isCollapsed ? "justify-center" : "",
-                activePath.startsWith("/superadmin/manage")
-                  ? "text-blue-600 bg-blue-50 font-medium"
-                  : "text-gray-600 hover:bg-gray-50",
-              ].join(" ")}
-            >
-              <ShieldUser size={18} />
-              {!isCollapsed && (
-                <span className="whitespace-nowrap">จัดการข้อมูล</span>
-              )}
-            </Link>
-          )}
-
           <Link
             to="/stations"
             onClick={onNavigate}
@@ -172,6 +160,68 @@ export default function Sidebar({
             <RadioTower size={18} />
             {!isCollapsed && <span className="whitespace-nowrap">สเตชั่น</span>}
           </Link>
+
+          {role === "superadmin" && (
+            <div className="space-y-1">
+              <Link
+                to="/superadmin/manage"
+                onClick={handleNavigate}
+                className={[
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                  isCollapsed ? "justify-center" : "",
+                  activePath.startsWith("/superadmin/manage")
+                    ? "text-blue-600 bg-blue-50 font-medium"
+                    : "text-gray-600 hover:bg-gray-50",
+                ].join(" ")}
+              >
+                <ShieldUser size={18} />
+                {!isCollapsed && (
+                  <span className="whitespace-nowrap">จัดการข้อมูล</span>
+                )}
+              </Link>
+
+              {!isCollapsed && activePath.startsWith("/superadmin/manage") && (
+                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                  <Link
+                    to="/superadmin/manage?tab=employees"
+                    onClick={handleNavigate}
+                    className={[
+                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      activeManageTab === "employees"
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-slate-600 hover:bg-slate-100",
+                    ].join(" ")}
+                  >
+                    จัดการพนักงาน
+                  </Link>
+                  <Link
+                    to="/superadmin/manage?tab=insurances"
+                    onClick={handleNavigate}
+                    className={[
+                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      activeManageTab === "insurances"
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-slate-600 hover:bg-slate-100",
+                    ].join(" ")}
+                  >
+                    จัดการบริษัทประกันภัย
+                  </Link>
+                  <Link
+                    to="/superadmin/manage?tab=brands"
+                    onClick={handleNavigate}
+                    className={[
+                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      activeManageTab === "brands"
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-slate-600 hover:bg-slate-100",
+                    ].join(" ")}
+                  >
+                    จัดการยี่ห้อรถ
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Logout button */}
