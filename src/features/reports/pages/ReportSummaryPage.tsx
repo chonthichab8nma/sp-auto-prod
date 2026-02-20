@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 import {
-  BadgeCheck,
   BriefcaseBusiness,
   Coins,
   Crown,
-  HandCoins,
   RefreshCw,
   Wallet,
 } from "lucide-react";
@@ -89,7 +87,6 @@ export default function ReportSummaryPage() {
   const cashRevenue = financialSummary?.totalExcessFee ?? data?.totalExcessFee ?? 0;
   const totalRevenue = financialSummary?.totalCashAndClaim ?? data?.totalCashAndClaim ?? 0;
   const approvedAmount = data?.totalApprovedAmount ?? 0;
-  const disbursedAmount = data?.totalDisbursedAmount ?? 0;
   const processingAmount = Math.max(insuranceRevenue - approvedAmount, 0);
 
   const fallbackSortedCompanies = [...insuranceStats].sort(
@@ -188,29 +185,29 @@ export default function ReportSummaryPage() {
                 icon={<Coins size={18} />}
                 tone="green"
               />
-              <StatCard
+              {/* <StatCard
                 label="อนุมัติแล้ว"
                 value={`฿${formatAmount(approvedAmount)}`}
                 icon={<BadgeCheck size={18} />}
-              />
-              <StatCard
+              /> */}
+              {/* <StatCard
                 label="ได้รับเงินแล้ว"
                 value={`฿${formatAmount(disbursedAmount)}`}
                 icon={<HandCoins size={18} />}
                 tone="green"
-              />
+              /> */}
               <StatCard
-                label="กำลังดำเนินการ"
+                label="รับเงินแล้วเรียบร้อย"
                 value={`฿${formatAmount(processingAmount)}`}
                 icon={<RefreshCw size={18} />}
                 tone="amber"
               />
             </div>
-            {insuranceRevenue > 0 && disbursedAmount === 0 && (
+            {/* {insuranceRevenue > 0 && disbursedAmount === 0 && (
               <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 ยังไม่มียอด "ได้รับเงินแล้ว" จากระบบการเงิน แม้มีรายได้ประกัน
               </div>
-            )}
+            )} */}
           </section>
         </div>
 
@@ -280,13 +277,13 @@ export default function ReportSummaryPage() {
                   <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
                   รายได้รวม
                 </span>
-                <span className="inline-flex items-center gap-1 text-slate-600">
+                {/* <span className="inline-flex items-center gap-1 text-slate-600">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   ได้รับเงินแล้ว
-                </span>
+                </span> */}
                 <span className="inline-flex items-center gap-1 text-slate-600">
                   <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                  กำลังดำเนินการ
+                  รับเงินแล้วเรียบร้อย
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -294,10 +291,6 @@ export default function ReportSummaryPage() {
                   <div className="flex h-56 items-end gap-3">
                     {monthlyChartData.map((item) => {
                       const totalHeight = Math.max((item.total / maxChartValue) * 100, 3);
-                      const disbursedHeight = Math.max(
-                        (item.disbursed / maxChartValue) * 100,
-                        3,
-                      );
                       const processingHeight = Math.max(
                         (item.processing / maxChartValue) * 100,
                         3,
@@ -311,19 +304,19 @@ export default function ReportSummaryPage() {
                               style={{ height: `${item.total > 0 ? totalHeight : 2}%` }}
                               title={`${item.month} | รายได้รวม: ${formatAmount(item.total)} บาท`}
                             />
-                            <div
+                            {/* <div
                               className="w-3 rounded-t bg-emerald-500"
                               style={{
                                 height: `${item.disbursed > 0 ? disbursedHeight : 2}%`,
                               }}
                               title={`${item.month} | ได้รับเงินแล้ว: ${formatAmount(item.disbursed)} บาท`}
-                            />
+                            /> */}
                             <div
                               className="w-3 rounded-t bg-amber-500"
                               style={{
                                 height: `${item.processing > 0 ? processingHeight : 2}%`,
                               }}
-                              title={`${item.month} | กำลังดำเนินการ: ${formatAmount(item.processing)} บาท`}
+                              title={`${item.month} | รับเงินแล้วเรียบร้อย: ${formatAmount(item.processing)} บาท`}
                             />
                           </div>
                           <span className="text-xs text-slate-500">
@@ -351,9 +344,9 @@ export default function ReportSummaryPage() {
                       <th className="px-3 py-3">เดือน</th>
                       <th className="px-3 py-3">จำนวนงาน</th>
                       <th className="px-3 py-3 text-right">รายได้รวม (บาท)</th>
-                      <th className="px-3 py-3 text-right">อนุมัติแล้ว</th>
-                      <th className="px-3 py-3 text-right">ได้รับเงินแล้ว</th>
-                      <th className="px-3 py-3 text-right">กำลังดำเนินการ</th>
+                      {/* <th className="px-3 py-3 text-right">อนุมัติแล้ว</th>
+                      <th className="px-3 py-3 text-right">ได้รับเงินแล้ว</th> */}
+                      <th className="px-3 py-3 text-right">รับเงินแล้วเรียบร้อย</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -373,12 +366,12 @@ export default function ReportSummaryPage() {
                           <td className="px-3 py-3 text-right text-sm font-medium text-slate-900">
                             {formatAmount(month.totalClaimAmount)} บาท
                           </td>
-                          <td className="px-3 py-3 text-right text-sm text-slate-700">
+                          {/* <td className="px-3 py-3 text-right text-sm text-slate-700">
                             {formatAmount(month.totalApprovedAmount)} บาท
                           </td>
                           <td className="px-3 py-3 text-right text-sm text-slate-700">
                             {formatAmount(month.totalDisbursedAmount)} บาท
-                          </td>
+                          </td> */}
                           <td className="px-3 py-3 text-right text-sm text-amber-700">
                             {formatAmount(monthProcessing)} บาท
                           </td>
