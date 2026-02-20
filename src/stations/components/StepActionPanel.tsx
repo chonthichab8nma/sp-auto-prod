@@ -24,12 +24,16 @@ export default function StepActionPanel({
   skipLabel = "ข้าม",
   onBulkSkip,
   onRemarkSaved,
+  onStepImagesChanged,
   showReceiptUploader = false,
   receiptFile,
   onReceiptFileChange,
   uploadedReceipt,
+  onUploadReceiptNow,
+  onDeleteUploadedReceipt,
   lockEmployee = false,
   lockedEmployeeName,
+  canManageReceipt = true,
 }: {
   stepId: string;
   stepName: string;
@@ -48,12 +52,16 @@ export default function StepActionPanel({
   skipLabel?: string;
   onBulkSkip?: () => void;
   onRemarkSaved?: (stepId: string, remark: string) => void;
+  onStepImagesChanged?: () => void;
   showReceiptUploader?: boolean;
   receiptFile?: File | null;
   onReceiptFileChange?: (file: File | null) => void;
   uploadedReceipt?: JobReceiptUploadResponse | null;
+  onUploadReceiptNow?: (file?: File | null) => void;
+  onDeleteUploadedReceipt?: () => void;
   lockEmployee?: boolean;
   lockedEmployeeName?: string;
+  canManageReceipt?: boolean;
 }) {
   const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -132,7 +140,7 @@ export default function StepActionPanel({
 
         {!showReceiptUploader && (
           <div className="border-t border-slate-100 pt-3">
-            <StepImagesUploader stepId={stepId} />
+            <StepImagesUploader stepId={stepId} onChanged={onStepImagesChanged} />
           </div>
         )}
         {showReceiptUploader && onReceiptFileChange && (
@@ -140,39 +148,71 @@ export default function StepActionPanel({
             <label className="block text-sm font-semibold text-slate-700">
               ใบเสร็จวันจ่ายเงิน 
             </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-600">
-              <Paperclip size={14} />
-              <span>เลือกไฟล์ใบเสร็จ</span>
-              <input
-                type="file"
-                accept="application/pdf,image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] ?? null;
-                  onReceiptFileChange(file);
-                  e.currentTarget.value = "";
-                }}
-              />
-            </label>
-            {receiptFile && (
-              <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-                <span className="truncate">{receiptFile.name}</span>
-                <button
-                  type="button"
-                  onClick={() => onReceiptFileChange(null)}
-                  className="text-blue-700 hover:text-blue-900"
-                >
-                  <X size={14} />
-                </button>
-              </div>
+            {canManageReceipt && (
+              <>
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-600">
+                  <Paperclip size={14} />
+                  <span>เลือกไฟล์ใบเสร็จ</span>
+                  <input
+                    type="file"
+                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      onReceiptFileChange(file);
+                      if (file && onUploadReceiptNow) {
+                        onUploadReceiptNow(file);
+                      }
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+                {receiptFile && (
+                  <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                    <span className="truncate">{receiptFile.name}</span>
+                    <div className="ml-2 flex items-center gap-1">
+                      {onUploadReceiptNow && (
+                        <button
+                          type="button"
+                          onClick={() => onUploadReceiptNow(receiptFile)}
+                          className="rounded-md bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+                        >
+                          อัปโหลดใหม่
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onReceiptFileChange(null)}
+                        className="text-blue-700 hover:text-blue-900"
+                        title="ยกเลิกไฟล์ที่เลือก"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             {uploadedReceipt && (
               <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
-                <div className="flex items-center gap-2">
-                <FileText size={14} />
-                <span className="truncate">
-                  อัปโหลดใบเสร็จแล้ว: {uploadedReceipt.receiptFileName}
-                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <FileText size={14} />
+                    <span className="truncate">
+                      อัปโหลดใบเสร็จแล้ว: {uploadedReceipt.receiptFileName}
+                    </span>
+                  </div>
+                  {canManageReceipt && onDeleteUploadedReceipt && (
+                    <button
+                      type="button"
+                      onClick={onDeleteUploadedReceipt}
+                      className="shrink-0 p-0 text-red-500 hover:text-red-600"
+                      title="ลบใบเสร็จเดิม"
+                      aria-label="ลบใบเสร็จเดิม"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
                 </div>
                 {getReceiptHref(uploadedReceipt) && (
                   <a
@@ -185,6 +225,20 @@ export default function StepActionPanel({
                     <ExternalLink size={12} />
                   </a>
                 )}
+              </div>
+            )}
+            {canManageReceipt && (
+              <>
+                {!uploadedReceipt && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    ยังไม่มีใบเสร็จที่อัปโหลด
+                  </div>
+                )}
+              </>
+            )}
+            {!canManageReceipt && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                งานนี้เสร็จแล้ว แก้ไขใบเสร็จได้เฉพาะ Superadmin
               </div>
             )}
           </div>

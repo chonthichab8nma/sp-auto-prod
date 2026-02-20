@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { StepStatus } from "../../Type";
 import { formatThaiDateTime } from "../../shared/lib/date";
@@ -7,6 +7,7 @@ import {
   getJobStepImages,
   getJobStepImageViewUrl,
 } from "../api/jobStepImages.api";
+import { getJobReceipt } from "../../features/jobs/api/receipt.api";
 
 export type StepVM = {
   id: string;
@@ -44,26 +45,42 @@ export default function StepTimeline({
   steps,
   activeStepId,
   onSelectStep,
+  jobId,
+  externalReceiptUrl,
+  refreshKey,
 }: {
   title: string;
   steps: StepVM[];
   activeStepId: string;
   onSelectStep: (id: string) => void;
+  jobId?: number;
+  externalReceiptUrl?: string | null;
+  refreshKey?: number;
 }) {
   const [loadingStepId, setLoadingStepId] = useState<string | null>(null);
   const [stepHasImages, setStepHasImages] = useState<Record<string, boolean>>({});
+  const [stepHasReceipts, setStepHasReceipts] = useState<Record<string, boolean>>({});
   const [openViewer, setOpenViewer] = useState(false);
+  const [fetchedReceiptUrl, setFetchedReceiptUrl] = useState<string | null>(null);
   const [viewerImages, setViewerImages] = useState<
     { id: number; src: string; name: string }[]
   >([]);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const imagePresenceCacheRef = useRef<Map<string, { image: boolean; receipt: boolean }>>(
+    new Map(),
+  );
+  const lastRefreshKeyRef = useRef<number | undefined>(undefined);
 
-  const openImages = async (stepId: string) => {
+  const openImages = async (stepId: string, category: "image" | "receipt" = "image") => {
     setLoadingStepId(stepId);
     try {
       const res = await getJobStepImages(stepId);
       const images = res.images
-        .filter((img) => !img.fileName.startsWith("__receipt__"))
+        .filter((img) =>
+          category === "receipt"
+            ? img.fileName.startsWith("__receipt__")
+            : !img.fileName.startsWith("__receipt__"),
+        )
         .map((img) => ({
           id: img.id,
           src: img.url || getJobStepImageViewUrl(stepId, img.id),
@@ -71,10 +88,34 @@ export default function StepTimeline({
         }));
 
       if (images.length === 0) {
-        toast("ขั้นตอนนี้ยังไม่มีรูปภาพ");
+        toast(category === "receipt" ? "ขั้นตอนนี้ยังไม่มีใบเสร็จ" : "ขั้นตอนนี้ยังไม่มีรูปภาพ");
+        const previous = imagePresenceCacheRef.current.get(stepId) ?? {
+          image: false,
+          receipt: false,
+        };
+        const next = {
+          ...previous,
+          image: category === "image" ? false : previous.image,
+          receipt: category === "receipt" ? false : previous.receipt,
+        };
+        imagePresenceCacheRef.current.set(stepId, next);
+        setStepHasImages((prev) => ({ ...prev, [stepId]: next.image }));
+        setStepHasReceipts((prev) => ({ ...prev, [stepId]: next.receipt }));
         return;
       }
 
+      const previous = imagePresenceCacheRef.current.get(stepId) ?? {
+        image: false,
+        receipt: false,
+      };
+      const next = {
+        ...previous,
+        image: category === "image" ? true : previous.image,
+        receipt: category === "receipt" ? true : previous.receipt,
+      };
+      imagePresenceCacheRef.current.set(stepId, next);
+      setStepHasImages((prev) => ({ ...prev, [stepId]: next.image }));
+      setStepHasReceipts((prev) => ({ ...prev, [stepId]: next.receipt }));
       setViewerImages(images);
       setViewerIndex(0);
       setOpenViewer(true);
@@ -97,31 +138,101 @@ export default function StepTimeline({
     );
   };
 
+  const toAbsoluteUrl = (raw?: string | null): string | null => {
+    if (!raw) return null;
+    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+    if (raw.startsWith("/")) return `${import.meta.env.VITE_API_BASE_URL}${raw}`;
+    return raw;
+  };
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!jobId) {
+      setFetchedReceiptUrl(null);
+      return;
+    }
+
+    (async () => {
+      try {
+        const receipt = await getJobReceipt(jobId);
+        if (!alive) return;
+        setFetchedReceiptUrl(toAbsoluteUrl(receipt.receiptViewUrl || receipt.receiptUrl));
+      } catch {
+        if (!alive) return;
+        setFetchedReceiptUrl(null);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [jobId]);
+
   useEffect(() => {
     let alive = true;
 
     const loadImagePresence = async () => {
       if (!steps.length) {
         setStepHasImages({});
+        setStepHasReceipts({});
         return;
       }
 
+      if (refreshKey !== lastRefreshKeyRef.current) {
+        lastRefreshKeyRef.current = refreshKey;
+        imagePresenceCacheRef.current.clear();
+      }
+
+      const cachedImageEntries = steps.map((step) => [
+        step.id,
+        imagePresenceCacheRef.current.get(step.id)?.image ?? false,
+      ]) as Array<[string, boolean]>;
+      const cachedReceiptEntries = steps.map((step) => [
+        step.id,
+        imagePresenceCacheRef.current.get(step.id)?.receipt ?? false,
+      ]) as Array<[string, boolean]>;
+      setStepHasImages(Object.fromEntries(cachedImageEntries));
+      setStepHasReceipts(Object.fromEntries(cachedReceiptEntries));
+
+      const uncachedSteps = steps.filter(
+        (step) => !imagePresenceCacheRef.current.has(step.id),
+      );
+      if (!uncachedSteps.length) return;
+
       const entries = await Promise.all(
-        steps.map(async (step) => {
+        uncachedSteps.map(async (step) => {
           try {
             const res = await getJobStepImages(step.id);
             const hasImage = res.images.some(
               (img) => !img.fileName.startsWith("__receipt__"),
             );
-            return [step.id, hasImage] as const;
+            const hasReceipt = res.images.some(
+              (img) => img.fileName.startsWith("__receipt__"),
+            );
+            return [step.id, { image: hasImage, receipt: hasReceipt }] as const;
           } catch {
-            return [step.id, false] as const;
+            return [step.id, { image: false, receipt: false }] as const;
           }
         }),
       );
 
       if (!alive) return;
-      setStepHasImages(Object.fromEntries(entries));
+
+      entries.forEach(([stepId, value]) => {
+        imagePresenceCacheRef.current.set(stepId, value);
+      });
+
+      const latestImageEntries = steps.map((step) => [
+        step.id,
+        imagePresenceCacheRef.current.get(step.id)?.image ?? false,
+      ]) as Array<[string, boolean]>;
+      const latestReceiptEntries = steps.map((step) => [
+        step.id,
+        imagePresenceCacheRef.current.get(step.id)?.receipt ?? false,
+      ]) as Array<[string, boolean]>;
+      setStepHasImages(Object.fromEntries(latestImageEntries));
+      setStepHasReceipts(Object.fromEntries(latestReceiptEntries));
     };
 
     void loadImagePresence();
@@ -129,7 +240,7 @@ export default function StepTimeline({
     return () => {
       alive = false;
     };
-  }, [steps]);
+  }, [steps, refreshKey]);
 
   return (
     <div className="pb-4">
@@ -150,6 +261,11 @@ export default function StepTimeline({
               {steps.map((step) => {
                 const isActive = step.id === activeStepId;
                 const isCompleted = step.status === "completed";
+                const normalizedStepName = (step.name ?? "").replace(/\s+/g, "");
+                const isPaymentDateStep = normalizedStepName.includes("วันจ่ายเงิน");
+                const resolvedExternalUrl = toAbsoluteUrl(externalReceiptUrl);
+                const resolvedReceiptUrl = resolvedExternalUrl || fetchedReceiptUrl;
+                const hasJobReceiptForStep = isPaymentDateStep && Boolean(resolvedReceiptUrl);
                 // const isSkipped = step.status === "skipped";
 
                 
@@ -223,19 +339,47 @@ export default function StepTimeline({
                         </div>
                       </div>
                     </div>
-                    {stepHasImages[step.id] && (
-                      <div className="ml-3 shrink-0 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void openImages(step.id);
-                          }}
-                          disabled={loadingStepId === step.id}
-                          className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
-                        >
-                          รูปภาพ
-                        </button>
+                    {(stepHasImages[step.id] ||
+                      stepHasReceipts[step.id] ||
+                      hasJobReceiptForStep) && (
+                      <div className="ml-3 shrink-0 pt-0.5 flex gap-1">
+                        {stepHasImages[step.id] && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void openImages(step.id, "image");
+                            }}
+                            disabled={loadingStepId === step.id}
+                            className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                          >
+                            รูปภาพ
+                          </button>
+                        )}
+                        {stepHasReceipts[step.id] && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void openImages(step.id, "receipt");
+                            }}
+                            disabled={loadingStepId === step.id}
+                            className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                          >
+                            ใบเสร็จ
+                          </button>
+                        )}
+                        {!stepHasReceipts[step.id] && isPaymentDateStep && resolvedReceiptUrl && (
+                          <a
+                            href={resolvedReceiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+                          >
+                            ใบเสร็จ
+                          </a>
+                        )}
                       </div>
                     )}
                   </div>

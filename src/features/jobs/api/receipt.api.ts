@@ -41,3 +41,16 @@ export async function uploadJobReceipt(
     return uploadWithFieldName(jobId, file, "file");
   }
 }
+
+export async function getJobReceipt(
+  jobId: number,
+): Promise<JobReceiptUploadResponse> {
+  const { data } = await http.get<JobReceiptUploadResponse>(
+    `private/jobs/${jobId}/receipt`,
+  );
+  return data;
+}
+
+export async function deleteJobReceipt(jobId: number): Promise<void> {
+  await http.delete(`private/jobs/${jobId}/receipt`);
+}

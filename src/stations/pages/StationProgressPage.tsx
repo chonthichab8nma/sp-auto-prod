@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car, Check, Printer } from "lucide-react";
 import toast from "react-hot-toast";
@@ -29,6 +29,7 @@ export default function StationProgressPage({
 }) {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
   const isStaff = role === "staff";
   const isSuperAdmin = role === "superadmin";
   const authEmployee = useMemo<EmployeeApi | null>(() => {
@@ -64,6 +65,8 @@ export default function StationProgressPage({
     setReceiptFile,
     uploadedReceipt,
     showReceiptUploader,
+    handleUploadReceiptNow,
+    handleDeleteUploadedReceipt,
     saving,
     canPrintBillingPdf,
     brandLogoUrl,
@@ -78,6 +81,7 @@ export default function StationProgressPage({
     forcedEmployee: isStaff ? authEmployee : null,
   });
   const showDoneReadonlyCard = jobState.status === "DONE" && !isSuperAdmin;
+  const canManageReceipt = !(jobState.status === "DONE" && !isSuperAdmin);
   const billingStageIndex = stages.findIndex(
     (stage) => (stage.stage.code ?? "").toUpperCase() === "BILLING",
   );
@@ -246,6 +250,9 @@ export default function StationProgressPage({
             steps={stepsVm}
             activeStepId={activeStepId}
             onSelectStep={handleSelectStep}
+            jobId={jobState.id}
+            externalReceiptUrl={uploadedReceipt?.receiptViewUrl || uploadedReceipt?.receiptUrl || null}
+            refreshKey={timelineRefreshKey}
           />
         </div>
 
@@ -295,10 +302,16 @@ export default function StationProgressPage({
                 saving={saving}
                 canSkip={false}
                 onRemarkSaved={handleRemarkSaved}
+                onStepImagesChanged={() =>
+                  setTimelineRefreshKey((prev) => prev + 1)
+                }
                 showReceiptUploader={showReceiptUploader}
                 receiptFile={receiptFile}
                 onReceiptFileChange={setReceiptFile}
                 uploadedReceipt={uploadedReceipt}
+                onUploadReceiptNow={handleUploadReceiptNow}
+                onDeleteUploadedReceipt={handleDeleteUploadedReceipt}
+                canManageReceipt={canManageReceipt}
                 lockEmployee={isStaff}
                 lockedEmployeeName={authEmployee?.name}
               />

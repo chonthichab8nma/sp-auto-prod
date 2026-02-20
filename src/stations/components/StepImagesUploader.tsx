@@ -61,9 +61,13 @@ function formatFileForCategory(file: File, category: UploadCategory): File {
 export default function StepImagesUploader({
   stepId,
   category = "image",
+  readOnly = false,
+  onChanged,
 }: {
   stepId: string;
   category?: UploadCategory;
+  readOnly?: boolean;
+  onChanged?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
@@ -134,13 +138,14 @@ export default function StepImagesUploader({
         }
 
         await loadImages({ silent: true });
+        onChanged?.();
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
         setUploading(false);
       }
     },
-    [stepId, loadImages, category],
+    [stepId, loadImages, category, onChanged],
   );
 
   const openAt = useCallback((idx: number) => {
@@ -207,6 +212,7 @@ export default function StepImagesUploader({
 
             await deleteJobStepImage(stepId, imageId);
             await loadImages({ silent: true });
+            onChanged?.();
 
             toast.success("ลบรูปเรียบร้อยแล้ว", {
               duration: 1500,
@@ -229,7 +235,7 @@ export default function StepImagesUploader({
         },
       });
     },
-    [stepId, loadImages, images, activeIdx, open, category],
+    [stepId, loadImages, images, activeIdx, open, category, onChanged],
   );
 
   const modal = open && srcList.length > 0 && (
@@ -245,16 +251,18 @@ export default function StepImagesUploader({
             </div>
 
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => void handleDelete(images[activeIdx].id)}
-                disabled={deletingId === images[activeIdx].id}
-                className="rounded-xl p-2 text-red-600 hover:bg-red-50 disabled:opacity-50"
-                aria-label="delete"
-                title="ลบรูปนี้"
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => void handleDelete(images[activeIdx].id)}
+                  disabled={deletingId === images[activeIdx].id}
+                  className="rounded-xl p-2 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  aria-label="delete"
+                  title="ลบรูปนี้"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
 
               <button
                 type="button"
@@ -381,33 +389,37 @@ export default function StepImagesUploader({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className={[
-            "inline-flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold tracking-tight transition-colors",
-            uploading
-              ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-          ].join(" ")}
-        >
-          <span className="grid h-6 w-6 place-items-center rounded-md bg-slate-100 text-slate-600">
-            <ImagePlus className="h-3.5 w-3.5" />
-          </span>
-          {labels.addButton}
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className={[
+              "inline-flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold tracking-tight transition-colors",
+              uploading
+                ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+            ].join(" ")}
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-md bg-slate-100 text-slate-600">
+              <ImagePlus className="h-3.5 w-3.5" />
+            </span>
+            {labels.addButton}
+          </button>
+        )}
       </div>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => void handleFiles(e.target.files)}
-        disabled={uploading}
-      />
+      {!readOnly && (
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => void handleFiles(e.target.files)}
+          disabled={uploading}
+        />
+      )}
 
       {error && (
         <pre className="whitespace-pre-wrap rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
@@ -418,10 +430,16 @@ export default function StepImagesUploader({
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
         {!hasImages && !loading ? (
           <div
-            className="cursor-pointer rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500 hover:bg-slate-50"
-            onClick={() => inputRef.current?.click()}
+            className={[
+              "rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500",
+              readOnly ? "" : "cursor-pointer hover:bg-slate-50",
+            ].join(" ")}
+            onClick={() => {
+              if (readOnly) return;
+              inputRef.current?.click();
+            }}
           >
-            {labels.emptyText}
+            {readOnly ? "ยังไม่มีไฟล์" : labels.emptyText}
           </div>
         ) : (
           <>
@@ -458,27 +476,29 @@ export default function StepImagesUploader({
                             </div>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void handleDelete(img.id);
-                            }}
-                            disabled={deletingId === img.id}
-                            className={[
-                              "absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1.5 text-white",
-                              "opacity-100",
-                              "md:opacity-0 md:group-hover:opacity-100",
-                              "transition",
-                              deletingId === img.id
-                                ? "cursor-not-allowed opacity-60"
-                                : "hover:bg-black/80",
-                            ].join(" ")}
-                            aria-label="delete"
-                            title="ลบรูป"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          {!readOnly && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleDelete(img.id);
+                              }}
+                              disabled={deletingId === img.id}
+                              className={[
+                                "absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1.5 text-white",
+                                "opacity-100",
+                                "md:opacity-0 md:group-hover:opacity-100",
+                                "transition",
+                                deletingId === img.id
+                                  ? "cursor-not-allowed opacity-60"
+                                  : "hover:bg-black/80",
+                              ].join(" ")}
+                              aria-label="delete"
+                              title="ลบรูป"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </button>
                       );
                     })}

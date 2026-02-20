@@ -26,6 +26,7 @@ import EmployeeAutocomplete from "../../../shared/components/ui/EmployeeAutocomp
 import { useJobDetailEditForm } from "../hooks/useJobDetailEditForm";
 import type { JobDetailEditForm } from "../types/jobDetailEdit";
 import { useAuth } from "../../../shared/auth/useAuth";
+import { getJobReceipt } from "../api/receipt.api";
 
 const Section = ({
   title,
@@ -88,6 +89,13 @@ const LabelWithStar = ({ text }: { text: string }) => (
   </span>
 );
 
+function toAbsoluteUrl(raw?: string | null): string | null {
+  if (!raw) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("/")) return `${import.meta.env.VITE_API_BASE_URL}${raw}`;
+  return raw;
+}
+
 export default function JobDetailPage({
   job,
   onRefresh,
@@ -103,6 +111,8 @@ export default function JobDetailPage({
   const [savedPreview, setSavedPreview] = useState<JobDetailEditForm | null>(
     null,
   );
+  const [receiptViewUrl, setReceiptViewUrl] = useState<string | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   const {
     editing,
@@ -202,6 +212,47 @@ export default function JobDetailPage({
       alive = false;
     };
   }, [job?.vehicle?.registration]);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!job?.id) {
+      setReceiptViewUrl(null);
+      setReceiptLoading(false);
+      return;
+    }
+
+    (async () => {
+      setReceiptLoading(true);
+      try {
+        const receipt = await getJobReceipt(job.id);
+        if (!alive) return;
+        const rawUrl = receipt.receiptViewUrl || receipt.receiptUrl || "";
+        setReceiptViewUrl(toAbsoluteUrl(rawUrl));
+      } catch {
+        if (!alive) return;
+        const jobReceipt = (job as JobApi & {
+          receiptViewUrl?: string;
+          receiptUrl?: string;
+        });
+        const photoReceipt = (job?.jobPhotos as Array<Record<string, unknown>> | undefined)
+          ?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
+
+        const fallbackRaw = jobReceipt.receiptViewUrl
+          || jobReceipt.receiptUrl
+          || (photoReceipt?.viewUrl as string | undefined)
+          || (photoReceipt?.url as string | undefined)
+          || null;
+        setReceiptViewUrl(toAbsoluteUrl(fallbackRaw));
+      } finally {
+        if (alive) setReceiptLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [job]);
 
   const displayVehicleType =
     vehicleTypeFromDb || job?.vehicle?.type || vehicleTypeFromCatalog || "-";
@@ -343,9 +394,25 @@ export default function JobDetailPage({
                     <CarFront size={40} className="text-slate-800" />
                   )}
                   <div>
-                    <h1 className="text-lg font-bold text-slate-900">
-                      {job?.vehicle.brand}
-                    </h1>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-lg font-bold text-slate-900">
+                        {job?.vehicle.brand}
+                      </h1>
+                      {receiptLoading ? (
+                        <span className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+                          กำลังโหลดใบเสร็จ...
+                        </span>
+                      ) : receiptViewUrl ? (
+                        <a
+                          href={receiptViewUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                        >
+                          ใบเสร็จ
+                        </a>
+                      ) : null}
+                    </div>
                     <p className="text-slate-400 text-sm">
                       {job?.vehicle.model} {job?.vehicle.year} {displayVehicleType}
                     </p>
