@@ -18,7 +18,6 @@ import { useStationProgressMutation } from "./useStationProgressMutation";
 import type { StepVM } from "../components/StepTimeline";
 import {
   deleteJobReceipt,
-  getJobReceipt,
   uploadJobReceipt,
   type JobReceiptUploadResponse,
 } from "../../features/jobs/api/receipt.api";
@@ -143,6 +142,12 @@ export function useStationProgressViewModel({
       timestamp: step.completedAt,
       isSkippable: Boolean(step.stepTemplate?.isSkippable),
       employee: step.employee ? { name: step.employee.name } : undefined,
+      hasImages: (step.images ?? []).some(
+        (img) => !String(img.fileName ?? "").startsWith("__receipt__"),
+      ),
+      hasReceipts: (step.images ?? []).some((img) =>
+        String(img.fileName ?? "").startsWith("__receipt__"),
+      ),
     }));
   }, [viewingStageSteps]);
 
@@ -200,70 +205,81 @@ export function useStationProgressViewModel({
     return normalizedStepName.includes("วันจ่ายเงิน");
   }, [activeStep?.name]);
 
-  useEffect(() => {
-    let alive = true;
-    if (!isViewingBillingStage || !isPaymentDateStep) return;
-
-    (async () => {
-      try {
-        const receipt = await getJobReceipt(jobState.id);
-        if (!alive) return;
-        setUploadedReceipt(receipt);
-      } catch {
-        if (!alive) return;
-        const jobReceipt = jobState as JobApi & {
-          receiptFileName?: string;
-          receiptMimeType?: string;
-          receiptFileSize?: number;
-          receiptUploadedAt?: string;
-          receiptViewUrl?: string;
-          receiptUrl?: string;
-        };
-        const photoReceipt = (
-          jobState?.jobPhotos as Array<Record<string, unknown>> | undefined
-        )?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
-
-        const fallbackUrl =
-          (jobReceipt.receiptViewUrl as string | undefined) ||
-          (jobReceipt.receiptUrl as string | undefined) ||
-          (photoReceipt?.viewUrl as string | undefined) ||
-          (photoReceipt?.url as string | undefined) ||
-          "";
-
-        if (fallbackUrl) {
-          setUploadedReceipt({
-            jobId: jobState.id,
-            receiptFileName:
-              (jobReceipt.receiptFileName as string | undefined) ||
-              (photoReceipt?.fileName as string | undefined) ||
-              "receipt",
-            receiptUrl:
-              (jobReceipt.receiptUrl as string | undefined) ||
-              (photoReceipt?.url as string | undefined) ||
-              fallbackUrl,
-            receiptMimeType:
-              (jobReceipt.receiptMimeType as string | undefined) ||
-              (photoReceipt?.mimeType as string | undefined) ||
-              "application/octet-stream",
-            receiptFileSize:
-              (jobReceipt.receiptFileSize as number | undefined) ||
-              (photoReceipt?.fileSize as number | undefined) ||
-              0,
-            receiptUploadedAt:
-              (jobReceipt.receiptUploadedAt as string | undefined) ||
-              new Date().toISOString(),
-            receiptViewUrl: fallbackUrl,
-          });
-        } else {
-          setUploadedReceipt(null);
-        }
-      }
-    })();
-
-    return () => {
-      alive = false;
+  const receiptSnapshot = useMemo(() => {
+    const jobReceipt = jobState as JobApi & {
+      receiptR2Key?: string;
+      receiptFileName?: string;
+      receiptMimeType?: string;
+      receiptFileSize?: number;
+      receiptUploadedAt?: string;
+      receiptViewUrl?: string;
+      receiptUrl?: string;
     };
-  }, [isViewingBillingStage, isPaymentDateStep, jobState]);
+    const photoReceipt = (
+      jobState?.jobPhotos as Array<Record<string, unknown>> | undefined
+    )?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
+
+    const fallbackUrl =
+      (jobReceipt.receiptViewUrl as string | undefined) ||
+      (jobReceipt.receiptUrl as string | undefined) ||
+      (photoReceipt?.viewUrl as string | undefined) ||
+      (photoReceipt?.url as string | undefined) ||
+      "";
+
+    const hasReceiptHint = Boolean(
+      jobReceipt.receiptFileName ||
+        jobReceipt.receiptR2Key ||
+        jobReceipt.receiptViewUrl ||
+        jobReceipt.receiptUrl ||
+        photoReceipt,
+    );
+
+    return {
+      fallbackUrl,
+      hasReceiptHint,
+      receiptFileName:
+        (jobReceipt.receiptFileName as string | undefined) ||
+        (photoReceipt?.fileName as string | undefined) ||
+        "receipt",
+      receiptUrl:
+        (jobReceipt.receiptUrl as string | undefined) ||
+        (photoReceipt?.url as string | undefined) ||
+        fallbackUrl,
+      receiptMimeType:
+        (jobReceipt.receiptMimeType as string | undefined) ||
+        (photoReceipt?.mimeType as string | undefined) ||
+        "application/octet-stream",
+      receiptFileSize:
+        (jobReceipt.receiptFileSize as number | undefined) ||
+        (photoReceipt?.fileSize as number | undefined) ||
+        0,
+      receiptUploadedAt:
+        (jobReceipt.receiptUploadedAt as string | undefined) ||
+        new Date().toISOString(),
+    };
+  }, [jobState]);
+
+  useEffect(() => {
+    if (!isViewingBillingStage || !isPaymentDateStep) return;
+    if (!receiptSnapshot.hasReceiptHint) {
+      setUploadedReceipt(null);
+      return;
+    }
+
+    if (receiptSnapshot.fallbackUrl) {
+      setUploadedReceipt({
+        jobId: jobState.id,
+        receiptFileName: receiptSnapshot.receiptFileName,
+        receiptUrl: receiptSnapshot.receiptUrl,
+        receiptMimeType: receiptSnapshot.receiptMimeType,
+        receiptFileSize: receiptSnapshot.receiptFileSize,
+        receiptUploadedAt: receiptSnapshot.receiptUploadedAt,
+        receiptViewUrl: receiptSnapshot.fallbackUrl,
+      });
+    } else {
+      setUploadedReceipt(null);
+    }
+  }, [isViewingBillingStage, isPaymentDateStep, jobState.id, receiptSnapshot]);
 
   const brandLogoUrl = useMemo(
     () => resolveBrandLogoUrl(brands, jobState.vehicle?.brand),

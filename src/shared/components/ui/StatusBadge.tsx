@@ -1,4 +1,9 @@
-import type { JobApi } from "../../../features/jobs/api/job.api";
+import type { JobStatusApi } from "../../../features/jobs/api/job.api";
+
+type StatusBadgeJob = {
+  status: JobStatusApi | string;
+  isFinished?: boolean;
+};
 
 type BadgeConfig = {
   label: string;
@@ -19,7 +24,7 @@ export default function StatusBadge({
   job,
   forceWhiteBackground = false,
 }: {
-  job: JobApi;
+  job: StatusBadgeJob;
   forceWhiteBackground?: boolean;
 }) {
   if (job.isFinished) {

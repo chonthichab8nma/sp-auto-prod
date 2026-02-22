@@ -104,6 +104,10 @@ export type JobStepApi = {
   notes: string | null;
   stepTemplate: StepTemplateApi;
   employee: EmployeeApi;
+  images?: Array<{
+    id: number;
+    fileName: string;
+  }>;
 };
 
 export type JobStageApi = {
@@ -152,6 +156,10 @@ export type JobApi = {
   receiver: {
     name: string;
   };
+
+  daysInProcess?: number;
+  agingStatus?: "normal" | "warning" | "critical";
+  agingColor?: "green" | "yellow" | "red";
 };
 
 export type JobsListApiResponse =

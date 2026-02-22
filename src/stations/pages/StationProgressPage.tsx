@@ -250,7 +250,6 @@ export default function StationProgressPage({
             steps={stepsVm}
             activeStepId={activeStepId}
             onSelectStep={handleSelectStep}
-            jobId={jobState.id}
             externalReceiptUrl={uploadedReceipt?.receiptViewUrl || uploadedReceipt?.receiptUrl || null}
             refreshKey={timelineRefreshKey}
           />

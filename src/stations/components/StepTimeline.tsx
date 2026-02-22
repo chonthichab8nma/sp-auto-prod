@@ -7,7 +7,6 @@ import {
   getJobStepImages,
   getJobStepImageViewUrl,
 } from "../api/jobStepImages.api";
-import { getJobReceipt } from "../../features/jobs/api/receipt.api";
 
 export type StepVM = {
   id: string;
@@ -17,6 +16,8 @@ export type StepVM = {
   employee?: { name: string };
   isSkippable?: boolean;
   remark?: string | null;
+  hasImages?: boolean;
+  hasReceipts?: boolean;
 };
 
 function StatusBadge({ status }: { status: StepStatus }) {
@@ -45,7 +46,6 @@ export default function StepTimeline({
   steps,
   activeStepId,
   onSelectStep,
-  jobId,
   externalReceiptUrl,
   refreshKey,
 }: {
@@ -53,7 +53,6 @@ export default function StepTimeline({
   steps: StepVM[];
   activeStepId: string;
   onSelectStep: (id: string) => void;
-  jobId?: number;
   externalReceiptUrl?: string | null;
   refreshKey?: number;
 }) {
@@ -61,7 +60,6 @@ export default function StepTimeline({
   const [stepHasImages, setStepHasImages] = useState<Record<string, boolean>>({});
   const [stepHasReceipts, setStepHasReceipts] = useState<Record<string, boolean>>({});
   const [openViewer, setOpenViewer] = useState(false);
-  const [fetchedReceiptUrl, setFetchedReceiptUrl] = useState<string | null>(null);
   const [viewerImages, setViewerImages] = useState<
     { id: number; src: string; name: string }[]
   >([]);
@@ -148,30 +146,6 @@ export default function StepTimeline({
   useEffect(() => {
     let alive = true;
 
-    if (!jobId) {
-      setFetchedReceiptUrl(null);
-      return;
-    }
-
-    (async () => {
-      try {
-        const receipt = await getJobReceipt(jobId);
-        if (!alive) return;
-        setFetchedReceiptUrl(toAbsoluteUrl(receipt.receiptViewUrl || receipt.receiptUrl));
-      } catch {
-        if (!alive) return;
-        setFetchedReceiptUrl(null);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [jobId]);
-
-  useEffect(() => {
-    let alive = true;
-
     const loadImagePresence = async () => {
       if (!steps.length) {
         setStepHasImages({});
@@ -182,57 +156,68 @@ export default function StepTimeline({
       if (refreshKey !== lastRefreshKeyRef.current) {
         lastRefreshKeyRef.current = refreshKey;
         imagePresenceCacheRef.current.clear();
+        setStepHasImages({});
+        setStepHasReceipts({});
       }
 
-      const cachedImageEntries = steps.map((step) => [
-        step.id,
-        imagePresenceCacheRef.current.get(step.id)?.image ?? false,
-      ]) as Array<[string, boolean]>;
-      const cachedReceiptEntries = steps.map((step) => [
-        step.id,
-        imagePresenceCacheRef.current.get(step.id)?.receipt ?? false,
-      ]) as Array<[string, boolean]>;
-      setStepHasImages(Object.fromEntries(cachedImageEntries));
-      setStepHasReceipts(Object.fromEntries(cachedReceiptEntries));
-
-      const uncachedSteps = steps.filter(
-        (step) => !imagePresenceCacheRef.current.has(step.id),
-      );
-      if (!uncachedSteps.length) return;
-
-      const entries = await Promise.all(
-        uncachedSteps.map(async (step) => {
-          try {
-            const res = await getJobStepImages(step.id);
-            const hasImage = res.images.some(
-              (img) => !img.fileName.startsWith("__receipt__"),
-            );
-            const hasReceipt = res.images.some(
-              (img) => img.fileName.startsWith("__receipt__"),
-            );
-            return [step.id, { image: hasImage, receipt: hasReceipt }] as const;
-          } catch {
-            return [step.id, { image: false, receipt: false }] as const;
-          }
-        }),
-      );
-
-      if (!alive) return;
-
-      entries.forEach(([stepId, value]) => {
-        imagePresenceCacheRef.current.set(stepId, value);
+      const seededImageEntries = steps.map((step) => {
+        const cached = imagePresenceCacheRef.current.get(step.id);
+        const image =
+          typeof step.hasImages === "boolean"
+            ? step.hasImages
+            : (cached?.image ?? false);
+        const receipt =
+          typeof step.hasReceipts === "boolean"
+            ? step.hasReceipts
+            : (cached?.receipt ?? false);
+        if (typeof step.hasImages === "boolean" || typeof step.hasReceipts === "boolean") {
+          imagePresenceCacheRef.current.set(step.id, { image, receipt });
+        }
+        return [step.id, image] as const;
       });
 
-      const latestImageEntries = steps.map((step) => [
-        step.id,
-        imagePresenceCacheRef.current.get(step.id)?.image ?? false,
-      ]) as Array<[string, boolean]>;
-      const latestReceiptEntries = steps.map((step) => [
-        step.id,
-        imagePresenceCacheRef.current.get(step.id)?.receipt ?? false,
-      ]) as Array<[string, boolean]>;
-      setStepHasImages(Object.fromEntries(latestImageEntries));
-      setStepHasReceipts(Object.fromEntries(latestReceiptEntries));
+      const seededReceiptEntries = steps.map((step) => {
+        const cached = imagePresenceCacheRef.current.get(step.id);
+        const receipt =
+          typeof step.hasReceipts === "boolean"
+            ? step.hasReceipts
+            : (cached?.receipt ?? false);
+        return [step.id, receipt] as const;
+      });
+
+      setStepHasImages(Object.fromEntries(seededImageEntries));
+      setStepHasReceipts(Object.fromEntries(seededReceiptEntries));
+
+      const activeStep = steps.find((step) => step.id === activeStepId);
+      if (!activeStep) return;
+
+      const cached = imagePresenceCacheRef.current.get(activeStep.id);
+      if (cached) {
+        setStepHasImages((prev) => ({ ...prev, [activeStep.id]: cached.image }));
+        setStepHasReceipts((prev) => ({ ...prev, [activeStep.id]: cached.receipt }));
+        return;
+      }
+
+      try {
+        const res = await getJobStepImages(activeStep.id);
+        if (!alive) return;
+
+        const next = {
+          image: res.images.some((img) => !img.fileName.startsWith("__receipt__")),
+          receipt: res.images.some((img) => img.fileName.startsWith("__receipt__")),
+        };
+        imagePresenceCacheRef.current.set(activeStep.id, next);
+        setStepHasImages((prev) => ({ ...prev, [activeStep.id]: next.image }));
+        setStepHasReceipts((prev) => ({ ...prev, [activeStep.id]: next.receipt }));
+      } catch {
+        if (!alive) return;
+        imagePresenceCacheRef.current.set(activeStep.id, {
+          image: false,
+          receipt: false,
+        });
+        setStepHasImages((prev) => ({ ...prev, [activeStep.id]: false }));
+        setStepHasReceipts((prev) => ({ ...prev, [activeStep.id]: false }));
+      }
     };
 
     void loadImagePresence();
@@ -240,7 +225,7 @@ export default function StepTimeline({
     return () => {
       alive = false;
     };
-  }, [steps, refreshKey]);
+  }, [steps, activeStepId, refreshKey]);
 
   return (
     <div className="pb-4">
@@ -264,7 +249,7 @@ export default function StepTimeline({
                 const normalizedStepName = (step.name ?? "").replace(/\s+/g, "");
                 const isPaymentDateStep = normalizedStepName.includes("วันจ่ายเงิน");
                 const resolvedExternalUrl = toAbsoluteUrl(externalReceiptUrl);
-                const resolvedReceiptUrl = resolvedExternalUrl || fetchedReceiptUrl;
+                const resolvedReceiptUrl = resolvedExternalUrl;
                 const hasJobReceiptForStep = isPaymentDateStep && Boolean(resolvedReceiptUrl);
                 // const isSkipped = step.status === "skipped";
 

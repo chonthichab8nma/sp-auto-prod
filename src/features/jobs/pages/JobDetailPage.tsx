@@ -113,6 +113,31 @@ export default function JobDetailPage({
   );
   const [receiptViewUrl, setReceiptViewUrl] = useState<string | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
+  const receiptFallback = useMemo(() => {
+    const jobReceipt = (job as (JobApi & {
+      receiptR2Key?: string;
+      receiptViewUrl?: string;
+      receiptUrl?: string;
+    }) | null);
+    const photoReceipt = (job?.jobPhotos as Array<Record<string, unknown>> | undefined)
+      ?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
+
+    const fallbackRaw = jobReceipt?.receiptViewUrl
+      || jobReceipt?.receiptUrl
+      || (photoReceipt?.viewUrl as string | undefined)
+      || (photoReceipt?.url as string | undefined)
+      || null;
+
+    return {
+      fallbackRaw,
+      hasReceiptHint: Boolean(
+        jobReceipt?.receiptR2Key ||
+        jobReceipt?.receiptViewUrl ||
+        jobReceipt?.receiptUrl ||
+        photoReceipt,
+      ),
+    };
+  }, [job]);
 
   const {
     editing,
@@ -221,6 +246,11 @@ export default function JobDetailPage({
       setReceiptLoading(false);
       return;
     }
+    if (!receiptFallback.hasReceiptHint) {
+      setReceiptViewUrl(null);
+      setReceiptLoading(false);
+      return;
+    }
 
     (async () => {
       setReceiptLoading(true);
@@ -231,19 +261,7 @@ export default function JobDetailPage({
         setReceiptViewUrl(toAbsoluteUrl(rawUrl));
       } catch {
         if (!alive) return;
-        const jobReceipt = (job as JobApi & {
-          receiptViewUrl?: string;
-          receiptUrl?: string;
-        });
-        const photoReceipt = (job?.jobPhotos as Array<Record<string, unknown>> | undefined)
-          ?.find((img) => String(img?.fileName ?? "").startsWith("__receipt__"));
-
-        const fallbackRaw = jobReceipt.receiptViewUrl
-          || jobReceipt.receiptUrl
-          || (photoReceipt?.viewUrl as string | undefined)
-          || (photoReceipt?.url as string | undefined)
-          || null;
-        setReceiptViewUrl(toAbsoluteUrl(fallbackRaw));
+        setReceiptViewUrl(toAbsoluteUrl(receiptFallback.fallbackRaw));
       } finally {
         if (alive) setReceiptLoading(false);
       }
@@ -252,7 +270,7 @@ export default function JobDetailPage({
     return () => {
       alive = false;
     };
-  }, [job]);
+  }, [job?.id, receiptFallback]);
 
   const displayVehicleType =
     vehicleTypeFromDb || job?.vehicle?.type || vehicleTypeFromCatalog || "-";

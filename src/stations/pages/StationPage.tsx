@@ -8,13 +8,11 @@ import { useStationAlertsQuery } from "../hooks/useStationAlertsQuery";
 import { resolveAgingBand } from "../utils/aging";
 
 import Pagination from "../../shared/components/ui/Pagination";
-import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
 
 import type { JobsQuery } from "../../features/jobs/api/job.api";
 import { useDashboardQuery } from "../../features/jobs/hooks/useDashboardQuery";
 import type { JobApi } from "../../features/jobs/api/job.api";
 import {
-  fetchAllJobsPages,
   mapUiStatusToApi,
   resolveTotalItems,
   resolveTotalPages,
@@ -28,175 +26,104 @@ export default function StationsPage() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAlert, setSelectedAlert] = useState<AlertFilterValue>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [alertModeJobs, setAlertModeJobs] = useState<JobApi[]>([]);
-  const [alertModeLoading, setAlertModeLoading] = useState(false);
-  const [alertModeError, setAlertModeError] = useState("");
-  const [summaryScopedJobs, setSummaryScopedJobs] = useState<JobApi[]>([]);
-  const [summaryScopedLoading, setSummaryScopedLoading] = useState(false);
   const normalizedSearch = searchTerm.trim();
   const mappedStatus = mapUiStatusToApi(selectedStatus);
+  const hasScopeFilter = Boolean(selectedStatus || normalizedSearch);
+  const shouldUseAlertsEndpointTable =
+    selectedAlert !== "all" && !hasScopeFilter;
 
   const query: JobsQuery = useMemo(
     () => ({
-      page: selectedAlert === "all" ? currentPage : 1,
+      page: currentPage,
       pageSize,
       search: normalizedSearch || undefined,
       status: mappedStatus,
     }),
-    [currentPage, mappedStatus, normalizedSearch, pageSize, selectedAlert],
+    [currentPage, mappedStatus, normalizedSearch, pageSize],
   );
 
   const { data, error, loading } = useDashboardQuery(query, {
-    enabled: selectedAlert === "all",
+    enabled: !shouldUseAlertsEndpointTable,
   });
-  const { data: alertsData, error: alertsError } = useStationAlertsQuery();
+  const {
+    summary: alertsSummary,
+    error: alertsSummaryError,
+  } = useStationAlertsQuery({ threshold: "all", page: 1, limit: 1 });
+  const {
+    data: alertsPageData,
+    totalPages: alertsPageTotalPages,
+    error: alertsPageError,
+    loading: alertsPageLoading,
+  } = useStationAlertsQuery(
+    {
+      threshold: selectedAlert,
+      page: currentPage,
+      limit: pageSize,
+    },
+    { enabled: shouldUseAlertsEndpointTable },
+  );
 
   const apiJobs: JobApi[] = data?.data ?? [];
   const delayDaysByJobId = useMemo(() => {
     const map: Record<number, number> = {};
-    for (const row of alertsData) {
-      map[row.id] = row.daysInProcess;
+    const source = shouldUseAlertsEndpointTable ? alertsPageData : apiJobs;
+    for (const row of source) {
+      if (typeof row.daysInProcess === "number") {
+        map[row.id] = row.daysInProcess;
+      }
     }
     return map;
-  }, [alertsData]);
-
-  useEffect(() => {
-    if (selectedAlert === "all") {
-      setAlertModeJobs([]);
-      setAlertModeError("");
-      setAlertModeLoading(false);
-      return;
-    }
-
-    let alive = true;
-
-    (async () => {
-      setAlertModeLoading(true);
-      setAlertModeError("");
-
-      try {
-        const merged = await fetchAllJobsPages({
-          pageSize: 100,
-          search: normalizedSearch || undefined,
-          status: mappedStatus,
-        });
-
-        if (!alive) return;
-        setAlertModeJobs(merged);
-      } catch (e: unknown) {
-        if (!alive) return;
-        setAlertModeError(toThaiErrorMessage(e, "โหลดข้อมูลแจ้งเตือนไม่สำเร็จ"));
-      } finally {
-        if (alive) setAlertModeLoading(false);
+  }, [alertsPageData, apiJobs, shouldUseAlertsEndpointTable]);
+  const agingBandByJobId = useMemo(() => {
+    const map: Record<number, "normal" | "warning" | "critical"> = {};
+    const source = shouldUseAlertsEndpointTable ? alertsPageData : apiJobs;
+    for (const row of source) {
+      if (row.agingStatus === "normal" || row.agingStatus === "warning" || row.agingStatus === "critical") {
+        map[row.id] = row.agingStatus;
+      } else if (typeof row.daysInProcess === "number") {
+        map[row.id] = resolveAgingBand(row.daysInProcess);
       }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [mappedStatus, normalizedSearch, selectedAlert]);
-
-  useEffect(() => {
-    const hasScopeFilter = Boolean(selectedStatus || normalizedSearch);
-    if (selectedAlert !== "all" || !hasScopeFilter) {
-      setSummaryScopedJobs([]);
-      setSummaryScopedLoading(false);
-      return;
     }
-
-    let alive = true;
-
-    (async () => {
-      setSummaryScopedLoading(true);
-      try {
-        const merged = await fetchAllJobsPages({
-          pageSize: 100,
-          search: normalizedSearch || undefined,
-          status: mappedStatus,
-        });
-
-        if (!alive) return;
-        setSummaryScopedJobs(merged);
-      } finally {
-        if (alive) setSummaryScopedLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [mappedStatus, normalizedSearch, selectedAlert, selectedStatus]);
+    return map;
+  }, [alertsPageData, apiJobs, shouldUseAlertsEndpointTable]);
 
   const filteredAlertJobs = useMemo(() => {
-    if (selectedAlert === "all") return [];
+    if (selectedAlert === "all") return apiJobs;
 
-    return alertModeJobs.filter((job) => {
-      const days = delayDaysByJobId[job.id];
+    return apiJobs.filter((job) => {
+      const days = job.daysInProcess;
       if (typeof days !== "number") return false;
       return resolveAgingBand(days) === selectedAlert;
     });
-  }, [alertModeJobs, delayDaysByJobId, selectedAlert]);
+  }, [apiJobs, selectedAlert]);
 
-  const jobsForTable = useMemo(() => {
-    if (selectedAlert === "all") return apiJobs;
-    const start = (currentPage - 1) * pageSize;
-    return filteredAlertJobs.slice(start, start + pageSize);
-  }, [apiJobs, currentPage, filteredAlertJobs, pageSize, selectedAlert]);
+  const displayedJobs = shouldUseAlertsEndpointTable
+    ? alertsPageData
+    : filteredAlertJobs;
 
   const totalPages = useMemo(() => {
-    if (selectedAlert === "all") return resolveTotalPages(data, pageSize);
-    return Math.max(1, Math.ceil(filteredAlertJobs.length / pageSize));
-  }, [data, filteredAlertJobs.length, pageSize, selectedAlert]);
+    if (shouldUseAlertsEndpointTable) {
+      return Math.max(1, alertsPageTotalPages || 1);
+    }
+    return resolveTotalPages(data, pageSize);
+  }, [alertsPageTotalPages, data, pageSize, shouldUseAlertsEndpointTable]);
 
   useEffect(() => {
     setCurrentPage((prev) => Math.min(prev, totalPages));
   }, [totalPages]);
 
-  const tableLoading = selectedAlert === "all" ? loading : alertModeLoading;
-  const pageError = error || alertsError || alertModeError;
+  const tableLoading = shouldUseAlertsEndpointTable ? alertsPageLoading : loading;
+  const pageError = error || alertsSummaryError || alertsPageError;
 
   const statusOptions = useMemo(() => ["เคลม", "ซ่อม", "ตั้งเบิก", "เสร็จสิ้น"], []);
-  const summaryScopeJobs = useMemo(() => {
-    if (selectedAlert !== "all") return alertModeJobs;
-    if (selectedStatus || normalizedSearch) return summaryScopedJobs;
-    return null;
-  }, [
-    alertModeJobs,
-    normalizedSearch,
-    selectedAlert,
-    selectedStatus,
-    summaryScopedJobs,
-  ]);
 
   const summaryCounts = useMemo(
     () => ({
-      all: summaryScopeJobs ? summaryScopeJobs.length : resolveTotalItems(data),
-      warning: summaryScopeJobs
-        ? (() => {
-            const scopedIds = new Set(summaryScopeJobs.map((job) => job.id));
-            return alertsData.filter(
-              (row) =>
-                scopedIds.has(row.id) &&
-                resolveAgingBand(row.daysInProcess) === "warning",
-            ).length;
-          })()
-        : alertsData.filter(
-            (row) => resolveAgingBand(row.daysInProcess) === "warning",
-          ).length,
-      critical: summaryScopeJobs
-        ? (() => {
-            const scopedIds = new Set(summaryScopeJobs.map((job) => job.id));
-            return alertsData.filter(
-              (row) =>
-                scopedIds.has(row.id) &&
-                resolveAgingBand(row.daysInProcess) === "critical",
-            ).length;
-          })()
-        : alertsData.filter(
-            (row) => resolveAgingBand(row.daysInProcess) === "critical",
-          ).length,
+      all: hasScopeFilter ? resolveTotalItems(data) : alertsSummary.totalAlerts,
+      warning: alertsSummary.warningCount,
+      critical: alertsSummary.criticalCount,
     }),
-    [alertsData, data, summaryScopeJobs],
+    [alertsSummary.criticalCount, alertsSummary.totalAlerts, alertsSummary.warningCount, data, hasScopeFilter],
   );
 
   return (
@@ -232,9 +159,10 @@ export default function StationsPage() {
 
       <div className="mt-4">
         <StationsTable
-          jobs={jobsForTable}
-          loading={tableLoading || summaryScopedLoading}
+          jobs={displayedJobs}
+          loading={tableLoading}
           delayDaysByJobId={delayDaysByJobId}
+          agingBandByJobId={agingBandByJobId}
           onRowClick={(id) => navigate(`/stations/${id}`)}
         />
       </div>

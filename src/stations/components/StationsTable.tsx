@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { JobApi } from "../../features/jobs/api/job.api";
+import type { JobAlertApi } from "../api/jobAlerts.api";
 import StatusBadge from "../../shared/components/ui/StatusBadge";
 import Skeleton from "../../shared/components/ui/Skeleton";
 import { formatThaiDate } from "../../shared/lib/date";
@@ -47,11 +48,13 @@ export default function StationsTable({
   jobs,
   loading,
   delayDaysByJobId,
+  agingBandByJobId,
   onRowClick,
 }: {
-  jobs: JobApi[];
+  jobs: Array<JobApi | JobAlertApi>;
   loading: boolean;
   delayDaysByJobId: Record<number, number>;
+  agingBandByJobId?: Record<number, "normal" | "warning" | "critical">;
   onRowClick: (id: number) => void;
 }) {
   const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
@@ -86,9 +89,11 @@ export default function StationsTable({
     return (
       <div className="space-y-3 md:hidden">
         {jobs.map((job) => {
-          const delayDays = delayDaysByJobId[job.id];
+          const delayDays =
+            delayDaysByJobId[job.id] ?? job.daysInProcess;
           const delayBand =
-            typeof delayDays === "number" ? resolveAgingBand(delayDays) : "normal";
+            agingBandByJobId?.[job.id] ??
+            (typeof delayDays === "number" ? resolveAgingBand(delayDays) : "normal");
           const hasAlert = delayBand !== "normal";
           const isExpanded = expandedJobId === job.id;
           const repairDescription = job.repairDescription?.trim() || "";
@@ -255,11 +260,13 @@ export default function StationsTable({
               </tr>
             ) : (
               jobs.map((job) => {
-                const delayDays = delayDaysByJobId[job.id];
+                const delayDays =
+                  delayDaysByJobId[job.id] ?? job.daysInProcess;
                 const delayBand =
-                  typeof delayDays === "number"
+                  agingBandByJobId?.[job.id] ??
+                  (typeof delayDays === "number"
                     ? resolveAgingBand(delayDays)
-                    : "normal";
+                    : "normal");
                 const hasAlert = delayBand !== "normal";
                 const rowClass =
                   delayBand === "critical"

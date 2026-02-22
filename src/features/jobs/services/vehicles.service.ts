@@ -70,6 +70,7 @@ export type VehicleBrandApi = {
 export type InsuranceCompanyApi = {
   id: number;
   name: string;
+  isActive?: boolean;
   nameEn?: string | null;
   code?: string | null;
   createdAt?: string;

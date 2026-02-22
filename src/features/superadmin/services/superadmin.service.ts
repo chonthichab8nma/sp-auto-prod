@@ -109,6 +109,13 @@ export const superadminService = {
     return data;
   },
 
+  async updateEmployeePassword(id: number, password: string): Promise<EmployeeItem> {
+    const { data } = await http.patch<EmployeeItem>(`/private/employees/${id}`, {
+      password,
+    });
+    return data;
+  },
+
   async deleteEmployee(id: number): Promise<void> {
     await http.delete(`/private/employees/${id}`);
   },
@@ -125,6 +132,14 @@ export const superadminService = {
     return data;
   },
 
+  async updateInsurance(
+    id: number,
+    payload: CreateInsuranceCompanyInput,
+  ): Promise<InsuranceCompanyItem> {
+    const { data } = await http.put<InsuranceCompanyItem>(`/private/insurances/${id}`, payload);
+    return data;
+  },
+
   async deleteInsurance(id: number): Promise<void> {
     await http.delete(`/private/insurances/${id}`);
   },
@@ -136,6 +151,17 @@ export const superadminService = {
 
   async createVehicleBrand(payload: CreateVehicleBrandInput): Promise<VehicleBrandItem> {
     const { data } = await http.post<VehicleBrandItem>("/private/vehicles/brands", payload);
+    return data;
+  },
+
+  async updateVehicleBrand(
+    id: number,
+    payload: CreateVehicleBrandInput,
+  ): Promise<VehicleBrandItem> {
+    const { data } = await http.patch<VehicleBrandItem>(
+      `/private/vehicles/brands/${id}`,
+      payload,
+    );
     return data;
   },
 

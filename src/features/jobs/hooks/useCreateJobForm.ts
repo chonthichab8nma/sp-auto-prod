@@ -141,7 +141,7 @@ export function useCreateJobForm() {
         setIsLoadingInsurances(true);
         const list = await vehiclesService.listInsurances();
         if (!alive) return;
-        setInsurances(list.data);
+        setInsurances((list.data ?? []).filter((item) => item.isActive !== false));
       } catch (e) {
         console.error("โหลดข้อมูลประกันไม่สำเร็จ:", e);
         if (alive) setInsurances([]);
