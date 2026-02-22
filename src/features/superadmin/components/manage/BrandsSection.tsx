@@ -1,10 +1,12 @@
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import type {
   VehicleBrandItem,
   VehicleTypeItem,
 } from "../../services/superadmin.service";
 import type { GroupedCreateForm } from "../../constants/manage";
-import { SectionWrapper } from "./ManageShared";
+import { FormModal, SectionWrapper } from "./ManageShared";
+import FormSelect from "../../../../shared/components/form/FormSelect";
 
 export function BrandsSection({
   brands,
@@ -31,27 +33,114 @@ export function BrandsSection({
   onEdit: (item: VehicleBrandItem) => void;
   onDelete: (item: VehicleBrandItem) => void;
 }) {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   const setForm = (patch: Partial<GroupedCreateForm>) => {
     onGroupedFormChange({ ...groupedCreateForm, ...patch });
   };
 
+  const closeCreateModal = () => {
+    if (creatingGrouped) return;
+    setShowCreateModal(false);
+  };
+
   return (
-    <SectionWrapper title="จัดการยี่ห้อรถ" description="">
-      <div className="mt-5 space-y-5">
-        <form
-          onSubmit={onCreateGrouped}
-          className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-50 p-4"
+    <SectionWrapper
+      title="จัดการยี่ห้อรถ"
+      description=""
+      headerAction={
+        <button
+          type="button"
+          onClick={() => setShowCreateModal(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
         >
+          <Plus className="h-4 w-4" />
+          เพิ่มข้อมูลรถ
+        </button>
+      }
+    >
+      <div className="mt-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <div className="mb-3">
             <h3 className="text-base font-semibold text-slate-900">
-              เพิ่มข้อมูลรถแบบกลุ่ม (ยี่ห้อ, รุ่นรถ, ประเภทรถ)
+              รายการยี่ห้อรถทั้งหมด
             </h3>
-            <p className="text-sm text-slate-600">
-              เพิ่มได้ในครั้งเดียว เช่น ยี่ห้อ เต่า ไปยังรุ่น A1 และประเภท รถเก๋ง
+            <p className="text-sm text-slate-500">
+              ใช้สำหรับแก้ไข/ลบข้อมูลยี่ห้อรถ
             </p>
           </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">รหัส</th>
+                  <th className="px-3 py-2 text-left font-medium">ชื่อยี่ห้อ</th>
+                  <th className="px-3 py-2 text-left font-medium">ชื่ออังกฤษ</th>
+                  <th className="px-3 py-2 text-left font-medium">ประเทศ</th>
+                  <th className="px-3 py-2 text-right font-medium">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {brands.map((item) => (
+                  <tr key={item.id} className="border-t border-slate-200 bg-white">
+                    <td className="px-3 py-2">{item.code}</td>
+                    <td className="px-3 py-2">{item.name}</td>
+                    <td className="px-3 py-2">{item.nameEn || "-"}</td>
+                    <td className="px-3 py-2">{item.country || "-"}</td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onEdit(item)}
+                          disabled={editingBrandId === item.id}
+                          className="inline-flex min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {editingBrandId === item.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Pencil className="h-3.5 w-3.5" />
+                          )}
+                          แก้ไข
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(item)}
+                          disabled={deletingBrandId === item.id}
+                          className="inline-flex min-w-[64px] items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 shadow-sm transition hover:-translate-y-[1px] hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deletingBrandId === item.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
+                          ลบ
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {brands.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-3 py-4 text-center text-slate-500">
+                      ยังไม่มีข้อมูลยี่ห้อรถ
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      {showCreateModal ? (
+        <FormModal
+          title="เพิ่มข้อมูลรถ"
+          onClose={closeCreateModal}
+          disableClose={creatingGrouped}
+        >
+          <form onSubmit={onCreateGrouped} className="flex h-full flex-col gap-4">
+            
+
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <div className="mb-2 text-sm font-semibold text-slate-800">ยี่ห้อรถ</div>
               <div className="mb-2 flex gap-2">
@@ -80,18 +169,15 @@ export function BrandsSection({
               </div>
 
               {groupedCreateForm.brandMode === "existing" ? (
-                <select
+                <FormSelect
                   value={groupedCreateForm.existingBrandId}
+                  options={brands.map((brand) => ({
+                    value: String(brand.id),
+                    label: brand.name,
+                  }))}
+                  placeholder="เลือกยี่ห้อรถ"
                   onChange={(e) => setForm({ existingBrandId: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-600"
-                >
-                  <option value="">เลือกยี่ห้อรถ</option>
-                  {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                   <input
@@ -158,18 +244,15 @@ export function BrandsSection({
               </div>
 
               {groupedCreateForm.typeMode === "existing" ? (
-                <select
+                <FormSelect
                   value={groupedCreateForm.existingTypeId}
+                  options={vehicleTypes.map((item) => ({
+                    value: String(item.id),
+                    label: item.name,
+                  }))}
+                  placeholder="เลือกประเภทรถ"
                   onChange={(e) => setForm({ existingTypeId: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-600"
-                >
-                  <option value="">เลือกประเภทรถ</option>
-                  {vehicleTypes.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                   <input
@@ -193,95 +276,28 @@ export function BrandsSection({
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClearGrouped}
-              disabled={creatingGrouped}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              ล้างข้อมูล
-            </button>
-            <button
-              type="submit"
-              disabled={creatingGrouped}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {creatingGrouped ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              เพิ่มข้อมูลแบบกลุ่ม
-            </button>
-          </div>
-        </form>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="mb-3">
-            <h3 className="text-base font-semibold text-slate-900">รายการยี่ห้อรถทั้งหมด</h3>
-            <p className="text-sm text-slate-500">ใช้สำหรับแก้ไข/ลบข้อมูลยี่ห้อรถ</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">
-              <thead className="bg-slate-50 text-slate-700">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium">รหัส</th>
-                  <th className="px-3 py-2 text-left font-medium">ชื่อยี่ห้อ</th>
-                  <th className="px-3 py-2 text-left font-medium">ชื่ออังกฤษ</th>
-                  <th className="px-3 py-2 text-left font-medium">ประเทศ</th>
-                  <th className="px-3 py-2 text-right font-medium">การจัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {brands.map((item) => (
-                  <tr key={item.id} className="border-t border-slate-200 bg-white">
-                    <td className="px-3 py-2">{item.code}</td>
-                    <td className="px-3 py-2">{item.name}</td>
-                    <td className="px-3 py-2">{item.nameEn || "-"}</td>
-                    <td className="px-3 py-2">{item.country || "-"}</td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onEdit(item)}
-                          disabled={editingBrandId === item.id}
-                          className="inline-flex min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {editingBrandId === item.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Pencil className="h-3.5 w-3.5" />
-                          )}
-                          แก้ไข
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDelete(item)}
-                          disabled={deletingBrandId === item.id}
-                          className="inline-flex min-w-[64px] items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 shadow-sm transition hover:-translate-y-[1px] hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {deletingBrandId === item.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                          ลบ
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {brands.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-4 text-center text-slate-500">
-                      ยังไม่มีข้อมูลยี่ห้อรถ
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+            <div className="mt-auto flex justify-end gap-2 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={onClearGrouped}
+                disabled={creatingGrouped}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ล้างข้อมูล
+              </button>
+              <button
+                type="submit"
+                disabled={creatingGrouped}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {creatingGrouped ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                เพิ่มข้อมูลแบบกลุ่ม
+              </button>
+            </div>
+          </form>
+        </FormModal>
+      ) : null}
     </SectionWrapper>
   );
 }

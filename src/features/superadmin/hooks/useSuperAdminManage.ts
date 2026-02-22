@@ -336,59 +336,94 @@ export function useSuperAdminManage() {
     e.preventDefault();
     if (creatingGrouped) return;
 
+    const modelName = groupedCreateForm.modelName.trim();
+    if (!modelName) {
+      toast.error("กรุณากรอกชื่อรุ่นรถ");
+      return;
+    }
+
+    if (groupedCreateForm.brandMode === "existing") {
+      if (!Number(groupedCreateForm.existingBrandId)) {
+        toast.error("กรุณาเลือกยี่ห้อรถ");
+        return;
+      }
+    } else {
+      const brandCode = groupedCreateForm.brandCode.trim().toLowerCase();
+      const brandName = groupedCreateForm.brandName.trim();
+      if (!brandCode || !brandName) {
+        toast.error("กรุณากรอกรหัสและชื่อยี่ห้อรถ");
+        return;
+      }
+    }
+
+    if (groupedCreateForm.typeMode === "existing") {
+      if (!Number(groupedCreateForm.existingTypeId)) {
+        toast.error("กรุณาเลือกประเภทรถ");
+        return;
+      }
+    } else {
+      const typeCode = groupedCreateForm.typeCode.trim().toLowerCase();
+      const typeName = groupedCreateForm.typeName.trim();
+      if (!typeCode || !typeName) {
+        toast.error("กรุณากรอกรหัสและชื่อประเภทรถ");
+        return;
+      }
+    }
+
+    let createdBrandId: number | null = null;
+    let createdTypeId: number | null = null;
+
     try {
       setCreatingGrouped(true);
 
       let brandId: number;
       if (groupedCreateForm.brandMode === "existing") {
         brandId = Number(groupedCreateForm.existingBrandId);
-        if (!brandId) {
-          toast.error("กรุณาเลือกยี่ห้อรถ");
-          return;
-        }
       } else {
+        const normalizedBrandCode = groupedCreateForm.brandCode.trim().toLowerCase();
+        const existingBrandByCode = brands.find(
+          (item) => item.code.trim().toLowerCase() === normalizedBrandCode,
+        );
+        if (existingBrandByCode) {
+          brandId = existingBrandByCode.id;
+          toast("พบรหัสยี่ห้อเดิม ระบบจะใช้ยี่ห้อเดิมให้อัตโนมัติ");
+        } else {
         const brandPayload: CreateVehicleBrandInput = {
-          code: groupedCreateForm.brandCode.trim().toLowerCase(),
+          code: normalizedBrandCode,
           name: groupedCreateForm.brandName.trim(),
           nameEn: groupedCreateForm.brandNameEn.trim(),
           country: groupedCreateForm.brandCountry.trim(),
           logoUrl: groupedCreateForm.brandLogoUrl.trim(),
         };
-        if (!brandPayload.code || !brandPayload.name) {
-          toast.error("กรุณากรอกรหัสและชื่อยี่ห้อรถ");
-          return;
-        }
         const createdBrand = await superadminService.createVehicleBrand(brandPayload);
         setBrands((prev) => [createdBrand, ...prev]);
         brandId = createdBrand.id;
+        createdBrandId = createdBrand.id;
+        }
       }
 
       let typeId: number;
       if (groupedCreateForm.typeMode === "existing") {
         typeId = Number(groupedCreateForm.existingTypeId);
-        if (!typeId) {
-          toast.error("กรุณาเลือกประเภทรถ");
-          return;
-        }
       } else {
+        const normalizedTypeCode = groupedCreateForm.typeCode.trim().toLowerCase();
+        const existingTypeByCode = vehicleTypes.find(
+          (item) => item.code.trim().toLowerCase() === normalizedTypeCode,
+        );
+        if (existingTypeByCode) {
+          typeId = existingTypeByCode.id;
+          toast("พบรหัสประเภทรถเดิม ระบบจะใช้ประเภทเดิมให้อัตโนมัติ");
+        } else {
         const typePayload: CreateVehicleTypeInput = {
-          code: groupedCreateForm.typeCode.trim().toLowerCase(),
+          code: normalizedTypeCode,
           name: groupedCreateForm.typeName.trim(),
           nameEn: groupedCreateForm.typeNameEn.trim(),
         };
-        if (!typePayload.code || !typePayload.name) {
-          toast.error("กรุณากรอกรหัสและชื่อประเภทรถ");
-          return;
-        }
         const createdType = await superadminService.createVehicleType(typePayload);
         setVehicleTypes((prev) => [createdType, ...prev]);
         typeId = createdType.id;
-      }
-
-      const modelName = groupedCreateForm.modelName.trim();
-      if (!modelName) {
-        toast.error("กรุณากรอกชื่อรุ่นรถ");
-        return;
+        createdTypeId = createdType.id;
+        }
       }
 
       await superadminService.createVehicleModel({
@@ -400,6 +435,22 @@ export function useSuperAdminManage() {
       setGroupedCreateForm(getDefaultGroupedFormWithBrand(brandId));
       toast.success("เพิ่มข้อมูลรถสำเร็จ");
     } catch (e) {
+      if (createdBrandId) {
+        try {
+          await superadminService.deleteVehicleBrand(createdBrandId);
+          setBrands((prev) => prev.filter((item) => item.id !== createdBrandId));
+        } catch {
+          // ignore rollback error
+        }
+      }
+      if (createdTypeId) {
+        try {
+          await superadminService.deleteVehicleType(createdTypeId);
+          setVehicleTypes((prev) => prev.filter((item) => item.id !== createdTypeId));
+        } catch {
+          // ignore rollback error
+        }
+      }
       toast.error(toThaiErrorMessage(e, "เพิ่มข้อมูลรถไม่สำเร็จ"));
     } finally {
       setCreatingGrouped(false);

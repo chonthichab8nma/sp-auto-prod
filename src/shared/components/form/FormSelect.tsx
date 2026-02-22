@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
+type SelectOption = string | { label: string; value: string };
+
 interface FormSelectProps extends Omit<
   React.SelectHTMLAttributes<HTMLSelectElement>,
   "children"
 > {
   label?: React.ReactNode;
-  options: string[];
+  options: SelectOption[];
   placeholder?: string;
   error?: string;
   // portal?: boolean;
@@ -40,10 +43,20 @@ const FormSelect = ({
   const [pos, setPos] = useState<Pos | null>(null);
 
   const stringValue = (value ?? "") as string;
+  const normalizedOptions = useMemo(
+    () =>
+      options.map((option) =>
+        typeof option === "string" ? { label: option, value: option } : option,
+      ),
+    [options],
+  );
 
   const selectedLabel = useMemo(() => {
-    return options.find((o) => o === stringValue) ?? "";
-  }, [options, stringValue]);
+    return (
+      normalizedOptions.find((option) => option.value === stringValue)?.label ??
+      ""
+    );
+  }, [normalizedOptions, stringValue]);
 
   useEffect(() => {
     const onDocDown = (e: MouseEvent) => {
@@ -138,14 +151,14 @@ const FormSelect = ({
               ].join(" ")}
             >
               <ul className="max-h-72 overflow-auto py-1">
-                {options.map((o) => {
-                  const isSelected = o === stringValue;
+                {normalizedOptions.map((option) => {
+                  const isSelected = option.value === stringValue;
                   return (
-                    <li key={o}>
+                    <li key={option.value}>
                       <button
                         type="button"
                         onClick={() => {
-                          commit(o);
+                          commit(option.value);
                         }}
                         className={[
                           "w-full text-left px-4 py-2 text-sm leading-normal",
@@ -155,7 +168,7 @@ const FormSelect = ({
                             : "text-slate-800",
                         ].join(" ")}
                       >
-                        {o}
+                        {option.label}
                       </button>
                     </li>
                   );
@@ -190,9 +203,9 @@ const FormSelect = ({
         <option value="" disabled>
           {placeholder}
         </option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+        {normalizedOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
