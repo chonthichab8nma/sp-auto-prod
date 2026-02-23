@@ -1,10 +1,9 @@
 import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import FormSelect from "../../../shared/components/form/FormSelect";
+import Skeleton from "../../../shared/components/ui/Skeleton";
 import {
   defaultGroupedCreateForm,
-  tabItems,
   type ManageTab,
 } from "../constants/manage";
 import { AlertConfigsSection } from "../components/manage/AlertConfigsSection";
@@ -20,6 +19,51 @@ import {
 import { useSuperAdminManage } from "../hooks/useSuperAdminManage";
 import type { EmployeeRole } from "../services/superadmin.service";
 
+const alertStatusLabel: Record<string, string> = {
+  CLAIM: "เคลม",
+  REPAIR: "ซ่อม",
+  BILLING: "วางบิล",
+  DONE: "งานเสร็จ",
+};
+
+function ManageTableSkeleton({
+  title,
+  columns,
+}: {
+  title: string;
+  columns: number;
+}) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+      <div className="mb-4 space-y-2">
+        <Skeleton className="h-7 w-56" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="grid min-w-[720px] gap-3 bg-slate-50 px-3 py-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+          {Array.from({ length: columns }).map((_, idx) => (
+            <Skeleton key={`head-${title}-${idx}`} className="h-4 w-20" />
+          ))}
+        </div>
+        <div className="space-y-0">
+          {Array.from({ length: 6 }).map((_, row) => (
+            <div
+              key={`row-${title}-${row}`}
+              className="grid min-w-[720px] gap-3 border-t border-slate-200 px-3 py-3"
+              style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+            >
+              {Array.from({ length: columns }).map((__, col) => (
+                <Skeleton key={`cell-${title}-${row}-${col}`} className="h-5 w-full max-w-[140px]" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function SuperAdminManagePage() {
   const [searchParams] = useSearchParams();
   const vm = useSuperAdminManage();
@@ -32,11 +76,6 @@ export default function SuperAdminManagePage() {
       ? activeTabParam
       : "employees";
 
-  const activeLabel = useMemo(
-    () => tabItems.find((tab) => tab.id === activeTab)?.label ?? "",
-    [activeTab],
-  );
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
       <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
@@ -44,28 +83,21 @@ export default function SuperAdminManagePage() {
       </section>
 
       {vm.loading && activeTab === "employees" ? <EmployeeSectionSkeleton /> : null}
-
-      {vm.loading && activeTab !== "employees" ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
-          <span className="inline-flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            กำลังโหลดข้อมูล {activeLabel}
-          </span>
-        </div>
+      {vm.loading && activeTab === "insurances" ? (
+        <ManageTableSkeleton title="insurances" columns={4} />
+      ) : null}
+      {vm.loading && activeTab === "brands" ? (
+        <ManageTableSkeleton title="brands" columns={5} />
+      ) : null}
+      {vm.loading && activeTab === "alerts" ? (
+        <ManageTableSkeleton title="alerts" columns={5} />
       ) : null}
 
       {!vm.loading && activeTab === "employees" ? (
         <EmployeesSection
           employees={vm.employees}
-          updatingEmployeePasswordId={vm.updatingEmployeePasswordId}
-          editingEmployeeId={vm.editingEmployeeId}
           deletingEmployeeId={vm.deletingEmployeeId}
           onOpenCreate={() => vm.setShowEmployeeForm(true)}
-          onEdit={vm.openEmployeeEditModal}
-          onOpenPassword={(item) => {
-            vm.setEmployeePasswordTarget(item);
-            vm.setEmployeePassword("");
-          }}
           onDelete={(item) =>
             vm.openDeleteModal({ type: "employee", id: item.id, name: item.name })
           }
@@ -347,7 +379,9 @@ export default function SuperAdminManagePage() {
 
       {vm.alertConfigEditTarget ? (
         <FormModal
-          title={`แก้ไขระยะเวลาแจ้งเตือน : ${vm.alertConfigEditTarget.status}`}
+          title={`แก้ไขระยะเวลาแจ้งเตือน : ${
+            alertStatusLabel[vm.alertConfigEditTarget.status] ?? vm.alertConfigEditTarget.status
+          }`}
           onClose={vm.closeAlertConfigEditModal}
           disableClose={Boolean(vm.editingAlertConfigId)}
         >

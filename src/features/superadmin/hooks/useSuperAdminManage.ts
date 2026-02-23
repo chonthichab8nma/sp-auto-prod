@@ -28,7 +28,6 @@ const ALERT_STATUS_ORDER: AlertConfigStatus[] = [
   "CLAIM",
   "REPAIR",
   "BILLING",
-  "DONE",
 ];
 
 function getDefaultGroupedFormWithBrand(brandId?: number) {

@@ -230,7 +230,7 @@ export default function Sidebar({
                         : "text-slate-600 hover:bg-slate-100",
                     ].join(" ")}
                   >
-                    ตั้งค่า SLA/การแจ้งเตือน
+                   ตั้งค่าระยะเวลาการแจ้งเตือน
                   </Link>
                 </div>
               )}
