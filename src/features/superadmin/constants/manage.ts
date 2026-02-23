@@ -5,7 +5,7 @@ import type {
   EmployeeRole,
 } from "../services/superadmin.service";
 
-export type ManageTab = "employees" | "insurances" | "brands";
+export type ManageTab = "employees" | "insurances" | "brands" | "alerts";
 
 export const roleLabel: Record<EmployeeRole, string> = {
   admin: "admin",
@@ -16,6 +16,7 @@ export const tabItems: { id: ManageTab; label: string }[] = [
   { id: "employees", label: "จัดการพนักงาน" },
   { id: "insurances", label: "จัดการบริษัทประกันภัย" },
   { id: "brands", label: "จัดการยี่ห้อรถ" },
+  { id: "alerts", label: "ตั้งค่า SLA/การแจ้งเตือน" },
 ];
 
 export const defaultEmployeeForm: CreateEmployeeInput = {

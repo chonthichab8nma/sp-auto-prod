@@ -7,6 +7,7 @@ import {
   tabItems,
   type ManageTab,
 } from "../constants/manage";
+import { AlertConfigsSection } from "../components/manage/AlertConfigsSection";
 import { BrandsSection } from "../components/manage/BrandsSection";
 import { EmployeesSection } from "../components/manage/EmployeesSection";
 import { InsurancesSection } from "../components/manage/InsurancesSection";
@@ -25,7 +26,9 @@ export default function SuperAdminManagePage() {
 
   const activeTabParam = searchParams.get("tab");
   const activeTab: ManageTab =
-    activeTabParam === "insurances" || activeTabParam === "brands"
+    activeTabParam === "insurances" ||
+    activeTabParam === "brands" ||
+    activeTabParam === "alerts"
       ? activeTabParam
       : "employees";
 
@@ -55,8 +58,10 @@ export default function SuperAdminManagePage() {
         <EmployeesSection
           employees={vm.employees}
           updatingEmployeePasswordId={vm.updatingEmployeePasswordId}
+          editingEmployeeId={vm.editingEmployeeId}
           deletingEmployeeId={vm.deletingEmployeeId}
           onOpenCreate={() => vm.setShowEmployeeForm(true)}
+          onEdit={vm.openEmployeeEditModal}
           onOpenPassword={(item) => {
             vm.setEmployeePasswordTarget(item);
             vm.setEmployeePassword("");
@@ -93,6 +98,14 @@ export default function SuperAdminManagePage() {
           onClearGrouped={() => vm.setGroupedCreateForm(defaultGroupedCreateForm)}
           onEdit={vm.openBrandEditModal}
           onDelete={(item) => vm.openDeleteModal({ type: "brand", id: item.id, name: item.name })}
+        />
+      ) : null}
+
+      {!vm.loading && activeTab === "alerts" ? (
+        <AlertConfigsSection
+          configs={vm.alertConfigs}
+          editingAlertConfigId={vm.editingAlertConfigId}
+          onEdit={vm.openAlertConfigEditModal}
         />
       ) : null}
 
@@ -159,6 +172,73 @@ export default function SuperAdminManagePage() {
               >
                 {vm.creatingEmployee ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 บันทึกพนักงาน
+              </button>
+            </div>
+          </form>
+        </FormModal>
+      ) : null}
+
+      {vm.employeeEditTarget ? (
+        <FormModal
+          title="แก้ไขข้อมูลพนักงาน"
+          onClose={vm.closeEmployeeEditModal}
+          disableClose={Boolean(vm.editingEmployeeId)}
+        >
+          <form onSubmit={vm.handleUpdateEmployee} className="flex h-full flex-col gap-4">
+            <TextInput
+              label="ชื่อ"
+              value={vm.employeeEditForm.name}
+              onChange={(next) => vm.setEmployeeEditForm((prev) => ({ ...prev, name: next }))}
+              placeholder="Jane Doe"
+            />
+            <FormSelect
+              label="Role"
+              value={vm.employeeEditForm.role}
+              options={["staff", "admin"]}
+              onChange={(e) =>
+                vm.setEmployeeEditForm((prev) => ({
+                  ...prev,
+                  role: e.target.value as EmployeeRole,
+                }))
+              }
+            />
+            <TextInput
+              label="เบอร์โทร"
+              value={vm.employeeEditForm.phone}
+              onChange={(next) =>
+                vm.setEmployeeEditForm((prev) => {
+                  const digits = next.replace(/\D/g, "").slice(0, 10);
+                  if (digits.length > 0 && digits[0] !== "0") return prev;
+                  return { ...prev, phone: digits };
+                })
+              }
+              placeholder="0811112222"
+            />
+            <TextInput
+              label="Username"
+              value={vm.employeeEditForm.username}
+              onChange={(next) =>
+                vm.setEmployeeEditForm((prev) => ({ ...prev, username: next }))
+              }
+              placeholder="janedoe"
+            />
+
+            <div className="mt-auto flex justify-end gap-2 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={vm.closeEmployeeEditModal}
+                disabled={Boolean(vm.editingEmployeeId)}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={Boolean(vm.editingEmployeeId)}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {vm.editingEmployeeId ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                บันทึกการแก้ไข
               </button>
             </div>
           </form>
@@ -259,6 +339,75 @@ export default function SuperAdminManagePage() {
               >
                 {vm.updatingEmployeePasswordId ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 บันทึกรหัสผ่าน
+              </button>
+            </div>
+          </form>
+        </FormModal>
+      ) : null}
+
+      {vm.alertConfigEditTarget ? (
+        <FormModal
+          title={`แก้ไขระยะเวลาแจ้งเตือน : ${vm.alertConfigEditTarget.status}`}
+          onClose={vm.closeAlertConfigEditModal}
+          disableClose={Boolean(vm.editingAlertConfigId)}
+        >
+          <form onSubmit={vm.handleUpdateAlertConfig} className="flex h-full flex-col gap-4">
+            <div className=" px-3 py-2 text-xs text-red-700">
+              หมายเหตุ: จำนวนวันเกินกำหนดต้องมากกว่าหรือเท่ากับจำนวนวันแจ้งเตือน
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-800">เริ่มแจ้งเตือน (วัน)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={String(vm.alertConfigEditForm.warningDays)}
+                  onChange={(e) =>
+                    vm.setAlertConfigEditForm((prev) => ({
+                      ...prev,
+                      warningDays: e.target.value === "" ? 0 : Number(e.target.value),
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-blue-600"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-800">เกินกำหนด (วัน)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={String(vm.alertConfigEditForm.criticalDays)}
+                  onChange={(e) =>
+                    vm.setAlertConfigEditForm((prev) => ({
+                      ...prev,
+                      criticalDays: e.target.value === "" ? 0 : Number(e.target.value),
+                    }))
+                  }
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-blue-600"
+                />
+              </div>
+            </div>
+
+            <div className="mt-auto flex justify-end gap-2 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={vm.closeAlertConfigEditModal}
+                disabled={Boolean(vm.editingAlertConfigId)}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={Boolean(vm.editingAlertConfigId)}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {vm.editingAlertConfigId ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Save
               </button>
             </div>
           </form>

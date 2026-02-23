@@ -59,7 +59,9 @@ export default function Sidebar({
   const canAccessDashboard = role === "superadmin" || role === "admin";
   const manageTabParam = new URLSearchParams(activeSearch).get("tab");
   const activeManageTab =
-    manageTabParam === "insurances" || manageTabParam === "brands"
+    manageTabParam === "insurances" ||
+    manageTabParam === "brands" ||
+    manageTabParam === "alerts"
       ? manageTabParam
       : "employees";
 
@@ -217,6 +219,18 @@ export default function Sidebar({
                     ].join(" ")}
                   >
                     จัดการยี่ห้อรถ
+                  </Link>
+                  <Link
+                    to="/superadmin/manage?tab=alerts"
+                    onClick={handleNavigate}
+                    className={[
+                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      activeManageTab === "alerts"
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-slate-600 hover:bg-slate-100",
+                    ].join(" ")}
+                  >
+                    ตั้งค่า SLA/การแจ้งเตือน
                   </Link>
                 </div>
               )}

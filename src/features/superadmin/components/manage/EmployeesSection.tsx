@@ -1,4 +1,4 @@
-import { KeyRound, Loader2, Trash2 } from "lucide-react";
+import { KeyRound, Loader2, Pencil, Trash2 } from "lucide-react";
 import type { EmployeeItem, EmployeeRole } from "../../services/superadmin.service";
 import { roleLabel } from "../../constants/manage";
 import { SectionWrapper } from "./ManageShared";
@@ -6,15 +6,19 @@ import { SectionWrapper } from "./ManageShared";
 export function EmployeesSection({
   employees,
   updatingEmployeePasswordId,
+  editingEmployeeId,
   deletingEmployeeId,
   onOpenCreate,
+  onEdit,
   onOpenPassword,
   onDelete,
 }: {
   employees: EmployeeItem[];
   updatingEmployeePasswordId: number | null;
+  editingEmployeeId: number | null;
   deletingEmployeeId: number | null;
   onOpenCreate: () => void;
+  onEdit: (item: EmployeeItem) => void;
   onOpenPassword: (item: EmployeeItem) => void;
   onDelete: (item: EmployeeItem) => void;
 }) {
@@ -56,6 +60,19 @@ export function EmployeesSection({
                 <td className="px-3 py-2">{item.username}</td>
                 <td className="px-3 py-2 text-right">
                   <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(item)}
+                      disabled={editingEmployeeId === item.id}
+                      className="inline-flex min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {editingEmployeeId === item.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Pencil className="h-3.5 w-3.5" />
+                      )}
+                      แก้ไข
+                    </button>
                     <button
                       type="button"
                       onClick={() => onOpenPassword(item)}

@@ -19,6 +19,13 @@ export type CreateEmployeeInput = {
   password: string;
 };
 
+export type UpdateEmployeeInput = {
+  name: string;
+  role: EmployeeRole;
+  phone: string;
+  username: string;
+};
+
 export type InsuranceCompanyItem = {
   id: number;
   name: string;
@@ -78,6 +85,21 @@ export type CreateVehicleModelInput = {
   typeId?: number | null;
 };
 
+export type AlertConfigStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
+
+export type AlertConfigItem = {
+  id: number;
+  status: AlertConfigStatus;
+  warningDays: number;
+  criticalDays: number;
+  updatedAt: string;
+};
+
+export type UpdateAlertConfigInput = {
+  warningDays: number;
+  criticalDays: number;
+};
+
 type WrappedListResponse<T> = {
   data?: T[];
 };
@@ -90,6 +112,9 @@ type EmployeesListResponse =
 type InsurancesListResponse =
   | InsuranceCompanyItem[]
   | WrappedListResponse<InsuranceCompanyItem>;
+type AlertConfigsListResponse =
+  | AlertConfigItem[]
+  | WrappedListResponse<AlertConfigItem>;
 
 function extractList<T>(data: T[] | WrappedListResponse<T>): T[] {
   if (Array.isArray(data)) return data;
@@ -109,6 +134,11 @@ export const superadminService = {
     return data;
   },
 
+  async updateEmployee(id: number, payload: UpdateEmployeeInput): Promise<EmployeeItem> {
+    const { data } = await http.patch<EmployeeItem>(`/private/employees/${id}`, payload);
+    return data;
+  },
+
   async updateEmployeePassword(id: number, password: string): Promise<EmployeeItem> {
     const { data } = await http.patch<EmployeeItem>(`/private/employees/${id}`, {
       password,
@@ -125,6 +155,22 @@ export const superadminService = {
       params: { page: 1, limit: 200 },
     });
     return extractList(data as InsuranceCompanyItem[] | WrappedListResponse<InsuranceCompanyItem>);
+  },
+
+  async listAlertConfigs(): Promise<AlertConfigItem[]> {
+    const { data } = await http.get<AlertConfigsListResponse>("/private/alert-configs");
+    return extractList(data as AlertConfigItem[] | WrappedListResponse<AlertConfigItem>);
+  },
+
+  async updateAlertConfig(
+    status: AlertConfigStatus,
+    payload: UpdateAlertConfigInput,
+  ): Promise<AlertConfigItem> {
+    const { data } = await http.put<AlertConfigItem>(
+      `/private/alert-configs/${status}`,
+      payload,
+    );
+    return data;
   },
 
   async createInsurance(payload: CreateInsuranceCompanyInput): Promise<InsuranceCompanyItem> {

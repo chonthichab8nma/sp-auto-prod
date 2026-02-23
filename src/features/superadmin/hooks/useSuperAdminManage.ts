@@ -3,12 +3,16 @@ import toast from "react-hot-toast";
 import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 import {
   superadminService,
+  type AlertConfigItem,
+  type AlertConfigStatus,
   type CreateEmployeeInput,
   type CreateInsuranceCompanyInput,
   type CreateVehicleBrandInput,
   type CreateVehicleTypeInput,
   type EmployeeItem,
   type InsuranceCompanyItem,
+  type UpdateAlertConfigInput,
+  type UpdateEmployeeInput,
   type VehicleBrandItem,
   type VehicleTypeItem,
 } from "../services/superadmin.service";
@@ -20,12 +24,40 @@ import {
   type DeleteTarget,
 } from "../constants/manage";
 
+const ALERT_STATUS_ORDER: AlertConfigStatus[] = [
+  "CLAIM",
+  "REPAIR",
+  "BILLING",
+  "DONE",
+];
+
 function getDefaultGroupedFormWithBrand(brandId?: number) {
   return {
     ...defaultGroupedCreateForm,
     brandMode: "existing" as const,
     existingBrandId: brandId ? String(brandId) : "",
   };
+}
+
+function sortAlertConfigs(items: AlertConfigItem[]) {
+  return [...items].sort(
+    (a, b) => ALERT_STATUS_ORDER.indexOf(a.status) - ALERT_STATUS_ORDER.indexOf(b.status),
+  );
+}
+
+function withDefaultAlertConfigs(items: AlertConfigItem[]) {
+  const byStatus = new Map(items.map((item) => [item.status, item]));
+  return ALERT_STATUS_ORDER.map((status) => {
+    const found = byStatus.get(status);
+    if (found) return found;
+    return {
+      id: 0,
+      status,
+      warningDays: 0,
+      criticalDays: 0,
+      updatedAt: new Date().toISOString(),
+    };
+  });
 }
 
 export function useSuperAdminManage() {
@@ -40,6 +72,15 @@ export function useSuperAdminManage() {
   const [deletingEmployeeId, setDeletingEmployeeId] = useState<number | null>(
     null,
   );
+  const [editingEmployeeId, setEditingEmployeeId] = useState<number | null>(null);
+  const [employeeEditTarget, setEmployeeEditTarget] =
+    useState<EmployeeItem | null>(null);
+  const [employeeEditForm, setEmployeeEditForm] = useState<UpdateEmployeeInput>({
+    name: "",
+    role: "staff",
+    phone: "",
+    username: "",
+  });
   const [updatingEmployeePasswordId, setUpdatingEmployeePasswordId] =
     useState<number | null>(null);
   const [employeePasswordTarget, setEmployeePasswordTarget] =
@@ -59,6 +100,16 @@ export function useSuperAdminManage() {
   const [deletingInsuranceId, setDeletingInsuranceId] = useState<number | null>(
     null,
   );
+
+  const [alertConfigs, setAlertConfigs] = useState<AlertConfigItem[]>([]);
+  const [editingAlertConfigId, setEditingAlertConfigId] = useState<number | null>(null);
+  const [alertConfigEditTarget, setAlertConfigEditTarget] =
+    useState<AlertConfigItem | null>(null);
+  const [alertConfigEditForm, setAlertConfigEditForm] =
+    useState<UpdateAlertConfigInput>({
+      warningDays: 0,
+      criticalDays: 0,
+    });
 
   const [brands, setBrands] = useState<VehicleBrandItem[]>([]);
   const [editingBrandId, setEditingBrandId] = useState<number | null>(null);
@@ -82,16 +133,18 @@ export function useSuperAdminManage() {
   async function loadAll() {
     setLoading(true);
     try {
-      const [employeeList, insuranceList, brandList, vehicleTypeList] =
+      const [employeeList, insuranceList, alertConfigList, brandList, vehicleTypeList] =
         await Promise.all([
           superadminService.listEmployees(),
           superadminService.listInsurances(),
+          superadminService.listAlertConfigs(),
           superadminService.listVehicleBrands(),
           superadminService.listVehicleTypes(),
         ]);
 
       setEmployees(employeeList);
       setInsurances(insuranceList);
+      setAlertConfigs(withDefaultAlertConfigs(sortAlertConfigs(alertConfigList)));
       setBrands(brandList);
       setVehicleTypes(vehicleTypeList);
     } catch (e) {
@@ -137,6 +190,58 @@ export function useSuperAdminManage() {
     }
   }
 
+  function openEmployeeEditModal(item: EmployeeItem) {
+    setEmployeeEditTarget(item);
+    setEmployeeEditForm({
+      name: item.name ?? "",
+      role: item.role ?? "staff",
+      phone: item.phone ?? "",
+      username: item.username ?? "",
+    });
+  }
+
+  async function handleUpdateEmployee(e: React.FormEvent) {
+    e.preventDefault();
+    if (!employeeEditTarget || editingEmployeeId) return;
+
+    const payload: UpdateEmployeeInput = {
+      name: employeeEditForm.name.trim(),
+      role: employeeEditForm.role,
+      phone: employeeEditForm.phone.replace(/\D/g, "").slice(0, 10),
+      username: employeeEditForm.username.trim(),
+    };
+
+    if (!payload.name || !payload.phone || !payload.username) {
+      toast.error("กรุณากรอกข้อมูลพนักงานให้ครบ");
+      return;
+    }
+
+    if (!payload.phone.startsWith("0")) {
+      toast.error("เบอร์โทรพนักงานต้องขึ้นต้นด้วย 0");
+      return;
+    }
+
+    try {
+      setEditingEmployeeId(employeeEditTarget.id);
+      const updated = await superadminService.updateEmployee(employeeEditTarget.id, payload);
+      setEmployees((prev) =>
+        prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)),
+      );
+      setEmployeeEditTarget(null);
+      setEmployeeEditForm({
+        name: "",
+        role: "staff",
+        phone: "",
+        username: "",
+      });
+      toast.success("แก้ไขข้อมูลพนักงานสำเร็จ");
+    } catch (e) {
+      toast.error(toThaiErrorMessage(e, "แก้ไขข้อมูลพนักงานไม่สำเร็จ"));
+    } finally {
+      setEditingEmployeeId(null);
+    }
+  }
+
   async function handleUpdateEmployeePassword(e: React.FormEvent) {
     e.preventDefault();
     if (!employeePasswordTarget || updatingEmployeePasswordId) return;
@@ -163,6 +268,76 @@ export function useSuperAdminManage() {
       toast.error(toThaiErrorMessage(e, "แก้ไขรหัสผ่านพนักงานไม่สำเร็จ"));
     } finally {
       setUpdatingEmployeePasswordId(null);
+    }
+  }
+
+  function openAlertConfigEditModal(item: AlertConfigItem) {
+    if (item.status === "DONE") {
+      toast("สถานะ DONE ไม่ต้องแจ้งเตือน");
+      return;
+    }
+
+    setAlertConfigEditTarget(item);
+    setAlertConfigEditForm({
+      warningDays: Number(item.warningDays || 0),
+      criticalDays: Number(item.criticalDays || 0),
+    });
+  }
+
+  async function handleUpdateAlertConfig(e: React.FormEvent) {
+    e.preventDefault();
+    if (!alertConfigEditTarget || editingAlertConfigId) return;
+
+    const warningDays = Number(alertConfigEditForm.warningDays);
+    const criticalDays = Number(alertConfigEditForm.criticalDays);
+
+    if (!Number.isFinite(warningDays) || !Number.isFinite(criticalDays)) {
+      toast.error("กรุณากรอกเป็นตัวเลขเท่านั้น");
+      return;
+    }
+
+    if (warningDays < 0 || criticalDays < 0) {
+      toast.error("จำนวนวันต้องไม่ติดลบ");
+      return;
+    }
+
+    if (criticalDays < warningDays) {
+      toast.error("Critical Days ต้องมากกว่าหรือเท่ากับ Warning Days");
+      return;
+    }
+
+    try {
+      setEditingAlertConfigId(alertConfigEditTarget.id);
+      const updated = await superadminService.updateAlertConfig(alertConfigEditTarget.status, {
+        warningDays,
+        criticalDays,
+      });
+
+      setAlertConfigs((prev) =>
+        withDefaultAlertConfigs(
+          sortAlertConfigs(
+            prev.map((item) =>
+              item.status === alertConfigEditTarget.status
+                ? {
+                    ...item,
+                    ...updated,
+                    warningDays,
+                    criticalDays,
+                    updatedAt: updated.updatedAt || new Date().toISOString(),
+                  }
+                : item,
+            ),
+          ),
+        ),
+      );
+
+      setAlertConfigEditTarget(null);
+      setAlertConfigEditForm({ warningDays: 0, criticalDays: 0 });
+      toast.success("บันทึก SLA สำเร็จ");
+    } catch (e) {
+      toast.error(toThaiErrorMessage(e, "บันทึก SLA ไม่สำเร็จ"));
+    } finally {
+      setEditingAlertConfigId(null);
     }
   }
 
@@ -388,17 +563,17 @@ export function useSuperAdminManage() {
           brandId = existingBrandByCode.id;
           toast("พบรหัสยี่ห้อเดิม ระบบจะใช้ยี่ห้อเดิมให้อัตโนมัติ");
         } else {
-        const brandPayload: CreateVehicleBrandInput = {
-          code: normalizedBrandCode,
-          name: groupedCreateForm.brandName.trim(),
-          nameEn: groupedCreateForm.brandNameEn.trim(),
-          country: groupedCreateForm.brandCountry.trim(),
-          logoUrl: groupedCreateForm.brandLogoUrl.trim(),
-        };
-        const createdBrand = await superadminService.createVehicleBrand(brandPayload);
-        setBrands((prev) => [createdBrand, ...prev]);
-        brandId = createdBrand.id;
-        createdBrandId = createdBrand.id;
+          const brandPayload: CreateVehicleBrandInput = {
+            code: normalizedBrandCode,
+            name: groupedCreateForm.brandName.trim(),
+            nameEn: groupedCreateForm.brandNameEn.trim(),
+            country: groupedCreateForm.brandCountry.trim(),
+            logoUrl: groupedCreateForm.brandLogoUrl.trim(),
+          };
+          const createdBrand = await superadminService.createVehicleBrand(brandPayload);
+          setBrands((prev) => [createdBrand, ...prev]);
+          brandId = createdBrand.id;
+          createdBrandId = createdBrand.id;
         }
       }
 
@@ -414,15 +589,15 @@ export function useSuperAdminManage() {
           typeId = existingTypeByCode.id;
           toast("พบรหัสประเภทรถเดิม ระบบจะใช้ประเภทเดิมให้อัตโนมัติ");
         } else {
-        const typePayload: CreateVehicleTypeInput = {
-          code: normalizedTypeCode,
-          name: groupedCreateForm.typeName.trim(),
-          nameEn: groupedCreateForm.typeNameEn.trim(),
-        };
-        const createdType = await superadminService.createVehicleType(typePayload);
-        setVehicleTypes((prev) => [createdType, ...prev]);
-        typeId = createdType.id;
-        createdTypeId = createdType.id;
+          const typePayload: CreateVehicleTypeInput = {
+            code: normalizedTypeCode,
+            name: groupedCreateForm.typeName.trim(),
+            nameEn: groupedCreateForm.typeNameEn.trim(),
+          };
+          const createdType = await superadminService.createVehicleType(typePayload);
+          setVehicleTypes((prev) => [createdType, ...prev]);
+          typeId = createdType.id;
+          createdTypeId = createdType.id;
         }
       }
 
@@ -463,6 +638,17 @@ export function useSuperAdminManage() {
     setShowEmployeeForm(false);
   }
 
+  function closeEmployeeEditModal() {
+    if (editingEmployeeId) return;
+    setEmployeeEditTarget(null);
+    setEmployeeEditForm({
+      name: "",
+      role: "staff",
+      phone: "",
+      username: "",
+    });
+  }
+
   function closeInsuranceForm() {
     if (creatingInsurance) return;
     setInsuranceForm(defaultInsuranceForm);
@@ -473,6 +659,12 @@ export function useSuperAdminManage() {
     if (updatingEmployeePasswordId) return;
     setEmployeePasswordTarget(null);
     setEmployeePassword("");
+  }
+
+  function closeAlertConfigEditModal() {
+    if (editingAlertConfigId) return;
+    setAlertConfigEditTarget(null);
+    setAlertConfigEditForm({ warningDays: 0, criticalDays: 0 });
   }
 
   function closeInsuranceEditModal() {
@@ -505,6 +697,11 @@ export function useSuperAdminManage() {
     setShowEmployeeForm,
     creatingEmployee,
     deletingEmployeeId,
+    editingEmployeeId,
+    employeeEditTarget,
+    setEmployeeEditTarget,
+    employeeEditForm,
+    setEmployeeEditForm,
     updatingEmployeePasswordId,
     employeePasswordTarget,
     setEmployeePasswordTarget,
@@ -523,6 +720,13 @@ export function useSuperAdminManage() {
     setInsuranceEditForm,
     deletingInsuranceId,
 
+    alertConfigs,
+    editingAlertConfigId,
+    alertConfigEditTarget,
+    setAlertConfigEditTarget,
+    alertConfigEditForm,
+    setAlertConfigEditForm,
+
     brands,
     editingBrandId,
     brandEditTarget,
@@ -538,7 +742,11 @@ export function useSuperAdminManage() {
     creatingGrouped,
 
     handleCreateEmployee,
+    openEmployeeEditModal,
+    handleUpdateEmployee,
     handleUpdateEmployeePassword,
+    openAlertConfigEditModal,
+    handleUpdateAlertConfig,
     handleCreateInsurance,
     openInsuranceEditModal,
     handleUpdateInsurance,
@@ -548,8 +756,10 @@ export function useSuperAdminManage() {
     handleConfirmDelete,
     handleCreateGroupedVehicle,
     closeEmployeeForm,
+    closeEmployeeEditModal,
     closeInsuranceForm,
     closeEmployeePasswordModal,
+    closeAlertConfigEditModal,
     closeInsuranceEditModal,
     closeBrandEditModal,
     deletingWithModal,
