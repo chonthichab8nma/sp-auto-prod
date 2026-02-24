@@ -1,10 +1,4 @@
-import {
-  AlertTriangle,
-  ArrowUpCircle,
-  CarFront,
-  List,
-  Search,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import FormSelect from "../../shared/components/form/FormSelect";
 
 export type AlertFilterValue = "all" | "warning" | "critical";
@@ -55,50 +49,41 @@ export default function StationsFilters({
           {
             key: "totalVehicles" as SummaryCardKey,
             title: "จำนวนรถทั้งหมด",
-            subTitle: "รถทั้งหมดในระบบ",
+            subTitle: "รถที่กำลังซ่อมอยู่ในระบบ",
             count: totalVehiclesCount,
-            icon: CarFront,
-            iconWrapClass: "bg-sky-50 text-sky-600",
             toneClass: "border-sky-200 bg-sky-50/40",
             countClass: "text-sky-700",
             subTitleClass: "text-sky-700/80",
           },
           {
             key: "all" as SummaryCardKey,
-            title: "งานทั้งหมดที่เกินระยะเวลา",
-            subTitle: "งานที่อยู่ในระบบ",
+            title: "งานที่ล่าช้าทั้งหมด",
+            subTitle: "รวมงานที่เสี่ยงและเกินกำหนด",
             count: summaryCounts.all,
-            icon: List,
-            iconWrapClass: "bg-blue-50 text-blue-600",
             toneClass: "border-slate-200 bg-white",
             countClass: "text-slate-900",
             subTitleClass: "text-slate-500",
           },
           {
             key: "warning" as SummaryCardKey,
-            title: "เกินกำหนด",
-            subTitle: isAllStatuses ? "ตามค่าเตือนของแต่ละสถานะ" : `${warningDays} วัน`,
+            title: "เสี่ยงล่าช้า",
+            subTitle: `เกินกำหนด ${warningDays} วัน`,
             count: summaryCounts.warning,
-            icon: ArrowUpCircle,
-            iconWrapClass: "bg-amber-50 text-amber-600",
             toneClass: "border-amber-200 bg-amber-50/45",
             countClass: "text-amber-700",
             subTitleClass: "text-amber-700/80",
           },
           {
             key: "critical" as SummaryCardKey,
-            title: "เกินกำหนด",
-            subTitle: isAllStatuses ? "ตามค่าเตือนของแต่ละสถานะ" : `${criticalDays} วัน`,
+            title: "เกินกำหนดแล้ว",
+            subTitle: `เกินกำหนดแล้ว ${criticalDays} วัน`,
             count: summaryCounts.critical,
-            icon: AlertTriangle,
-            iconWrapClass: "bg-rose-50 text-rose-600",
             toneClass: "border-rose-200 bg-rose-50/45",
             countClass: "text-rose-700",
             subTitleClass: "text-rose-700/80",
           },
         ].map((item) => {
           const active = selectedAlert === item.key;
-          const Icon = item.icon;
           const isFilterButton = item.key !== "totalVehicles";
           return (
             <button
@@ -118,15 +103,7 @@ export default function StationsFilters({
                   : "opacity-95 cursor-default",
               ].join(" ")}
             >
-              <div className="flex h-full items-center gap-3">
-                <span
-                  className={[
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                    item.iconWrapClass,
-                  ].join(" ")}
-                >
-                  <Icon className="h-4.5 w-4.5" />
-                </span>
+              <div className="flex h-full items-center">
                 <span className="min-w-0 flex-1 flex items-center justify-between gap-2">
                   <span className="min-w-0">
                     <span className="block text-[13px] leading-tight font-semibold text-slate-700 lg:text-[14px]">
@@ -141,7 +118,7 @@ export default function StationsFilters({
                     ) : null}
                   </span>
                   <span
-                    className={`shrink-0 whitespace-nowrap text-right text-[40px] leading-none font-extrabold lg:text-[44px] ${item.countClass}`}
+                    className={`shrink-0 -translate-y-4 whitespace-nowrap text-right text-[30px] leading-none font-extrabold lg:text-[32px] ${item.countClass}`}
                   >
                     {item.count}
                   </span>
