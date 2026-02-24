@@ -27,7 +27,7 @@ export default function StationsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedAlert, setSelectedAlert] = useState<AlertFilterValue>("all");
+  const [selectedAlert, setSelectedAlert] = useState<AlertFilterValue>("vehicles");
   const [currentPage, setCurrentPage] = useState(1);
   const [scopedJobs, setScopedJobs] = useState<JobApi[] | null>(null);
   const [scopedJobsLoading, setScopedJobsLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function StationsPage() {
   const mappedStatus = mapUiStatusToApi(selectedStatus);
   const hasScopeFilter = Boolean(selectedStatus || normalizedSearch);
   const shouldUseAlertsEndpointTable =
-    selectedAlert !== "all" && !hasScopeFilter;
+    selectedAlert !== "vehicles" && !hasScopeFilter;
 
   const query: JobsQuery = useMemo(
     () => ({
@@ -75,7 +75,7 @@ export default function StationsPage() {
     loading: alertsPageLoading,
   } = useStationAlertsQuery(
     {
-      threshold: selectedAlert,
+      threshold: selectedAlert === "vehicles" ? "all" : selectedAlert,
       page: currentPage,
       limit: pageSize,
     },
@@ -176,7 +176,15 @@ export default function StationsPage() {
   ]);
 
   const scopedFilteredJobs = useMemo(() => {
-    if (!hasScopeFilter || selectedAlert === "all") return scopedJobs ?? [];
+    if (!hasScopeFilter || selectedAlert === "vehicles") return scopedJobs ?? [];
+    if (selectedAlert === "all") {
+      return (scopedJobs ?? []).filter((job) => {
+        const days = job.daysInProcess;
+        if (typeof days !== "number") return false;
+        const band = resolveAgingBand(days, thresholdsByStatus[job.status]);
+        return band === "warning" || band === "critical";
+      });
+    }
     return (scopedJobs ?? []).filter((job) => {
       const days = job.daysInProcess;
       if (typeof days !== "number") return false;
@@ -184,7 +192,7 @@ export default function StationsPage() {
     });
   }, [hasScopeFilter, scopedJobs, selectedAlert, thresholdsByStatus]);
 
-  const isScopedAlertMode = hasScopeFilter && selectedAlert !== "all";
+  const isScopedAlertMode = hasScopeFilter && selectedAlert !== "vehicles";
   const scopedAlertPageData = useMemo(() => {
     if (!isScopedAlertMode) return [];
     const start = (currentPage - 1) * pageSize;

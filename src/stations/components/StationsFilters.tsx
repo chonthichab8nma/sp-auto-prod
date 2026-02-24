@@ -1,8 +1,14 @@
-import { Search } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpCircle,
+  CarFront,
+  List,
+  Search,
+} from "lucide-react";
 import FormSelect from "../../shared/components/form/FormSelect";
 
-export type AlertFilterValue = "all" | "warning" | "critical";
-type SummaryCardKey = AlertFilterValue | "totalVehicles";
+export type AlertFilterValue = "vehicles" | "all" | "warning" | "critical";
+type SummaryCardKey = AlertFilterValue;
 
 export default function StationsFilters({
   searchTerm,
@@ -47,78 +53,105 @@ export default function StationsFilters({
       <div className="hidden grid-cols-2 gap-3 md:grid xl:grid-cols-4">
         {[
           {
-            key: "totalVehicles" as SummaryCardKey,
+            key: "vehicles" as SummaryCardKey,
             title: "จำนวนรถทั้งหมด",
-            subTitle: "รถที่กำลังซ่อมอยู่ในระบบ",
+            subTitle: "รถที่กำลังซ่อมในระบบ",
             count: totalVehiclesCount,
-            toneClass: "border-sky-200 bg-sky-50/40",
+            icon: CarFront,
+            iconWrapClass: "bg-sky-100 text-sky-600",
+            toneClass: "border-sky-200 bg-sky-50",
             countClass: "text-sky-700",
             subTitleClass: "text-sky-700/80",
-          },
-          {
-            key: "all" as SummaryCardKey,
-            title: "งานที่ล่าช้าทั้งหมด",
-            subTitle: "รวมงานที่เสี่ยงและเกินกำหนด",
-            count: summaryCounts.all,
-            toneClass: "border-slate-200 bg-white",
-            countClass: "text-slate-900",
-            subTitleClass: "text-slate-500",
+            titleClass: "text-slate-800",
           },
           {
             key: "warning" as SummaryCardKey,
             title: "เสี่ยงล่าช้า",
-            subTitle: `เกินกำหนด ${warningDays} วัน`,
+            subTitle: isAllStatuses
+              ? "ตามค่าเตือนของแต่ละสถานะ"
+              : `เกินกำหนด ${warningDays} วัน`,
             count: summaryCounts.warning,
-            toneClass: "border-amber-200 bg-amber-50/45",
+            icon: ArrowUpCircle,
+            iconWrapClass: "bg-amber-100 text-amber-600",
+            toneClass: "border-amber-200 bg-amber-50",
             countClass: "text-amber-700",
             subTitleClass: "text-amber-700/80",
+            titleClass: "text-slate-700",
           },
           {
             key: "critical" as SummaryCardKey,
             title: "เกินกำหนดแล้ว",
-            subTitle: `เกินกำหนดแล้ว ${criticalDays} วัน`,
+            subTitle: isAllStatuses
+              ? "ตามค่าเตือนของแต่ละสถานะ"
+              : `เกินกำหนด ${criticalDays} วัน`,
             count: summaryCounts.critical,
-            toneClass: "border-rose-200 bg-rose-50/45",
+            icon: AlertTriangle,
+            iconWrapClass: "bg-rose-100 text-rose-600",
+            toneClass: "border-rose-200 bg-rose-50",
             countClass: "text-rose-700",
             subTitleClass: "text-rose-700/80",
+            titleClass: "text-slate-700",
+          },
+          {
+            key: "all" as SummaryCardKey,
+            title: "งานที่ล่าช้าทั้งหมด",
+            subTitle: "รวมเสี่ยงล่าช้าและเกินกำหนด",
+            count: summaryCounts.all,
+            icon: List,
+            iconWrapClass: "bg-blue-100 text-blue-600",
+            toneClass: "border-slate-200 bg-slate-50",
+            countClass: "text-slate-900",
+            subTitleClass: "text-slate-500",
+            titleClass: "text-slate-800",
           },
         ].map((item) => {
           const active = selectedAlert === item.key;
-          const isFilterButton = item.key !== "totalVehicles";
+          const Icon = item.icon;
+          const activeClass = item.key === "vehicles"
+              ? "border-sky-300 bg-sky-200"
+            : item.key === "warning"
+              ? "border-amber-300 bg-amber-100"
+              : item.key === "critical"
+                ? "border-rose-300 bg-rose-100"
+                : "border-blue-300 bg-blue-100";
+
           return (
             <button
               key={item.key}
               type="button"
               onClick={() => {
-                if (!isFilterButton) return;
-                onAlertChange(item.key as AlertFilterValue);
+                onAlertChange(item.key);
               }}
               className={[
-                "relative w-full min-h-[96px] rounded-2xl border px-4 py-3 text-left transition shadow-sm",
+                "relative w-full min-h-20 rounded-2xl border px-4 py-2 text-left transition",
                 item.toneClass,
-                isFilterButton
-                  ? active
-                    ? "shadow-md bg-white/95"
-                    : "opacity-95"
-                  : "opacity-95 cursor-default",
+                active ? activeClass : "hover:brightness-[0.98]",
               ].join(" ")}
             >
-              <div className="flex h-full items-center">
+              <div className="flex h-full items-center gap-4">
+                <span
+                  className={[
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+                    item.iconWrapClass,
+                  ].join(" ")}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
                 <span className="min-w-0 flex-1 flex items-center justify-between gap-2">
-                  <span className="min-w-0">
-                    <span className="block text-[13px] leading-tight font-semibold text-slate-700 lg:text-[14px]">
+                  <span className="min-w-0 pr-2">
+                    <span className={`block truncate whitespace-nowrap text-[14px] leading-snug font-semibold lg:text-[15px] ${item.titleClass}`}>
                       {item.title}
                     </span>
                     {item.subTitle ? (
                       <span
-                        className={`mt-0.5 block text-[12px] leading-snug font-semibold lg:text-[13px] ${item.subTitleClass}`}
+                        className={`mt-1 block truncate whitespace-nowrap text-[12px] leading-relaxed font-semibold lg:text-[13px] ${item.subTitleClass}`}
                       >
                         {item.subTitle}
                       </span>
                     ) : null}
                   </span>
                   <span
-                    className={`shrink-0 -translate-y-4 whitespace-nowrap text-right text-[30px] leading-none font-extrabold lg:text-[32px] ${item.countClass}`}
+                    className={`shrink-0 self-start whitespace-nowrap text-right text-[28px] leading-none font-bold lg:text-[30px] ${item.countClass}`}
                   >
                     {item.count}
                   </span>
@@ -127,6 +160,68 @@ export default function StationsFilters({
             </button>
           );
         })}
+      </div>
+
+      <div className="md:hidden">
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            {
+              key: "vehicles" as AlertFilterValue,
+              label: "รถทั้งหมด",
+              count: totalVehiclesCount,
+              subLabel: "รถที่กำลังซ่อมในระบบ",
+              idle: "border-sky-200 bg-sky-50 text-sky-800",
+              active: "border-sky-300 bg-sky-200 text-sky-900",
+            },
+            {
+              key: "warning" as AlertFilterValue,
+              label: "เสี่ยงล่าช้า",
+              count: summaryCounts.warning,
+              subLabel: isAllStatuses
+                ? "ตามค่าเตือนของแต่ละสถานะ"
+                : `เกินกำหนด ${warningDays} วัน`,
+              idle: "border-amber-200 bg-amber-50 text-amber-800",
+              active: "border-amber-300 bg-amber-200 text-amber-900",
+            },
+            {
+              key: "critical" as AlertFilterValue,
+              label: "เกินกำหนด",
+              count: summaryCounts.critical,
+              subLabel: isAllStatuses
+                ? "ตามค่าเตือนของแต่ละสถานะ"
+                : `เกินกำหนด ${criticalDays} วัน`,
+              idle: "border-rose-200 bg-rose-50 text-rose-800",
+              active: "border-rose-300 bg-rose-200 text-rose-900",
+            },
+            {
+              key: "all" as AlertFilterValue,
+              label: "งานที่ล่าช้าทั้งหมด",
+              count: summaryCounts.all,
+              subLabel: "รวมเสี่ยงล่าช้าและเกินกำหนด",
+              idle: "border-slate-200 bg-slate-50 text-slate-800",
+              active: "border-blue-300 bg-blue-200 text-slate-900",
+            },
+          ].map((item) => {
+            const active = selectedAlert === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onAlertChange(item.key)}
+                className={[
+                  "rounded-xl border px-3 py-2 text-left transition",
+                  active ? item.active : `${item.idle} hover:brightness-[0.98]`,
+                ].join(" ")}
+              >
+                <div className="truncate text-[11px] font-semibold">{item.label}</div>
+                <div className="mt-0.5 text-lg font-bold leading-none">{item.count}</div>
+                <div className="mt-1 truncate text-[10px] font-medium opacity-80">
+                  {item.subLabel}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
@@ -155,45 +250,6 @@ export default function StationsFilters({
           />
         </div>
 
-        <div className="inline-flex w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 xl:w-auto">
-          {[
-            {
-              key: "all" as const,
-              label: "ทั้งหมด",
-              count: summaryCounts.all,
-            },
-            {
-              key: "warning" as const,
-              label: isAllStatuses ? "เตือน" : `เกิน ${warningDays} วัน`,
-              count: summaryCounts.warning,
-            },
-            {
-              key: "critical" as const,
-              label: isAllStatuses ? "เกินกำหนด" : `เกิน ${criticalDays} วัน`,
-              count: summaryCounts.critical,
-            },
-          ].map((item) => {
-            const active = selectedAlert === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => onAlertChange(item.key)}
-                className={[
-                  "flex-1 px-3 py-2.5 text-[13px] font-semibold transition xl:flex-none xl:px-4 xl:text-sm",
-                  active
-                    ? "bg-blue-500 text-white"
-                    : "text-slate-700 hover:bg-white",
-                ].join(" ")}
-              >
-                <span className="hidden md:inline">{item.label}</span>
-                <span className="md:hidden">
-                  {item.label} ({item.count})
-                </span>
-              </button>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
