@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   ArrowUpCircle,
+  CarFront,
   List,
   Search,
 } from "lucide-react";
@@ -14,6 +15,10 @@ export default function StationsFilters({
   statusOptions,
   selectedAlert,
   summaryCounts,
+  totalVehiclesCount,
+  warningDays,
+  criticalDays,
+  isAllStatuses,
   onSearchTermChange,
   onStatusChange,
   onAlertChange,
@@ -28,6 +33,10 @@ export default function StationsFilters({
     warning: number;
     critical: number;
   };
+  totalVehiclesCount: number;
+  warningDays: number;
+  criticalDays: number;
+  isAllStatuses: boolean;
 
   onSearchTermChange: (v: string) => void;
   onStatusChange: (v: string) => void;
@@ -40,8 +49,19 @@ export default function StationsFilters({
 
   return (
     <div className="mb-6 space-y-4">
-      <div className="hidden grid-cols-1 gap-3 md:grid lg:grid-cols-3">
+      <div className="hidden grid-cols-2 gap-3 md:grid xl:grid-cols-4">
         {[
+          {
+            key: "totalVehicles",
+            title: "จำนวนรถทั้งหมด",
+            subTitle: "รถทั้งหมดในระบบ",
+            count: totalVehiclesCount,
+            icon: CarFront,
+            iconWrapClass: "bg-sky-50 text-sky-600",
+            toneClass: "border-sky-200 bg-sky-50/40",
+            countClass: "text-sky-700",
+            subTitleClass: "text-sky-700/80",
+          },
           {
             key: "all" as const,
             title: "งานทั้งหมดที่เกินระยะเวลา",
@@ -56,7 +76,7 @@ export default function StationsFilters({
           {
             key: "warning" as const,
             title: "เกินกำหนด",
-            subTitle: "15 วัน",
+            subTitle: isAllStatuses ? "ตามค่าเตือนของแต่ละสถานะ" : `${warningDays} วัน`,
             count: summaryCounts.warning,
             icon: ArrowUpCircle,
             iconWrapClass: "bg-amber-50 text-amber-600",
@@ -67,7 +87,7 @@ export default function StationsFilters({
           {
             key: "critical" as const,
             title: "เกินกำหนด",
-            subTitle: "30 วัน",
+            subTitle: isAllStatuses ? "ตามค่าเตือนของแต่ละสถานะ" : `${criticalDays} วัน`,
             count: summaryCounts.critical,
             icon: AlertTriangle,
             iconWrapClass: "bg-rose-50 text-rose-600",
@@ -78,18 +98,26 @@ export default function StationsFilters({
         ].map((item) => {
           const active = selectedAlert === item.key;
           const Icon = item.icon;
+          const isFilterButton = item.key !== "totalVehicles";
           return (
             <button
               key={item.key}
               type="button"
-              onClick={() => onAlertChange(item.key)}
+              onClick={() => {
+                if (!isFilterButton) return;
+                onAlertChange(item.key);
+              }}
               className={[
-                "relative w-full min-h-[74px] rounded-2xl border px-3.5 py-2.5 text-left transition shadow-sm",
+                "relative w-full min-h-[96px] rounded-2xl border px-4 py-3 text-left transition shadow-sm",
                 item.toneClass,
-                active ? "shadow-md bg-white/95" : "opacity-95",
+                isFilterButton
+                  ? active
+                    ? "shadow-md bg-white/95"
+                    : "opacity-95"
+                  : "opacity-95 cursor-default",
               ].join(" ")}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex h-full items-center gap-3">
                 <span
                   className={[
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
@@ -98,18 +126,22 @@ export default function StationsFilters({
                 >
                   <Icon className="h-4.5 w-4.5" />
                 </span>
-                <span className="min-w-0 flex-1 flex items-center justify-between gap-3">
+                <span className="min-w-0 flex-1 flex items-center justify-between gap-2">
                   <span className="min-w-0">
-                    <span className="block text-[14px] leading-tight font-semibold text-slate-700">
+                    <span className="block text-[13px] leading-tight font-semibold text-slate-700 lg:text-[14px]">
                       {item.title}
                     </span>
                     {item.subTitle ? (
-                      <span className={`mt-0.5 block text-[13px] leading-tight font-semibold ${item.subTitleClass}`}>
+                      <span
+                        className={`mt-0.5 block text-[12px] leading-snug font-semibold lg:text-[13px] ${item.subTitleClass}`}
+                      >
                         {item.subTitle}
                       </span>
                     ) : null}
                   </span>
-                  <span className={`shrink-0 text-right text-[32px] leading-none font-extrabold ${item.countClass}`}>
+                  <span
+                    className={`shrink-0 whitespace-nowrap text-right text-[40px] leading-none font-extrabold lg:text-[44px] ${item.countClass}`}
+                  >
                     {item.count}
                   </span>
                 </span>
@@ -154,12 +186,12 @@ export default function StationsFilters({
             },
             {
               key: "warning" as const,
-              label: "เกิน 15 วัน",
+              label: isAllStatuses ? "เตือน" : `เกิน ${warningDays} วัน`,
               count: summaryCounts.warning,
             },
             {
               key: "critical" as const,
-              label: "เกิน 30 วัน",
+              label: isAllStatuses ? "เกินกำหนด" : `เกิน ${criticalDays} วัน`,
               count: summaryCounts.critical,
             },
           ].map((item) => {
