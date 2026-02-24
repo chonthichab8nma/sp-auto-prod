@@ -22,6 +22,7 @@ import {
   type JobReceiptUploadResponse,
 } from "../../features/jobs/api/receipt.api";
 import { toThaiErrorMessage } from "../../shared/lib/errorMessage";
+import { jobsService } from "../../features/jobs/services/jobs.service";
 
 function isDone(status: StepStatus | JobStepStatusApi) {
   return status === "completed" || status === "skipped";
@@ -372,6 +373,32 @@ export function useStationProgressViewModel({
         status: selectedAction,
         employeeId: employeeForSave?.id,
       });
+
+      const shouldMarkInsuranceDisbursed =
+        isViewingBillingStage &&
+        isPaymentDateStep &&
+        selectedAction === "completed" &&
+        (jobState.paymentType ?? "").toLowerCase() === "insurance" &&
+        Number(jobState.claimAmount ?? 0) > 0;
+
+      if (shouldMarkInsuranceDisbursed) {
+        const nowIso = new Date().toISOString();
+        const disbursedAmount = Number(jobState.claimAmount ?? 0);
+        const res = await jobsService.update(jobState.id, {
+          disbursedAmount,
+          disbursementDate: nowIso,
+        });
+
+        if (!res.ok) {
+          throw new Error(res.error || "อัปเดตข้อมูลรับเงินประกันไม่สำเร็จ");
+        }
+
+        setJobState((prev) => ({
+          ...prev,
+          disbursedAmount,
+          disbursementDate: nowIso,
+        }));
+      }
 
       onUpdateStep(
         checkpointIndex,

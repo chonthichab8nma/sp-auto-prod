@@ -95,22 +95,18 @@ export default function ReportSummaryPage() {
   } = useDashboardSummaryQuery();
 
   const insuranceRevenue =
+    data?.totalClaimAmount ??
     insuranceFinancialSummary?.overall.totalClaim ??
     financialSummary?.totalClaimAmount ??
-    data?.totalClaimAmount ??
     0;
   const cashRevenue = financialSummary?.totalExcessFee ?? data?.totalExcessFee ?? 0;
   const totalRevenue = financialSummary?.totalCashAndClaim ?? data?.totalCashAndClaim ?? 0;
   const receivedInsurance =
-    insuranceFinancialSummary?.overall.totalReceived ?? 0;
-  const pendingFromFlow = Math.max(insuranceRevenue - receivedInsurance, 0);
-  const pendingFromApi = insuranceFinancialSummary?.overall.totalPending;
-  const pendingInsurance =
-    pendingFromApi == null
-      ? pendingFromFlow
-      : pendingFromApi === 0 && pendingFromFlow > 0
-        ? pendingFromFlow
-        : pendingFromApi;
+    data?.totalDisbursedAmount ??
+    insuranceFinancialSummary?.overall.totalReceived ??
+    0;
+  // Pending insurance must always be "total claim - total received", never negative.
+  const pendingInsurance = Math.max(insuranceRevenue - receivedInsurance, 0);
   const processingAmount = pendingInsurance;
 
   const fallbackSortedCompanies = [...insuranceStats].sort(
@@ -240,12 +236,12 @@ export default function ReportSummaryPage() {
                     icon={<Coins size={18} />}
                     tone="green"
                   />
-                  <StatCard
+                  {/* <StatCard
                     label="ยอดคงค้างเคลม"
                     value={`฿${formatAmount(processingAmount)}`}
                     icon={<RefreshCw size={18} />}
                     tone="amber"
-                  />
+                  /> */}
                 </>
               )}
             </div>
