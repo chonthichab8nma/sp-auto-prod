@@ -107,7 +107,6 @@ export default function ReportSummaryPage() {
     0;
   // Pending insurance must always be "total claim - total received", never negative.
   const pendingInsurance = Math.max(insuranceRevenue - receivedInsurance, 0);
-  const processingAmount = pendingInsurance;
 
   const fallbackSortedCompanies = [...insuranceStats].sort(
     (a, b) => b.jobCount - a.jobCount,

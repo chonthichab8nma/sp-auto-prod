@@ -8,6 +8,7 @@ import {
 import FormSelect from "../../shared/components/form/FormSelect";
 
 export type AlertFilterValue = "all" | "warning" | "critical";
+type SummaryCardKey = AlertFilterValue | "totalVehicles";
 
 export default function StationsFilters({
   searchTerm,
@@ -52,7 +53,7 @@ export default function StationsFilters({
       <div className="hidden grid-cols-2 gap-3 md:grid xl:grid-cols-4">
         {[
           {
-            key: "totalVehicles",
+            key: "totalVehicles" as SummaryCardKey,
             title: "จำนวนรถทั้งหมด",
             subTitle: "รถทั้งหมดในระบบ",
             count: totalVehiclesCount,
@@ -63,7 +64,7 @@ export default function StationsFilters({
             subTitleClass: "text-sky-700/80",
           },
           {
-            key: "all" as const,
+            key: "all" as SummaryCardKey,
             title: "งานทั้งหมดที่เกินระยะเวลา",
             subTitle: "งานที่อยู่ในระบบ",
             count: summaryCounts.all,
@@ -74,7 +75,7 @@ export default function StationsFilters({
             subTitleClass: "text-slate-500",
           },
           {
-            key: "warning" as const,
+            key: "warning" as SummaryCardKey,
             title: "เกินกำหนด",
             subTitle: isAllStatuses ? "ตามค่าเตือนของแต่ละสถานะ" : `${warningDays} วัน`,
             count: summaryCounts.warning,
@@ -85,7 +86,7 @@ export default function StationsFilters({
             subTitleClass: "text-amber-700/80",
           },
           {
-            key: "critical" as const,
+            key: "critical" as SummaryCardKey,
             title: "เกินกำหนด",
             subTitle: isAllStatuses ? "ตามค่าเตือนของแต่ละสถานะ" : `${criticalDays} วัน`,
             count: summaryCounts.critical,
@@ -105,7 +106,7 @@ export default function StationsFilters({
               type="button"
               onClick={() => {
                 if (!isFilterButton) return;
-                onAlertChange(item.key);
+                onAlertChange(item.key as AlertFilterValue);
               }}
               className={[
                 "relative w-full min-h-[96px] rounded-2xl border px-4 py-3 text-left transition shadow-sm",
