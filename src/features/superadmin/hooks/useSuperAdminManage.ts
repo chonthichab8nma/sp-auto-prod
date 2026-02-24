@@ -14,6 +14,7 @@ import {
   type UpdateAlertConfigInput,
   type UpdateEmployeeInput,
   type VehicleBrandItem,
+  type VehicleModelItem,
   type VehicleTypeItem,
 } from "../services/superadmin.service";
 import {
@@ -57,6 +58,23 @@ function withDefaultAlertConfigs(items: AlertConfigItem[]) {
       updatedAt: new Date().toISOString(),
     };
   });
+}
+
+function splitModelNames(input: string): string[] {
+  const uniqueByLower = new Set<string>();
+  const models: string[] = [];
+  const tokens = input.split(/\r?\n|,/g);
+
+  for (const token of tokens) {
+    const name = token.trim();
+    if (!name) continue;
+    const normalized = name.toLowerCase();
+    if (uniqueByLower.has(normalized)) continue;
+    uniqueByLower.add(normalized);
+    models.push(name);
+  }
+
+  return models;
 }
 
 export function useSuperAdminManage() {
@@ -124,6 +142,16 @@ export function useSuperAdminManage() {
   const [groupedCreateForm, setGroupedCreateForm] =
     useState(defaultGroupedCreateForm);
   const [creatingGrouped, setCreatingGrouped] = useState(false);
+  const [selectedModelsBrandId, setSelectedModelsBrandId] = useState("");
+  const [modelsByBrand, setModelsByBrand] = useState<VehicleModelItem[]>([]);
+  const [loadingModelsByBrand, setLoadingModelsByBrand] = useState(false);
+  const [editingModelId, setEditingModelId] = useState<number | null>(null);
+  const [deletingModelId, setDeletingModelId] = useState<number | null>(null);
+  const [modelEditTarget, setModelEditTarget] = useState<VehicleModelItem | null>(null);
+  const [modelEditForm, setModelEditForm] = useState({
+    name: "",
+    typeId: "",
+  });
 
   useEffect(() => {
     void loadAll();
@@ -146,12 +174,47 @@ export function useSuperAdminManage() {
       setAlertConfigs(withDefaultAlertConfigs(sortAlertConfigs(alertConfigList)));
       setBrands(brandList);
       setVehicleTypes(vehicleTypeList);
+      if (brandList.length > 0) {
+        const firstBrandId = brandList[0].id;
+        setSelectedModelsBrandId(String(firstBrandId));
+        await loadModelsForBrand(firstBrandId);
+      } else {
+        setSelectedModelsBrandId("");
+        setModelsByBrand([]);
+      }
     } catch (e) {
       toast.error(toThaiErrorMessage(e, "โหลดข้อมูลจัดการระบบไม่สำเร็จ"));
     } finally {
       setLoading(false);
     }
   }
+
+  async function loadModelsForBrand(brandId: number) {
+    if (!brandId) {
+      setModelsByBrand([]);
+      return;
+    }
+
+    try {
+      setLoadingModelsByBrand(true);
+      const list = await superadminService.listVehicleModelsByBrand(brandId);
+      setModelsByBrand(list);
+    } catch (e) {
+      setModelsByBrand([]);
+      toast.error(toThaiErrorMessage(e, "โหลดรุ่นรถไม่สำเร็จ"));
+    } finally {
+      setLoadingModelsByBrand(false);
+    }
+  }
+
+  useEffect(() => {
+    const brandId = Number(selectedModelsBrandId);
+    if (!brandId) {
+      setModelsByBrand([]);
+      return;
+    }
+    void loadModelsForBrand(brandId);
+  }, [selectedModelsBrandId]);
 
   async function handleCreateEmployee(e: React.FormEvent) {
     e.preventDefault();
@@ -485,7 +548,21 @@ export function useSuperAdminManage() {
         setDeletingBrandId(deleteTarget.id);
         await superadminService.deleteVehicleBrand(deleteTarget.id);
         setBrands((prev) => prev.filter((item) => item.id !== deleteTarget.id));
+        if (Number(selectedModelsBrandId) === deleteTarget.id) {
+          setSelectedModelsBrandId("");
+          setModelsByBrand([]);
+        }
         toast.success("ลบยี่ห้อรถแล้ว");
+      }
+
+      if (deleteTarget.type === "model") {
+        setDeletingModelId(deleteTarget.id);
+        await superadminService.deleteVehicleModel(deleteTarget.id);
+        setModelsByBrand((prev) => prev.filter((item) => item.id !== deleteTarget.id));
+        if (Number(selectedModelsBrandId) === deleteTarget.brandId) {
+          await loadModelsForBrand(deleteTarget.brandId);
+        }
+        toast.success("ลบรุ่นรถแล้ว");
       }
 
       setDeleteTarget(null);
@@ -499,10 +576,14 @@ export function useSuperAdminManage() {
       if (deleteTarget.type === "brand") {
         toast.error(toThaiErrorMessage(e, "ลบยี่ห้อรถไม่สำเร็จ"));
       }
+      if (deleteTarget.type === "model") {
+        toast.error(toThaiErrorMessage(e, "ลบรุ่นรถไม่สำเร็จ"));
+      }
     } finally {
       setDeletingEmployeeId(null);
       setDeletingInsuranceId(null);
       setDeletingBrandId(null);
+      setDeletingModelId(null);
     }
   }
 
@@ -510,9 +591,9 @@ export function useSuperAdminManage() {
     e.preventDefault();
     if (creatingGrouped) return;
 
-    const modelName = groupedCreateForm.modelName.trim();
-    if (!modelName) {
-      toast.error("กรุณากรอกชื่อรุ่นรถ");
+    const modelNames = splitModelNames(groupedCreateForm.modelNamesText);
+    if (modelNames.length === 0) {
+      toast.error("กรุณากรอกชื่อรุ่นรถอย่างน้อย 1 รุ่น");
       return;
     }
 
@@ -600,14 +681,20 @@ export function useSuperAdminManage() {
         }
       }
 
-      await superadminService.createVehicleModel({
-        brandId,
-        name: modelName,
-        typeId,
-      });
+      await Promise.all(
+        modelNames.map((modelName) =>
+          superadminService.createVehicleModel({
+            brandId,
+            name: modelName,
+            typeId,
+          }),
+        ),
+      );
 
       setGroupedCreateForm(getDefaultGroupedFormWithBrand(brandId));
-      toast.success("เพิ่มข้อมูลรถสำเร็จ");
+      setSelectedModelsBrandId(String(brandId));
+      await loadModelsForBrand(brandId);
+      toast.success(`เพิ่มข้อมูลรถสำเร็จ ${modelNames.length} รุ่น`);
     } catch (e) {
       if (createdBrandId) {
         try {
@@ -628,6 +715,50 @@ export function useSuperAdminManage() {
       toast.error(toThaiErrorMessage(e, "เพิ่มข้อมูลรถไม่สำเร็จ"));
     } finally {
       setCreatingGrouped(false);
+    }
+  }
+
+  function openModelEditModal(item: VehicleModelItem) {
+    setModelEditTarget(item);
+    setModelEditForm({
+      name: item.name ?? "",
+      typeId: item.typeId ? String(item.typeId) : "",
+    });
+  }
+
+  async function handleUpdateVehicleModel(e: React.FormEvent) {
+    e.preventDefault();
+    if (!modelEditTarget || editingModelId) return;
+
+    const payload = {
+      name: modelEditForm.name.trim(),
+      typeId: Number(modelEditForm.typeId) || null,
+    };
+
+    if (!payload.name) {
+      toast.error("กรุณากรอกชื่อรุ่นรถ");
+      return;
+    }
+
+    if (!payload.typeId) {
+      toast.error("กรุณาเลือกประเภทรถ");
+      return;
+    }
+
+    try {
+      setEditingModelId(modelEditTarget.id);
+      await superadminService.updateVehicleModel(modelEditTarget.id, payload);
+      const selectedBrandId = Number(selectedModelsBrandId);
+      if (selectedBrandId) {
+        await loadModelsForBrand(selectedBrandId);
+      }
+      setModelEditTarget(null);
+      setModelEditForm({ name: "", typeId: "" });
+      toast.success("แก้ไขรุ่นรถสำเร็จ");
+    } catch (e) {
+      toast.error(toThaiErrorMessage(e, "แก้ไขรุ่นรถไม่สำเร็จ"));
+    } finally {
+      setEditingModelId(null);
     }
   }
 
@@ -678,6 +809,12 @@ export function useSuperAdminManage() {
     setBrandEditForm(defaultBrandForm);
   }
 
+  function closeModelEditModal() {
+    if (editingModelId) return;
+    setModelEditTarget(null);
+    setModelEditForm({ name: "", typeId: "" });
+  }
+
   const deletingWithModal =
     deleteTarget?.type === "employee"
       ? deletingEmployeeId === deleteTarget.id
@@ -685,6 +822,8 @@ export function useSuperAdminManage() {
         ? deletingInsuranceId === deleteTarget.id
         : deleteTarget?.type === "brand"
           ? deletingBrandId === deleteTarget.id
+          : deleteTarget?.type === "model"
+            ? deletingModelId === deleteTarget.id
           : false;
 
   return {
@@ -739,6 +878,15 @@ export function useSuperAdminManage() {
     groupedCreateForm,
     setGroupedCreateForm,
     creatingGrouped,
+    selectedModelsBrandId,
+    setSelectedModelsBrandId,
+    modelsByBrand,
+    loadingModelsByBrand,
+    editingModelId,
+    deletingModelId,
+    modelEditTarget,
+    setModelEditForm,
+    modelEditForm,
 
     handleCreateEmployee,
     openEmployeeEditModal,
@@ -754,6 +902,8 @@ export function useSuperAdminManage() {
     openDeleteModal,
     handleConfirmDelete,
     handleCreateGroupedVehicle,
+    openModelEditModal,
+    handleUpdateVehicleModel,
     closeEmployeeForm,
     closeEmployeeEditModal,
     closeInsuranceForm,
@@ -761,6 +911,7 @@ export function useSuperAdminManage() {
     closeAlertConfigEditModal,
     closeInsuranceEditModal,
     closeBrandEditModal,
+    closeModelEditModal,
     deletingWithModal,
   };
 }

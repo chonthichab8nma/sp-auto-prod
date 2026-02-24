@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { toThaiErrorMessage } from "../../../shared/lib/errorMessage";
 import {
   getFinancialSummaryApi,
+  getInsuranceFinancialSummaryApi,
   getMonthlyTrendsApi,
   getDashboardSummaryApi,
   getInsuranceStatsApi,
   getTopInsuranceApi,
   type DashboardSummary,
   type FinancialSummary,
+  type InsuranceFinancialSummary,
   type InsuranceStatItem,
   type MonthlyTrendsResponse,
   type TopInsuranceItem,
@@ -22,6 +24,8 @@ export function useDashboardSummaryQuery() {
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(
     null,
   );
+  const [insuranceFinancialSummary, setInsuranceFinancialSummary] =
+    useState<InsuranceFinancialSummary | null>(null);
   const [insuranceStats, setInsuranceStats] = useState<InsuranceStatItem[]>([]);
   const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrendsResponse | null>(
     null,
@@ -35,16 +39,25 @@ export function useDashboardSummaryQuery() {
     setError("");
 
     try {
-      const [summaryRes, financialRes, insuranceRes, trendsRes, topInsuranceRes] =
+      const [
+        summaryRes,
+        financialRes,
+        insuranceFinancialRes,
+        insuranceRes,
+        trendsRes,
+        topInsuranceRes,
+      ] =
         await Promise.all([
         getDashboardSummaryApi(),
         getFinancialSummaryApi(),
+        getInsuranceFinancialSummaryApi().catch(() => null),
         getInsuranceStatsApi(100),
         getMonthlyTrendsApi(selectedYear),
         getTopInsuranceApi(currentMonth, currentYear),
       ]);
       setData(summaryRes);
       setFinancialSummary(financialRes);
+      setInsuranceFinancialSummary(insuranceFinancialRes);
       setInsuranceStats(insuranceRes?.data ?? []);
       setMonthlyTrends(trendsRes);
       setTopInsurance(topInsuranceRes?.data ?? []);
@@ -62,6 +75,7 @@ export function useDashboardSummaryQuery() {
   return {
     data,
     financialSummary,
+    insuranceFinancialSummary,
     insuranceStats,
     monthlyTrends,
     topInsurance,

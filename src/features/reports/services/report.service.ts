@@ -26,6 +26,28 @@ export type FinancialSummary = {
   totalCashAndClaim: number;
 };
 
+export type InsuranceFinancialSummary = {
+  overall: {
+    totalReceived: number;
+    totalPending: number;
+    totalClaim: number;
+    totalExcessFee: number;
+  };
+  byCompany: Array<{
+    insuranceCompanyId: number;
+    insuranceCompanyName: string;
+    jobCount: number;
+    totalReceived: number;
+    totalPending: number;
+    totalClaim: number;
+    totalExcessFee: number;
+  }>;
+  filters: {
+    dateFrom?: string;
+    dateTo?: string;
+  };
+};
+
 export type InsuranceStatItem = {
   insuranceCompanyId: number;
   insuranceCompanyName: string;
@@ -96,6 +118,13 @@ export async function getInsuranceStatsApi(
 export async function getFinancialSummaryApi(): Promise<FinancialSummary> {
   const { data } = await http.get<FinancialSummary>(
     "private/dashboard/financial-summary",
+  );
+  return data;
+}
+
+export async function getInsuranceFinancialSummaryApi(): Promise<InsuranceFinancialSummary> {
+  const { data } = await http.get<InsuranceFinancialSummary>(
+    "private/dashboard/insurance-financial-summary",
   );
   return data;
 }

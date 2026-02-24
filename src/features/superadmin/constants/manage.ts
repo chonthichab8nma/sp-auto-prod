@@ -53,7 +53,7 @@ export const defaultGroupedCreateForm = {
   brandNameEn: "",
   brandCountry: "",
   brandLogoUrl: "",
-  modelName: "",
+  modelNamesText: "",
   typeMode: "existing" as GroupTypeMode,
   existingTypeId: "",
   typeCode: "",
@@ -66,4 +66,5 @@ export type GroupedCreateForm = typeof defaultGroupedCreateForm;
 export type DeleteTarget =
   | { type: "employee"; id: number; name: string }
   | { type: "insurance"; id: number; name: string }
-  | { type: "brand"; id: number; name: string };
+  | { type: "brand"; id: number; name: string }
+  | { type: "model"; id: number; name: string; brandId: number };

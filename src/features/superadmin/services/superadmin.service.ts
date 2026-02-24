@@ -85,6 +85,11 @@ export type CreateVehicleModelInput = {
   typeId?: number | null;
 };
 
+export type UpdateVehicleModelInput = {
+  name: string;
+  typeId?: number | null;
+};
+
 export type AlertConfigStatus = "CLAIM" | "REPAIR" | "BILLING" | "DONE";
 
 export type AlertConfigItem = {
@@ -238,6 +243,17 @@ export const superadminService = {
 
   async createVehicleModel(payload: CreateVehicleModelInput): Promise<VehicleModelItem> {
     const { data } = await http.post<VehicleModelItem>("/private/vehicles/models", payload);
+    return data;
+  },
+
+  async updateVehicleModel(
+    id: number,
+    payload: UpdateVehicleModelInput,
+  ): Promise<VehicleModelItem> {
+    const { data } = await http.patch<VehicleModelItem>(
+      `/private/vehicles/models/${id}`,
+      payload,
+    );
     return data;
   },
 

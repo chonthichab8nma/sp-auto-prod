@@ -85,6 +85,7 @@ export default function ReportSummaryPage() {
   const {
     data,
     financialSummary,
+    insuranceFinancialSummary,
     insuranceStats,
     monthlyTrends,
     topInsurance,
@@ -93,11 +94,24 @@ export default function ReportSummaryPage() {
     error,
   } = useDashboardSummaryQuery();
 
-  const insuranceRevenue = financialSummary?.totalClaimAmount ?? data?.totalClaimAmount ?? 0;
+  const insuranceRevenue =
+    insuranceFinancialSummary?.overall.totalClaim ??
+    financialSummary?.totalClaimAmount ??
+    data?.totalClaimAmount ??
+    0;
   const cashRevenue = financialSummary?.totalExcessFee ?? data?.totalExcessFee ?? 0;
   const totalRevenue = financialSummary?.totalCashAndClaim ?? data?.totalCashAndClaim ?? 0;
-  const approvedAmount = data?.totalApprovedAmount ?? 0;
-  const processingAmount = Math.max(insuranceRevenue - approvedAmount, 0);
+  const receivedInsurance =
+    insuranceFinancialSummary?.overall.totalReceived ?? 0;
+  const pendingFromFlow = Math.max(insuranceRevenue - receivedInsurance, 0);
+  const pendingFromApi = insuranceFinancialSummary?.overall.totalPending;
+  const pendingInsurance =
+    pendingFromApi == null
+      ? pendingFromFlow
+      : pendingFromApi === 0 && pendingFromFlow > 0
+        ? pendingFromFlow
+        : pendingFromApi;
+  const processingAmount = pendingInsurance;
 
   const fallbackSortedCompanies = [...insuranceStats].sort(
     (a, b) => b.jobCount - a.jobCount,
@@ -191,6 +205,8 @@ export default function ReportSummaryPage() {
                   <SummarySkeletonCard />
                   <SummarySkeletonCard />
                   <SummarySkeletonCard />
+                  <SummarySkeletonCard />
+                  <SummarySkeletonCard />
                 </>
               ) : (
                 <>
@@ -199,6 +215,18 @@ export default function ReportSummaryPage() {
                     value={`฿${formatAmount(insuranceRevenue)}`}
                     icon={<BriefcaseBusiness size={18} />}
                     tone="blue"
+                  />
+                  <StatCard
+                    label="เงินประกันที่เก็บได้แล้ว"
+                    value={`฿${formatAmount(receivedInsurance)}`}
+                    icon={<Coins size={18} />}
+                    tone="green"
+                  />
+                  <StatCard
+                    label="เงินประกันที่ยังเก็บไม่ได้"
+                    value={`฿${formatAmount(pendingInsurance)}`}
+                    icon={<RefreshCw size={18} />}
+                    tone="amber"
                   />
                   <StatCard
                     label="รายได้จากเงินสด/ส่วนต่าง"

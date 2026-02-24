@@ -2,6 +2,7 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type {
   VehicleBrandItem,
+  VehicleModelItem,
   VehicleTypeItem,
 } from "../../services/superadmin.service";
 import type { GroupedCreateForm } from "../../constants/manage";
@@ -15,11 +16,19 @@ export function BrandsSection({
   creatingGrouped,
   editingBrandId,
   deletingBrandId,
+  selectedModelsBrandId,
+  modelsByBrand,
+  loadingModelsByBrand,
+  editingModelId,
+  deletingModelId,
   onGroupedFormChange,
   onCreateGrouped,
   onClearGrouped,
+  onSelectModelsBrand,
   onEdit,
   onDelete,
+  onEditModel,
+  onDeleteModel,
 }: {
   brands: VehicleBrandItem[];
   vehicleTypes: VehicleTypeItem[];
@@ -27,11 +36,19 @@ export function BrandsSection({
   creatingGrouped: boolean;
   editingBrandId: number | null;
   deletingBrandId: number | null;
+  selectedModelsBrandId: string;
+  modelsByBrand: VehicleModelItem[];
+  loadingModelsByBrand: boolean;
+  editingModelId: number | null;
+  deletingModelId: number | null;
   onGroupedFormChange: (next: GroupedCreateForm) => void;
   onCreateGrouped: (e: React.FormEvent) => void;
   onClearGrouped: () => void;
+  onSelectModelsBrand: (brandId: string) => void;
   onEdit: (item: VehicleBrandItem) => void;
   onDelete: (item: VehicleBrandItem) => void;
+  onEditModel: (item: VehicleModelItem) => void;
+  onDeleteModel: (item: VehicleModelItem) => void;
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -43,6 +60,9 @@ export function BrandsSection({
     if (creatingGrouped) return;
     setShowCreateModal(false);
   };
+
+  const selectedBrandName =
+    brands.find((item) => String(item.id) === selectedModelsBrandId)?.name ?? "-";
 
   return (
     <SectionWrapper
@@ -59,7 +79,7 @@ export function BrandsSection({
         </button>
       }
     >
-      <div className="mt-5">
+      <div className="mt-5 space-y-4">
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <div className="mb-3">
             <h3 className="text-base font-semibold text-slate-900">
@@ -130,6 +150,102 @@ export function BrandsSection({
             </table>
           </div>
         </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">
+                จัดการรุ่นรถ + ประเภทรถ
+              </h3>
+              <p className="text-sm text-slate-500">
+                เลือกยี่ห้อเพื่อดูรุ่นทั้งหมดและแก้ไขประเภทได้
+              </p>
+            </div>
+            <div className="w-full md:w-[320px]">
+              <FormSelect
+                value={selectedModelsBrandId}
+                options={brands.map((brand) => ({
+                  value: String(brand.id),
+                  label: brand.name,
+                }))}
+                placeholder="เลือกยี่ห้อเพื่อจัดการรุ่น"
+                onChange={(e) => onSelectModelsBrand(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            ยี่ห้อที่กำลังจัดการ: <span className="font-semibold">{selectedBrandName}</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">ชื่อรุ่น</th>
+                  <th className="px-3 py-2 text-left font-medium">ประเภท</th>
+                  <th className="px-3 py-2 text-right font-medium">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingModelsByBrand ? (
+                  <tr>
+                    <td colSpan={3} className="px-3 py-4 text-center text-slate-500">
+                      กำลังโหลดรุ่นรถ...
+                    </td>
+                  </tr>
+                ) : null}
+
+                {!loadingModelsByBrand && modelsByBrand.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-3 py-4 text-center text-slate-500">
+                      ยังไม่มีรุ่นรถในยี่ห้อนี้
+                    </td>
+                  </tr>
+                ) : null}
+
+                {!loadingModelsByBrand
+                  ? modelsByBrand.map((item) => (
+                      <tr key={item.id} className="border-t border-slate-200 bg-white">
+                        <td className="px-3 py-2">{item.name}</td>
+                        <td className="px-3 py-2">{item.type?.name || "-"}</td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => onEditModel(item)}
+                              disabled={editingModelId === item.id}
+                              className="inline-flex min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {editingModelId === item.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Pencil className="h-3.5 w-3.5" />
+                              )}
+                              แก้ไข
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeleteModel(item)}
+                              disabled={deletingModelId === item.id}
+                              className="inline-flex min-w-[64px] items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 shadow-sm transition hover:-translate-y-[1px] hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {deletingModelId === item.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                              )}
+                              ลบ
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {showCreateModal ? (
@@ -139,8 +255,6 @@ export function BrandsSection({
           disableClose={creatingGrouped}
         >
           <form onSubmit={onCreateGrouped} className="flex h-full flex-col gap-4">
-            
-
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <div className="mb-2 text-sm font-semibold text-slate-800">ยี่ห้อรถ</div>
               <div className="mb-2 flex gap-2">
@@ -210,37 +324,40 @@ export function BrandsSection({
 
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <div className="mb-2 text-sm font-semibold text-slate-800">รุ่นรถ + ประเภทรถ</div>
-              <div className="mb-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-                <input
-                  value={groupedCreateForm.modelName}
-                  onChange={(e) => setForm({ modelName: e.target.value })}
-                  placeholder="ชื่อรุ่น เช่น A1"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-600"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setForm({ typeMode: "existing" })}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                      groupedCreateForm.typeMode === "existing"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    ใช้ประเภทเดิม
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm({ typeMode: "new" })}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                      groupedCreateForm.typeMode === "new"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    เพิ่มประเภทใหม่
-                  </button>
-                </div>
+              <textarea
+                value={groupedCreateForm.modelNamesText}
+                onChange={(e) => setForm({ modelNamesText: e.target.value })}
+                placeholder={"กรอกรุ่นรถหลายรายการ (คั่นด้วยบรรทัดใหม่หรือ ,)\nตัวอย่าง:\nCamry\nCorolla Cross\nHilux Revo"}
+                rows={4}
+                className="mb-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-600"
+              />
+              <div className="mb-2 text-xs text-slate-500">
+                ระบบจะเพิ่มทุกรุ่นให้กับยี่ห้อเดียวกัน และใช้ประเภทรถเดียวกันตามที่เลือกด้านล่าง
+              </div>
+
+              <div className="mb-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ typeMode: "existing" })}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    groupedCreateForm.typeMode === "existing"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  ใช้ประเภทเดิม
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ typeMode: "new" })}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    groupedCreateForm.typeMode === "new"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  เพิ่มประเภทใหม่
+                </button>
               </div>
 
               {groupedCreateForm.typeMode === "existing" ? (

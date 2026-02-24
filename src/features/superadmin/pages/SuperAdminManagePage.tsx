@@ -125,11 +125,26 @@ export default function SuperAdminManagePage() {
           creatingGrouped={vm.creatingGrouped}
           editingBrandId={vm.editingBrandId}
           deletingBrandId={vm.deletingBrandId}
+          selectedModelsBrandId={vm.selectedModelsBrandId}
+          modelsByBrand={vm.modelsByBrand}
+          loadingModelsByBrand={vm.loadingModelsByBrand}
+          editingModelId={vm.editingModelId}
+          deletingModelId={vm.deletingModelId}
           onGroupedFormChange={vm.setGroupedCreateForm}
           onCreateGrouped={vm.handleCreateGroupedVehicle}
           onClearGrouped={() => vm.setGroupedCreateForm(defaultGroupedCreateForm)}
+          onSelectModelsBrand={vm.setSelectedModelsBrandId}
           onEdit={vm.openBrandEditModal}
           onDelete={(item) => vm.openDeleteModal({ type: "brand", id: item.id, name: item.name })}
+          onEditModel={vm.openModelEditModal}
+          onDeleteModel={(item) =>
+            vm.openDeleteModal({
+              type: "model",
+              id: item.id,
+              name: item.name,
+              brandId: item.brandId ?? Number(vm.selectedModelsBrandId),
+            })
+          }
         />
       ) : null}
 
@@ -560,6 +575,53 @@ export default function SuperAdminManagePage() {
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {vm.editingBrandId ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                บันทึกการแก้ไข
+              </button>
+            </div>
+          </form>
+        </FormModal>
+      ) : null}
+
+      {vm.modelEditTarget ? (
+        <FormModal
+          title="แก้ไขรุ่นรถ + ประเภทรถ"
+          onClose={vm.closeModelEditModal}
+          disableClose={Boolean(vm.editingModelId)}
+        >
+          <form onSubmit={vm.handleUpdateVehicleModel} className="flex h-full flex-col gap-4">
+            <TextInput
+              label="ชื่อรุ่น"
+              value={vm.modelEditForm.name}
+              onChange={(next) => vm.setModelEditForm((prev) => ({ ...prev, name: next }))}
+              placeholder="เช่น Camry"
+            />
+            <FormSelect
+              label="ประเภทรถ"
+              value={vm.modelEditForm.typeId}
+              options={vm.vehicleTypes.map((item) => ({
+                value: String(item.id),
+                label: item.name,
+              }))}
+              placeholder="เลือกประเภทรถ"
+              onChange={(e) =>
+                vm.setModelEditForm((prev) => ({ ...prev, typeId: e.target.value }))
+              }
+            />
+            <div className="mt-auto flex justify-end gap-2 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={vm.closeModelEditModal}
+                disabled={Boolean(vm.editingModelId)}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={Boolean(vm.editingModelId)}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {vm.editingModelId ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 บันทึกการแก้ไข
               </button>
             </div>
