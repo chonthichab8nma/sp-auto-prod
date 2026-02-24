@@ -291,11 +291,7 @@ export default function StationsPage() {
 
   return (
     <div className="bg-white min-h-screen p-6">
-      <div className="mb-6">
-        <h1 className="mb-1 text-xl font-bold text-slate-800 md:text-2xl">สถานะ</h1>
-        <p className="text-xs text-slate-500 md:text-sm">งานที่อยู่ในแต่ละสถานะ</p>
-      </div>
-
+    
       <StationsFilters
         searchTerm={searchTerm}
         selectedStatus={selectedStatus}

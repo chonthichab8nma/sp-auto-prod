@@ -5,7 +5,7 @@ import { useAuth } from "../shared/auth/useAuth";
 import { PanelLeft } from "lucide-react";
 
 export default function AppShell() {
-  const { logout, role } = useAuth();
+  const { logout, role, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,16 +17,22 @@ export default function AppShell() {
     navigate("/login", { replace: true });
   };
 
-  const getMobileSectionTitleTH = (pathname: string) => {
-    if (pathname === "/" || pathname.startsWith("/dashboard"))
-      return "แดชบอร์ด";
-    if (pathname.startsWith("/reports")) return "รายงาน";
-    if (pathname.startsWith("/superadmin/manage")) return "จัดการข้อมูล";
-    if (pathname.startsWith("/stations")) return "สเตชัน";
-    return ""; // หน้าอื่นไม่โชว์
+  const getPageTitleTH = (pathname: string) => {
+    if (pathname === "/" || pathname.startsWith("/dashboard")) return "แดชบอร์ด";
+    if (pathname.startsWith("/reports/summary")) return "รายงานรายได้";
+    if (pathname.startsWith("/create")) return "สร้างงานซ่อม";
+    if (pathname.startsWith("/job/")) return "รายละเอียดงานซ่อม";
+    if (pathname === "/stations") return "สถานะ";
+    if (pathname.startsWith("/stations/")) return "ความคืบหน้าสเตชัน";
+    if (pathname.startsWith("/superadmin/manage")) return "จัดการข้อมูลระบบ";
+    return "ระบบงาน";
   };
 
-  const mobileTitle = getMobileSectionTitleTH(location.pathname);
+  const pageTitle = getPageTitleTH(location.pathname);
+  const accountName = user?.name?.trim() || user?.username?.trim() || "ผู้ใช้งาน";
+  const roleLabel =
+    role === "superadmin" ? "Superadmin" : role === "admin" ? "Admin" : "Staff";
+  const showRoleSubtitle = role !== "superadmin";
 
   return (
     <div className="flex h-full min-h-screen bg-[#ebebeb] items-stretch">
@@ -67,8 +73,8 @@ export default function AppShell() {
 
       {/* Main content */}
       <main className="flex-1 min-w-0 ">
-        <div className="md:hidden sticky top-0 z-40 bg-[#ebebeb]/75 backdrop-blur border-b border-slate-200">
-          <div className="px-3 h-14 flex items-center gap-3">
+        <div className="sticky top-0 z-40 border-b border-slate-200 bg-white">
+          <div className="h-14 px-3 flex items-center gap-3 md:hidden">
             <button
               onClick={() => setMobileOpen(true)}
               className="h-10 w-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm active:scale-[0.98] transition"
@@ -78,19 +84,35 @@ export default function AppShell() {
             </button>
 
             <div className="min-w-0 flex-1">
-              <div className="text-l font-semibold text-slate-900 truncate">
-                sp auto
+              <div className="text-base font-semibold text-slate-900 truncate">
+                {pageTitle}
               </div>
-              {mobileTitle && (
-                <div className="text-xs text-slate-500 truncate">
-                  {mobileTitle}
-                </div>
-              )}
+            </div>
+
+            <div className="min-w-0 text-right leading-tight">
+              <div className="truncate text-sm font-semibold text-slate-800">
+                {accountName}
+              </div>
+              {showRoleSubtitle ? (
+                <div className="truncate text-[11px] text-slate-500">{roleLabel}</div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="hidden h-16 items-center justify-between px-6 md:flex">
+            <h1 className="truncate pr-4 text-2xl font-semibold text-slate-900">{pageTitle}</h1>
+            <div className="min-w-0 text-right leading-tight">
+              <div className="truncate text-base font-semibold text-slate-800">
+                {accountName}
+              </div>
+              {showRoleSubtitle ? (
+                <div className="truncate text-xs text-slate-500">{roleLabel}</div>
+              ) : null}
             </div>
           </div>
         </div>
 
-        <div className="p-4 md:p-10">
+        <div className="p-4 md:p-8">
           <Outlet />
         </div>
       </main>

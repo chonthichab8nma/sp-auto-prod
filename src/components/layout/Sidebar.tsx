@@ -183,15 +183,20 @@ export default function Sidebar({
               </Link>
 
               {!isCollapsed && activePath.startsWith("/superadmin/manage") && (
-                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                <div className="relative ml-3 mt-1 space-y-1.5 pl-5">
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-[2px] top-2 bottom-2 w-px rounded-full bg-slate-300"
+                  />
                   <Link
                     to="/superadmin/manage?tab=employees"
                     onClick={handleNavigate}
                     className={[
-                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      "relative block rounded-xl px-3 py-2 text-xs transition-colors",
+                      "before:pointer-events-none before:absolute before:left-[-18px] before:top-1/2 before:h-4 before:w-4 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-slate-300",
                       activeManageTab === "employees"
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "text-slate-600 hover:bg-slate-100",
+                        ? "bg-slate-100 text-slate-900 font-semibold"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
                     ].join(" ")}
                   >
                     จัดการพนักงาน
@@ -200,10 +205,11 @@ export default function Sidebar({
                     to="/superadmin/manage?tab=insurances"
                     onClick={handleNavigate}
                     className={[
-                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      "relative block rounded-xl px-3 py-2 text-xs transition-colors",
+                      "before:pointer-events-none before:absolute before:left-[-18px] before:top-1/2 before:h-4 before:w-4 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-slate-300",
                       activeManageTab === "insurances"
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "text-slate-600 hover:bg-slate-100",
+                        ? "bg-slate-100 text-slate-900 font-semibold"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
                     ].join(" ")}
                   >
                     จัดการบริษัทประกันภัย
@@ -212,10 +218,11 @@ export default function Sidebar({
                     to="/superadmin/manage?tab=brands"
                     onClick={handleNavigate}
                     className={[
-                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      "relative block rounded-xl px-3 py-2 text-xs transition-colors",
+                      "before:pointer-events-none before:absolute before:left-[-18px] before:top-1/2 before:h-4 before:w-4 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-slate-300",
                       activeManageTab === "brands"
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "text-slate-600 hover:bg-slate-100",
+                        ? "bg-slate-100 text-slate-900 font-semibold"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
                     ].join(" ")}
                   >
                     จัดการยี่ห้อรถ
@@ -224,10 +231,11 @@ export default function Sidebar({
                     to="/superadmin/manage?tab=alerts"
                     onClick={handleNavigate}
                     className={[
-                      "block rounded-md px-2 py-1.5 text-xs transition-colors",
+                      "relative block rounded-xl px-3 py-2 text-xs transition-colors",
+                      "before:pointer-events-none before:absolute before:left-[-18px] before:top-1/2 before:h-4 before:w-4 before:-translate-y-1/2 before:rounded-bl-xl before:border-b before:border-l before:border-slate-300",
                       activeManageTab === "alerts"
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "text-slate-600 hover:bg-slate-100",
+                        ? "bg-slate-100 text-slate-900 font-semibold"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
                     ].join(" ")}
                   >
                    ตั้งค่าระยะเวลาการแจ้งเตือน

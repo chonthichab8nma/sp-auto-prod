@@ -13,6 +13,7 @@ type StatCardProps = {
   value: string;
   icon: ReactNode;
   tone?: "blue" | "green" | "amber";
+  className?: string;
 };
 
 const amountFormatter = new Intl.NumberFormat("th-TH", {
@@ -44,7 +45,7 @@ function shortMonthLabel(value: string) {
   return value.length > 4 ? value.slice(0, 3) : value;
 }
 
-function StatCard({ label, value, icon, tone = "blue" }: StatCardProps) {
+function StatCard({ label, value, icon, tone = "blue", className }: StatCardProps) {
   const toneClass =
     tone === "green"
       ? "bg-emerald-50 text-emerald-700"
@@ -53,7 +54,9 @@ function StatCard({ label, value, icon, tone = "blue" }: StatCardProps) {
         : "bg-sky-50 text-sky-700";
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+    <article
+      className={`overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm ${className ?? ""}`}
+    >
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 text-sm font-medium leading-tight text-slate-500">{label}</p>
         <div
@@ -64,7 +67,7 @@ function StatCard({ label, value, icon, tone = "blue" }: StatCardProps) {
       </div>
       <p
         title={value}
-        className="mt-2 truncate text-[clamp(1.7rem,2.2vw,2.35rem)] leading-none font-semibold tracking-tight text-slate-900"
+        className="mt-2 truncate text-[clamp(1.3rem,1.45vw,2.2rem)] leading-none font-semibold tracking-tight text-slate-900"
       >
         {value}
       </p>
@@ -166,18 +169,8 @@ export default function ReportSummaryPage() {
     1,
   );
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-      <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4 md:items-center">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">รายงานรายได้และบริษัทลูกค้า</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              ภาพรวมรายได้จากประกัน ส่วนต่างเงินสด และบริษัทประกันที่มีจำนวนงานสูงสุด
-            </p>
-          </div>
-        </div>
-      </section>
-
+    <div className="flex w-full flex-col gap-5">
+      
       {error && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
           โหลดข้อมูลไม่สำเร็จ: {error}
@@ -185,72 +178,67 @@ export default function ReportSummaryPage() {
       )}
 
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-12 ">
-        <div className="space-y-5 lg:col-span-8">
-          <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+        <div className="space-y-5 lg:col-span-12">
+          <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-7">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900">สรุปรายได้</h2>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                 อัปเดตล่าสุด
               </span>
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {loading ? (
-                <>
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                </>
-              ) : (
-                <>
-                  <StatCard
-                    label="รายได้จากประกัน"
-                    value={`฿${formatAmount(insuranceRevenue)}`}
-                    icon={<BriefcaseBusiness size={18} />}
-                    tone="blue"
-                  />
-                  <StatCard
-                    label="เงินประกันที่เก็บได้แล้ว"
-                    value={`฿${formatAmount(receivedInsurance)}`}
-                    icon={<Coins size={18} />}
-                    tone="green"
-                  />
-                  <StatCard
-                    label="เงินประกันที่ยังเก็บไม่ได้"
-                    value={`฿${formatAmount(pendingInsurance)}`}
-                    icon={<RefreshCw size={18} />}
-                    tone="amber"
-                  />
-                  <StatCard
-                    label="รายได้จากเงินสด/ส่วนต่าง"
-                    value={`฿${formatAmount(cashRevenue)}`}
-                    icon={<Wallet size={18} />}
-                    tone="amber"
-                  />
-                  <StatCard
-                    label="รายได้รวมทั้งหมด"
-                    value={`฿${formatAmount(totalRevenue)}`}
-                    icon={<Coins size={18} />}
-                    tone="green"
-                  />
-                  {/* <StatCard
-                    label="ยอดคงค้างเคลม"
-                    value={`฿${formatAmount(processingAmount)}`}
-                    icon={<RefreshCw size={18} />}
-                    tone="amber"
-                  /> */}
-                </>
-              )}
+            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {loading ? (
+                  <>
+                    <SummarySkeletonCard />
+                    <SummarySkeletonCard />
+                    <SummarySkeletonCard />
+                    <SummarySkeletonCard />
+                    <SummarySkeletonCard />
+                  </>
+                ) : (
+                  <>
+                    <StatCard
+                      label="รายได้จากบริษัทประกัน"
+                      value={`฿${formatAmount(insuranceRevenue)}`}
+                      icon={<BriefcaseBusiness size={18} />}
+                      tone="blue"
+                    />
+                    <StatCard
+                      label="ยอดเงินประกันที่รับชำระแล้ว"
+                      value={`฿${formatAmount(receivedInsurance)}`}
+                      icon={<Coins size={18} />}
+                      tone="green"
+                    />
+                    <StatCard
+                      label="ยอดเงินประกันที่ยังไม่ได้รับ"
+                      value={`฿${formatAmount(pendingInsurance)}`}
+                      icon={<RefreshCw size={18} />}
+                      tone="amber"
+                    />
+                    <StatCard
+                      label="รายได้จากเงินสด"
+                      value={`฿${formatAmount(cashRevenue)}`}
+                      icon={<Wallet size={18} />}
+                      tone="amber"
+                    />
+                    <StatCard
+                      label="ยอดรายได้รวม"
+                      value={`฿${formatAmount(totalRevenue)}`}
+                      icon={<Coins size={18} />}
+                      tone="green"
+                    />
+                  </>
+                )}
             </div>
           </section>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12 ">
+        <div className="space-y-5 lg:col-span-8">
           <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900">รายงานรายเดือน ปี {selectedYear}</h2>
-              <p className="text-sm text-slate-500">
-                เปรียบเทียบรายได้รวมและยอดคงค้างเคลมรายเดือน
-              </p>
             </div>
 
             {monthlyRows.length === 0 ? (
@@ -271,42 +259,116 @@ export default function ReportSummaryPage() {
                     </span>
                   </div>
                   <div className="overflow-x-auto">
-                    <div className="min-w-[720px]">
-                      <div className="flex h-56 items-end gap-3">
-                        {monthlyChartData.map((item) => {
-                          const totalHeight = Math.max((item.total / maxChartValue) * 100, 3);
-                          const processingHeight = Math.max(
-                            (item.processing / maxChartValue) * 100,
-                            3,
-                          );
+                    {(() => {
+                      const chartWidth = Math.max(720, monthlyChartData.length * 72);
+                      const chartHeight = 240;
+                      const padding = { top: 16, right: 16, bottom: 16, left: 16 };
+                      const plotWidth = chartWidth - padding.left - padding.right;
+                      const plotHeight = chartHeight - padding.top - padding.bottom;
+                      const stepX =
+                        monthlyChartData.length > 1
+                          ? plotWidth / (monthlyChartData.length - 1)
+                          : 0;
 
-                          return (
-                            <div key={item.key} className="flex w-14 flex-col items-center gap-2">
-                              <div className="flex h-44 items-end gap-1">
-                                <div
-                                  className="w-3 rounded-t bg-sky-500"
-                                  style={{ height: `${item.total > 0 ? totalHeight : 2}%` }}
-                                  title={`${item.month} | รายได้รวม: ${formatAmount(item.total)} บาท`}
-                                />
-                                <div
-                                  className="w-3 rounded-t bg-amber-500"
-                                  style={{
-                                    height: `${item.processing > 0 ? processingHeight : 2}%`,
-                                  }}
-                                  title={`${item.month} | รับเงินแล้วเรียบร้อย: ${formatAmount(item.processing)} บาท`}
-                                />
+                      const totalPoints = monthlyChartData.map((item, index) => {
+                        const x = padding.left + stepX * index;
+                        const y = padding.top + (1 - item.total / maxChartValue) * plotHeight;
+                        return { ...item, x, y };
+                      });
+                      const processingPoints = monthlyChartData.map((item, index) => {
+                        const x = padding.left + stepX * index;
+                        const y = padding.top + (1 - item.processing / maxChartValue) * plotHeight;
+                        return { ...item, x, y };
+                      });
+
+                      const totalLine = totalPoints.map((p) => `${p.x},${p.y}`).join(" ");
+                      const processingLine = processingPoints.map((p) => `${p.x},${p.y}`).join(" ");
+                      const guideLines = Array.from({ length: 5 }, (_, idx) => {
+                        const y = padding.top + (plotHeight / 4) * idx;
+                        return y;
+                      });
+
+                      return (
+                        <div className="min-w-[720px]">
+                          <svg
+                            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                            className="h-56 w-full overflow-visible"
+                            role="img"
+                            aria-label="กราฟเส้นรายได้รายเดือน"
+                          >
+                            {guideLines.map((y) => (
+                              <line
+                                key={`guide-${y}`}
+                                x1={padding.left}
+                                y1={y}
+                                x2={chartWidth - padding.right}
+                                y2={y}
+                                stroke="#e2e8f0"
+                                strokeWidth="1"
+                              />
+                            ))}
+
+                            <polyline
+                              points={totalLine}
+                              fill="none"
+                              stroke="#0ea5e9"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <polyline
+                              points={processingLine}
+                              fill="none"
+                              stroke="#f59e0b"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+
+                            {totalPoints.map((point) => (
+                              <circle
+                                key={`total-${point.key}`}
+                                cx={point.x}
+                                cy={point.y}
+                                r="3.5"
+                                fill="#0ea5e9"
+                              >
+                                <title>{`${point.month} | รายได้รวม: ${formatAmount(point.total)} บาท`}</title>
+                              </circle>
+                            ))}
+                            {processingPoints.map((point) => (
+                              <circle
+                                key={`processing-${point.key}`}
+                                cx={point.x}
+                                cy={point.y}
+                                r="3.5"
+                                fill="#f59e0b"
+                              >
+                                <title>{`${point.month} | ยอดคงค้างเคลม: ${formatAmount(point.processing)} บาท`}</title>
+                              </circle>
+                            ))}
+                          </svg>
+
+                          <div
+                            className="mt-2 grid gap-2"
+                            style={{
+                              gridTemplateColumns: `repeat(${monthlyChartData.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {monthlyChartData.map((item) => (
+                              <div key={`label-${item.key}`} className="text-center">
+                                <span className="block text-xs text-slate-500">
+                                  {shortMonthLabel(item.month)}
+                                </span>
+                                <span className="block text-[11px] text-slate-400">
+                                  {compactNumberFormatter.format(item.total)}
+                                </span>
                               </div>
-                              <span className="text-xs text-slate-500">
-                                {shortMonthLabel(item.month)}
-                              </span>
-                              <span className="text-[11px] text-slate-400">
-                                {compactNumberFormatter.format(item.total)}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

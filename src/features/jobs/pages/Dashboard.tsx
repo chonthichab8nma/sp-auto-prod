@@ -95,12 +95,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="bg-white p-8 rounded-xl flex-col gap-1 hidden md:flex">
-        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-      </div>
-
-      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-8 flex flex-col gap-6 md:gap-10">
+    <div className="flex flex-col gap-3 md:gap-4">
+      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-8 flex flex-col gap-4 md:gap-6">
         <div className="md:hidden">
           <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
             <DashboardSearchInput
@@ -124,6 +120,11 @@ export default function Dashboard() {
         </div>
 
         <DashboardFilters
+          searchTerm={searchTerm}
+          onSearchChange={(v) => {
+            setSearchTerm(v);
+          }}
+          onSearchSubmit={() => setCurrentPage(1)}
           startDate={startDate}
           endDate={endDate}
           advancedFilters={advancedFilters}
@@ -170,18 +171,6 @@ export default function Dashboard() {
           >
             รับรถเข้า
           </button>
-        </div>
-
-        <div className="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-          <div className="lg:col-span-6">
-            <DashboardSearchInput
-              value={searchTerm}
-              onChange={(v) => {
-                setSearchTerm(v);
-              }}
-              onSubmit={() => setCurrentPage(1)}
-            />
-          </div>
         </div>
 
         <JobsTable

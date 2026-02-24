@@ -78,9 +78,6 @@ export default function SuperAdminManagePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-      <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
-        <h1 className="text-2xl font-semibold text-slate-900">จัดการข้อมูลระบบ</h1>
-      </section>
 
       {vm.loading && activeTab === "employees" ? <EmployeeSectionSkeleton /> : null}
       {vm.loading && activeTab === "insurances" ? (

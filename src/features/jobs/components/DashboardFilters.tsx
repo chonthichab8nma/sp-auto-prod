@@ -15,6 +15,7 @@ import {
 } from "../services/vehicles.service";
 import FormSelect from "../../../shared/components/form/FormSelect";
 import DatePickerPopover from "../../../shared/components/ui/DateRangePickerPopover";
+import DashboardSearchInput from "./DashboardSearchInput";
 
 type DashboardAdvancedFilters = {
   jobNumber?: string;
@@ -33,6 +34,9 @@ type DashboardAdvancedFilters = {
 type DashboardFilterValue = string | number | undefined;
 
 export default function DashboardFilters({
+  searchTerm,
+  onSearchChange,
+  onSearchSubmit,
   startDate,
   endDate,
   advancedFilters,
@@ -40,6 +44,9 @@ export default function DashboardFilters({
   onEndDateChange,
   onAdvancedFilterChange,
 }: {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
   startDate: string;
   endDate: string;
   advancedFilters?: DashboardAdvancedFilters;
@@ -125,6 +132,25 @@ export default function DashboardFilters({
     return (
       <div className={className}>
         <div>
+          <span className="text-xs font-semibold text-slate-500 block mb-1">บริษัทประกัน</span>
+          <FormSelect
+            options={insuranceOptions}
+            placeholder="ทั้งหมด"
+            value={
+              advancedFilters.insuranceCompanyId
+                ? (insurances.find((i) => i.id === advancedFilters.insuranceCompanyId)?.name ?? "")
+                : ""
+            }
+            className="w-full"
+            onChange={(e) => {
+              const name = e.target.value;
+              const found = insurances.find((i) => i.name === name);
+              onAdvancedFilterChange("insuranceCompanyId", found?.id);
+            }}
+          />
+        </div>
+
+        {/* <div>
           <label className="text-xs font-semibold text-slate-500 block mb-1">เลขที่ใบงาน</label>
           <input
             type="text"
@@ -133,7 +159,7 @@ export default function DashboardFilters({
             value={advancedFilters.jobNumber || ""}
             onChange={(e) => onAdvancedFilterChange("jobNumber", e.target.value)}
           />
-        </div>
+        </div> */}
 
         <div>
           <label className="text-xs font-semibold text-slate-500 block mb-1">ยี่ห้อรถ</label>
@@ -179,7 +205,7 @@ export default function DashboardFilters({
           />
         </div>
 
-        <div>
+        {/* <div>
           <label className="text-xs font-semibold text-slate-500 block mb-1">VIN Code</label>
           <input
             type="text"
@@ -188,7 +214,7 @@ export default function DashboardFilters({
             value={advancedFilters.vinNumber || ""}
             onChange={(e) => onAdvancedFilterChange("vinNumber", e.target.value)}
           />
-        </div>
+        </div> */}
 
         <div>
           <label className="text-xs font-semibold text-slate-500 block mb-1">ชื่อลูกค้า</label>
@@ -208,11 +234,11 @@ export default function DashboardFilters({
             placeholder="ทั้งหมด"
             value={
               advancedFilters.typeId
-                ? `${advancedFilters.typeId}::${types.find((t) => t.id === advancedFilters.typeId)?.name ?? ""}`
+                ? `${advancedFilters.typeId}.${types.find((t) => t.id === advancedFilters.typeId)?.name ?? ""}`
                 : ""
             }
             onChange={(e) => {
-              const [idStr] = e.target.value.split("::");
+              const [idStr] = e.target.value.split(".");
               onAdvancedFilterChange("typeId", idStr ? Number(idStr) : undefined);
             }}
           />
@@ -257,21 +283,12 @@ export default function DashboardFilters({
       <div className="hidden lg:block">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
           <div className="lg:col-span-4">
-            <span className="text-sm font-semibold text-slate-700 block mb-2">บริษัทประกัน</span>
-            <FormSelect
-              options={insuranceOptions}
-              placeholder="ทั้งหมด"
-              value={
-                advancedFilters?.insuranceCompanyId
-                  ? (insurances.find((i) => i.id === advancedFilters.insuranceCompanyId)?.name ?? "")
-                  : ""
-              }
-              className="h-11 rounded-xl border-slate-200 hover:bg-slate-50 focus:border-blue-500"
-              onChange={(e) => {
-                const name = e.target.value;
-                const found = insurances.find((i) => i.name === name);
-                onAdvancedFilterChange?.("insuranceCompanyId", found?.id);
-              }}
+            <DashboardSearchInput
+              value={searchTerm}
+              onChange={onSearchChange}
+              onSubmit={onSearchSubmit}
+              label="ค้นหา"
+              placeholder="ค้นหาทะเบียนรถ"
             />
           </div>
 
@@ -351,25 +368,6 @@ export default function DashboardFilters({
             </div>
 
             <div className="space-y-3">
-              <div>
-                <span className="text-[13px] font-semibold text-slate-700 block mb-2">บริษัทประกัน</span>
-                <FormSelect
-                  options={insuranceOptions}
-                  placeholder="ทั้งหมด"
-                  value={
-                    advancedFilters?.insuranceCompanyId
-                      ? (insurances.find((i) => i.id === advancedFilters.insuranceCompanyId)?.name ?? "")
-                      : ""
-                  }
-                  className="h-11 rounded-xl border-slate-200 hover:bg-slate-50 focus:border-blue-500"
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    const found = insurances.find((i) => i.name === name);
-                    onAdvancedFilterChange?.("insuranceCompanyId", found?.id);
-                  }}
-                />
-              </div>
-
               <div>
                 <DatePickerPopover
                   mode="range"

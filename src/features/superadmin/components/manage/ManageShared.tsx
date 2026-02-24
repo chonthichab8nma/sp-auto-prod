@@ -185,7 +185,7 @@ export function EmployeeSectionSkeleton() {
   return (
     <SectionWrapper
       title="จัดการพนักงาน"
-      description="กำหนด role ได้เฉพาะ admin และ staff พร้อมเพิ่ม/ลบ"
+      description=""
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
