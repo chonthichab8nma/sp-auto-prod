@@ -22,8 +22,8 @@ export default function DashboardStats({
       statusValue: "ทั้งหมด",
       value: values.total,
       icon: Car,
-      bg: "bg-blue-50",
-      iconColor: "text-blue-600",
+      bg: "bg-sky-100",
+      iconColor: "text-sky-600",
     },
     {
       label: "ขั้นตอนเคลม",

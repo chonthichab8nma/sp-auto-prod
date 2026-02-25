@@ -414,7 +414,7 @@ export default function ReportSummaryPage() {
         </div>
 
         <div className="lg:col-span-4">
-          <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 max-h-[435px]">
+          <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[424px]">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900 leading-tight">
                 บริษัทที่ใช้บริการสูงสุด
@@ -460,7 +460,7 @@ export default function ReportSummaryPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 max-h-[520px] overflow-hidden">
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[520px] overflow-hidden">
         <div className="px-1 pb-3 text-lg font-semibold text-slate-900">
           ตารางตัวเลขรายเดือน
         </div>

@@ -1,8 +1,8 @@
 import {
-  AlertTriangle,
-  ArrowUpCircle,
   CarFront,
-  List,
+  CircleAlert,
+  Clock3,
+  ClipboardList,
   Search,
 } from "lucide-react";
 import FormSelect from "../../shared/components/form/FormSelect";
@@ -58,9 +58,9 @@ export default function StationsFilters({
             subTitle: "รถที่กำลังซ่อมในระบบ",
             count: totalVehiclesCount,
             icon: CarFront,
-            iconWrapClass: "bg-sky-100 text-sky-600",
+            iconWrapClass: "bg-white text-sky-600",
             toneClass: "border-sky-200 bg-sky-50",
-            countClass: "text-sky-700",
+            countClass: "text-slate-900",
             subTitleClass: "text-sky-700/80",
             titleClass: "text-slate-800",
           },
@@ -71,10 +71,10 @@ export default function StationsFilters({
               ? "ตามค่าเตือนของแต่ละสถานะ"
               : `เกินกำหนด ${warningDays} วัน`,
             count: summaryCounts.warning,
-            icon: ArrowUpCircle,
-            iconWrapClass: "bg-amber-100 text-amber-600",
+            icon: Clock3,
+            iconWrapClass: "bg-white text-amber-500",
             toneClass: "border-amber-200 bg-amber-50",
-            countClass: "text-amber-700",
+            countClass: "text-slate-900",
             subTitleClass: "text-amber-700/80",
             titleClass: "text-slate-700",
           },
@@ -85,10 +85,10 @@ export default function StationsFilters({
               ? "ตามค่าเตือนของแต่ละสถานะ"
               : `เกินกำหนด ${criticalDays} วัน`,
             count: summaryCounts.critical,
-            icon: AlertTriangle,
-            iconWrapClass: "bg-rose-100 text-rose-600",
+            icon: CircleAlert,
+            iconWrapClass: "bg-white text-rose-600",
             toneClass: "border-rose-200 bg-rose-50",
-            countClass: "text-rose-700",
+            countClass: "text-slate-900",
             subTitleClass: "text-rose-700/80",
             titleClass: "text-slate-700",
           },
@@ -97,8 +97,8 @@ export default function StationsFilters({
             title: "งานที่ล่าช้าทั้งหมด",
             subTitle: "รวมเสี่ยงล่าช้าและเกินกำหนด",
             count: summaryCounts.all,
-            icon: List,
-            iconWrapClass: "bg-blue-100 text-blue-600",
+            icon: ClipboardList,
+            iconWrapClass: "bg-white text-blue-600",
             toneClass: "border-slate-200 bg-slate-50",
             countClass: "text-slate-900",
             subTitleClass: "text-slate-500",
@@ -224,32 +224,29 @@ export default function StationsFilters({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="grid grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] gap-2 xl:flex xl:flex-1 xl:items-center xl:gap-3">
-          <div className="relative min-w-0 w-full xl:flex-1 xl:max-w-3xl">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+        <div className="relative min-w-0 w-full md:flex-1">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-slate-400" />
-            </div>
-
-            <input
-              type="text"
-              className="placeholder:py-2 block w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-[13px] leading-5 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 md:text-sm"
-              placeholder="ค้นหาทะเบียนรถ / เลขตัวถัง / ชื่อลูกค้า"
-              value={searchTerm}
-              onChange={(e) => onSearchTermChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
           </div>
 
-          <FormSelect
-            options={statusOptions}
-            placeholder="สถานะ"
-            value={selectedStatus}
-            onChange={(e) => onStatusChange(e.target.value)}
-            className="w-full min-w-0 xl:w-auto xl:min-w-44"
+          <input
+            type="text"
+            className="placeholder:py-2 block w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-[13px] leading-5 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 md:text-sm"
+            placeholder="ค้นหาทะเบียนรถ / เลขตัวถัง / ชื่อลูกค้า"
+            value={searchTerm}
+            onChange={(e) => onSearchTermChange(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
 
+        <FormSelect
+          options={statusOptions}
+          placeholder="สถานะ"
+          value={selectedStatus}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="w-full min-w-0 md:ml-auto md:w-64 md:shrink-0"
+        />
       </div>
     </div>
   );
