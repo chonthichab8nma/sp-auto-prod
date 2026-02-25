@@ -14,7 +14,7 @@ export function SectionWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="mb-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>

@@ -97,6 +97,7 @@ export function useSuperAdminManage() {
     role: "staff",
     phone: "",
     username: "",
+    password: "",
   });
   const [updatingEmployeePasswordId, setUpdatingEmployeePasswordId] =
     useState<number | null>(null);
@@ -259,6 +260,7 @@ export function useSuperAdminManage() {
       role: item.role ?? "staff",
       phone: item.phone ?? "",
       username: item.username ?? "",
+      password: "",
     });
   }
 
@@ -266,11 +268,14 @@ export function useSuperAdminManage() {
     e.preventDefault();
     if (!employeeEditTarget || editingEmployeeId) return;
 
+    const nextPassword = (employeeEditForm.password ?? "").trim();
     const payload: UpdateEmployeeInput = {
       name: employeeEditForm.name.trim(),
       role: employeeEditForm.role,
       phone: employeeEditForm.phone.replace(/\D/g, "").slice(0, 10),
       username: employeeEditForm.username.trim(),
+      isActive: employeeEditTarget.isActive ?? true,
+      ...(nextPassword ? { password: nextPassword } : {}),
     };
 
     if (!payload.name || !payload.phone || !payload.username) {
@@ -295,6 +300,7 @@ export function useSuperAdminManage() {
         role: "staff",
         phone: "",
         username: "",
+        password: "",
       });
       toast.success("แก้ไขข้อมูลพนักงานสำเร็จ");
     } catch (e) {
@@ -776,6 +782,7 @@ export function useSuperAdminManage() {
       role: "staff",
       phone: "",
       username: "",
+      password: "",
     });
   }
 

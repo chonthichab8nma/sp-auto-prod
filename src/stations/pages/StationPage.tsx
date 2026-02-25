@@ -290,7 +290,7 @@ export default function StationsPage() {
   }, [data, shouldUseAlertsEndpointTable, totalVehiclesData]);
 
   return (
-    <div className="bg-white min-h-screen p-6">
+    <div className="min-h-screen rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
     
       <StationsFilters
         searchTerm={searchTerm}

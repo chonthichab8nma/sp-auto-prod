@@ -34,7 +34,7 @@ function ManageTableSkeleton({
   columns: number;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="mb-4 space-y-2">
         <Skeleton className="h-7 w-56" />
         <Skeleton className="h-4 w-80" />
@@ -77,7 +77,7 @@ export default function SuperAdminManagePage() {
       : "employees";
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
 
       {vm.loading && activeTab === "employees" ? <EmployeeSectionSkeleton /> : null}
       {vm.loading && activeTab === "insurances" ? (
@@ -95,6 +95,7 @@ export default function SuperAdminManagePage() {
           employees={vm.employees}
           deletingEmployeeId={vm.deletingEmployeeId}
           onOpenCreate={() => vm.setShowEmployeeForm(true)}
+          onEdit={vm.openEmployeeEditModal}
           onDelete={(item) =>
             vm.openDeleteModal({ type: "employee", id: item.id, name: item.name })
           }
@@ -155,19 +156,19 @@ export default function SuperAdminManagePage() {
 
       {vm.showEmployeeForm ? (
         <FormModal
-          title="จัดการพนักงาน"
+          title="เพิ่มข้อมูลพนักงาน"
           onClose={vm.closeEmployeeForm}
           disableClose={vm.creatingEmployee}
         >
           <form onSubmit={vm.handleCreateEmployee} className="flex h-full flex-col gap-4">
             <TextInput
-              label="ชื่อ"
+              label="ชื่อ - นามสกุล"
               value={vm.employeeForm.name}
               onChange={(next) => vm.setEmployeeForm((prev) => ({ ...prev, name: next }))}
-              placeholder="Jane Doe"
+              placeholder="กรอกชื่อ - นามสกุล"
             />
             <FormSelect
-              label="Role"
+              label="สิทธิ์การใช้งาน"
               value={vm.employeeForm.role}
               options={["staff", "admin"]}
               onChange={(e) =>
@@ -187,16 +188,16 @@ export default function SuperAdminManagePage() {
               placeholder="0811112222"
             />
             <TextInput
-              label="Username"
+              label="ชื่อผู้ใช้งาน"
               value={vm.employeeForm.username}
               onChange={(next) => vm.setEmployeeForm((prev) => ({ ...prev, username: next }))}
-              placeholder="janedoe"
+              placeholder="กรอกชื่อผู้ใช้งาน"
             />
             <TextInput
-              label="Password"
+              label="รหัสผ่าน"
               value={vm.employeeForm.password}
               onChange={(next) => vm.setEmployeeForm((prev) => ({ ...prev, password: next }))}
-              placeholder="secret"
+              placeholder="กรอกรหัสผ่าน"
               type="password"
             />
 
@@ -224,19 +225,19 @@ export default function SuperAdminManagePage() {
 
       {vm.employeeEditTarget ? (
         <FormModal
-          title="แก้ไขข้อมูลพนักงาน"
+          title="ปรับปรุงข้อมูลพนักงาน"
           onClose={vm.closeEmployeeEditModal}
           disableClose={Boolean(vm.editingEmployeeId)}
         >
           <form onSubmit={vm.handleUpdateEmployee} className="flex h-full flex-col gap-4">
             <TextInput
-              label="ชื่อ"
+              label="ชื่อ - นามสกุล"
               value={vm.employeeEditForm.name}
               onChange={(next) => vm.setEmployeeEditForm((prev) => ({ ...prev, name: next }))}
-              placeholder="Jane Doe"
+              placeholder="กรอกชื่อ - นามสกุล"
             />
             <FormSelect
-              label="Role"
+              label="สิทธิ์การใช้งาน"
               value={vm.employeeEditForm.role}
               options={["staff", "admin"]}
               onChange={(e) =>
@@ -259,12 +260,21 @@ export default function SuperAdminManagePage() {
               placeholder="0811112222"
             />
             <TextInput
-              label="Username"
+              label="ชื่อผู้ใช้งาน"
               value={vm.employeeEditForm.username}
               onChange={(next) =>
                 vm.setEmployeeEditForm((prev) => ({ ...prev, username: next }))
               }
-              placeholder="janedoe"
+              placeholder="กรอกชื่อผู้ใช้งาน"
+            />
+            <TextInput
+              label="รหัสผ่านใหม่ (ไม่บังคับ)"
+              value={vm.employeeEditForm.password ?? ""}
+              onChange={(next) =>
+                vm.setEmployeeEditForm((prev) => ({ ...prev, password: next }))
+              }
+              placeholder="เว้นว่างหากไม่ต้องการเปลี่ยนรหัสผ่าน"
+              type="password"
             />
 
             <div className="mt-auto flex justify-end gap-2 border-t border-slate-200 pt-4">

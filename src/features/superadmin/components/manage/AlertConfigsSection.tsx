@@ -14,7 +14,7 @@ function formatBangkokDateTime(value?: string | null) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "-";
 
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("th-TH", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -37,7 +37,7 @@ export function AlertConfigsSection({
   return (
     <SectionWrapper
       title="ตั้งค่าระยะเวลาการแจ้งเตือน"
-      description="กำหนดระยะเวลาการแจ้งเตือนและระยะเวลาเกินกำหนดของแต่ละสถานะงาน"
+      description=""
     >
       <div className="mt-5 space-y-3 md:hidden">
         {configs.map((item) => {
@@ -57,14 +57,15 @@ export function AlertConfigsSection({
                   type="button"
                   onClick={() => onEdit(item)}
                   disabled={disabled}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label={`แก้ไขสถานะ ${statusLabel[item.status]}`}
+                  title="แก้ไข"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {editingAlertConfigId === item.id ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Pencil className="h-3.5 w-3.5" />
                   )}
-                  แก้ไข
                 </button>
               </div>
 
@@ -126,14 +127,15 @@ export function AlertConfigsSection({
                       type="button"
                       onClick={() => onEdit(item)}
                       disabled={disabled}
-                      className="ml-3 inline-flex min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label={`แก้ไขสถานะ ${statusLabel[item.status]}`}
+                      title="แก้ไข"
+                      className="ml-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {editingAlertConfigId === item.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <Pencil className="h-3.5 w-3.5" />
                       )}
-                      แก้ไข
                     </button>
                   </td>
                 </tr>

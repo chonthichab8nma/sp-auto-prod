@@ -24,6 +24,8 @@ export type UpdateEmployeeInput = {
   role: EmployeeRole;
   phone: string;
   username: string;
+  password?: string;
+  isActive?: boolean;
 };
 
 export type InsuranceCompanyItem = {
@@ -140,7 +142,7 @@ export const superadminService = {
   },
 
   async updateEmployee(id: number, payload: UpdateEmployeeInput): Promise<EmployeeItem> {
-    const { data } = await http.patch<EmployeeItem>(`/private/employees/${id}`, payload);
+    const { data } = await http.put<EmployeeItem>(`/private/employees/${id}`, payload);
     return data;
   },
 

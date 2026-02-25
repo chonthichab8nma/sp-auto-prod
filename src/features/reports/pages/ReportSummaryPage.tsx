@@ -55,7 +55,7 @@ function StatCard({
 
   return (
     <article
-      className={`overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm ${className ?? ""}`}
+      className={`overflow-hidden rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm ${className ?? ""}`}
     >
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 text-sm font-medium leading-tight text-slate-500">
@@ -79,7 +79,7 @@ function StatCard({
 
 function SummarySkeletonCard() {
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+    <article className="overflow-hidden rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm">
       <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
       <div className="mt-3 h-9 w-40 animate-pulse rounded bg-slate-200" />
     </article>
@@ -246,7 +246,7 @@ export default function ReportSummaryPage() {
 
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-stretch">
         <div className="lg:col-span-8">
-          <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+          <section className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900">
                 รายงานรายเดือน ปี {selectedYear}
@@ -414,7 +414,7 @@ export default function ReportSummaryPage() {
         </div>
 
         <div className="lg:col-span-4">
-          <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[424px]">
+          <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[424px]">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900 leading-tight">
                 บริษัทที่ใช้บริการสูงสุด
@@ -460,7 +460,7 @@ export default function ReportSummaryPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[520px] overflow-hidden">
+      <section className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[520px] overflow-hidden">
         <div className="px-1 pb-3 text-lg font-semibold text-slate-900">
           ตารางตัวเลขรายเดือน
         </div>

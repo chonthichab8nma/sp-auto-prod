@@ -46,34 +46,36 @@ export function InsurancesSection({
               <tr key={item.id} className="border-t border-slate-200 bg-white">
                 <td className="px-3 py-2">{item.name}</td>
                 <td className="px-3 py-2">{item.contactPhone || "-"}</td>
-                <td className="px-3 py-2">{item.isActive ? "ใช่" : "ไม่"}</td>
+                <td className="px-3 py-2">{item.isActive ? <span className="text-green-600">เปิดใช้งาน</span> : <span className="text-red-600">ปิดใช้งาน</span>}</td>
                 <td className="px-3 py-2 text-right">
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => onEdit(item)}
                       disabled={editingInsuranceId === item.id}
-                      className="inline-flex min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label={`แก้ไข ${item.name}`}
+                      title="แก้ไข"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {editingInsuranceId === item.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <Pencil className="h-3.5 w-3.5" />
                       )}
-                      แก้ไข
                     </button>
                     <button
                       type="button"
                       onClick={() => onDelete(item)}
                       disabled={deletingInsuranceId === item.id}
-                      className="inline-flex min-w-[64px] items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 shadow-sm transition hover:-translate-y-[1px] hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label={`ลบ ${item.name}`}
+                      title="ลบ"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600 shadow-sm transition hover:-translate-y-[1px] hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {deletingInsuranceId === item.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <Trash2 className="h-3.5 w-3.5" />
                       )}
-                      ลบ
                     </button>
                   </div>
                 </td>
