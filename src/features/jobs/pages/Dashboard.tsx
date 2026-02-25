@@ -32,6 +32,7 @@ export default function Dashboard() {
     brand: "",
     model: "",
     color: "",
+    type: "",
     typeId: undefined as number | undefined,
     year: "",
     vehicleRegistration: "",
@@ -54,6 +55,7 @@ export default function Dashboard() {
       brand: advancedFilters.brand?.trim() || undefined,
       model: advancedFilters.model?.trim() || undefined,
       color: advancedFilters.color?.trim() || undefined,
+      type: advancedFilters.type?.trim() || undefined,
       typeId: advancedFilters.typeId,
       year: advancedFilters.year?.trim() || undefined,
       vehicleRegistration:

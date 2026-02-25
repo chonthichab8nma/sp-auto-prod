@@ -56,6 +56,12 @@ export function BrandsSection({
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [manageView, setManageView] = useState<"brand" | "model" | "type">("brand");
+  const sectionTitle =
+    manageView === "model"
+      ? "จัดการรุ่นรถ"
+      : manageView === "type"
+        ? "จัดการประเภทรถ"
+        : "จัดการยี่ห้อรถ";
 
   const setForm = (patch: Partial<GroupedCreateForm>) => {
     onGroupedFormChange({ ...groupedCreateForm, ...patch });
@@ -78,7 +84,7 @@ export function BrandsSection({
 
   return (
     <SectionWrapper
-      title="จัดการยี่ห้อรถ"
+      title={sectionTitle}
       description=""
       headerAction={
         <div className="flex items-center gap-2">
@@ -95,13 +101,27 @@ export function BrandsSection({
               }
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-          >
-            เพิ่มข้อมูลรถ
-          </button>
+          {manageView === "model" ? (
+            <div className="w-[160px]">
+              <FormSelect
+                value={selectedModelsBrandId}
+                options={brands.map((brand) => ({
+                  value: String(brand.id),
+                  label: brand.name,
+                }))}
+                placeholder="เลือกยี่ห้อรถ"
+                onChange={(e) => onSelectModelsBrand(e.target.value)}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            >
+              เพิ่มข้อมูลรถ
+            </button>
+          )}
         </div>
       }
     >
@@ -174,20 +194,6 @@ export function BrandsSection({
           </div>
         ) : manageView === "model" ? (
           <div>
-            <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div className="w-full md:w-[320px]">
-                <FormSelect
-                  value={selectedModelsBrandId}
-                  options={brands.map((brand) => ({
-                    value: String(brand.id),
-                    label: brand.name,
-                  }))}
-                  placeholder="เลือกยี่ห้อเพื่อจัดการรุ่น"
-                  onChange={(e) => onSelectModelsBrand(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
               ยี่ห้อที่กำลังจัดการ: <span className="font-semibold">{selectedBrandName}</span>
             </div>

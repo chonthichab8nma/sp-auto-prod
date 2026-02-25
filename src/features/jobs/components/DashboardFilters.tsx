@@ -23,6 +23,7 @@ type DashboardAdvancedFilters = {
   brand?: string;
   model?: string;
   color?: string;
+  type?: string;
   typeId?: number;
   year?: string;
   vehicleRegistration?: string;
@@ -71,7 +72,11 @@ export default function DashboardFilters({
 
   const brandOptions = useMemo(() => brands.map((b) => b.name), [brands]);
   const typeOptions = useMemo(
-    () => types.map((t) => `${t.id}::${t.name}`),
+    () =>
+      types.map((t) => ({
+        value: String(t.id),
+        label: t.name.replaceAll("::", "").trim(),
+      })),
     [types],
   );
 
@@ -118,6 +123,7 @@ export default function DashboardFilters({
     onAdvancedFilterChange?.("brand", "");
     onAdvancedFilterChange?.("model", "");
     onAdvancedFilterChange?.("color", "");
+    onAdvancedFilterChange?.("type", "");
     onAdvancedFilterChange?.("typeId", undefined);
     onAdvancedFilterChange?.("year", "");
     onAdvancedFilterChange?.("vehicleRegistration", "");
@@ -232,14 +238,12 @@ export default function DashboardFilters({
           <FormSelect
             options={typeOptions}
             placeholder="ทั้งหมด"
-            value={
-              advancedFilters.typeId
-                ? `${advancedFilters.typeId}.${types.find((t) => t.id === advancedFilters.typeId)?.name ?? ""}`
-                : ""
-            }
+            value={advancedFilters.typeId ? String(advancedFilters.typeId) : ""}
             onChange={(e) => {
-              const [idStr] = e.target.value.split(".");
-              onAdvancedFilterChange("typeId", idStr ? Number(idStr) : undefined);
+              const id = Number(e.target.value);
+              const foundType = types.find((t) => t.id === id);
+              onAdvancedFilterChange("typeId", Number.isFinite(id) && id > 0 ? id : undefined);
+              onAdvancedFilterChange("type", foundType?.name?.replaceAll("::", "").trim() || "");
             }}
           />
         </div>
