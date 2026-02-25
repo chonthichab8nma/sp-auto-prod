@@ -36,8 +36,10 @@ export default function ProgressHeader({
         </div>
 
         <div className="mt-1.5 md:hidden">
-          <p className="text-[11px] font-medium tracking-wide text-slate-400">ทะเบียนรถ</p>
-          <p className="mt-0.5 truncate text-[18px] font-semibold leading-none text-slate-900">
+          <p className="truncate text-[15px] font-semibold text-slate-900">
+            <span className="mr-1 text-[11px] font-medium tracking-wide text-slate-400">
+              ทะเบียนรถ
+            </span>
             {registration}
           </p>
         </div>

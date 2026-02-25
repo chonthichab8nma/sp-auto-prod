@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { PanelLeft } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../shared/auth/useAuth";
-import { PanelLeft } from "lucide-react";
 
 export default function AppShell() {
   const { logout, role, user } = useAuth();
@@ -50,13 +50,11 @@ export default function AppShell() {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* backdrop */}
           <button
             className="absolute inset-0 bg-black/30"
             onClick={() => setMobileOpen(false)}
             aria-label="close sidebar"
           />
-          {/* drawer */}
           <div className="absolute left-0 top-0 h-full">
             <Sidebar
               isCollapsed={false}

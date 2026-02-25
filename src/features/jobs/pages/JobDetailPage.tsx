@@ -320,7 +320,7 @@ export default function JobDetailPage({
   }
 
   return (
-    <div className="p-6 min-h-screen bg-white">
+    <div className="min-h-screen rounded-xl bg-white p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex items-center gap-3">
           <button

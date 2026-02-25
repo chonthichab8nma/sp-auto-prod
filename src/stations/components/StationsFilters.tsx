@@ -224,8 +224,8 @@ export default function StationsFilters({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-        <div className="relative min-w-0 w-full md:flex-1">
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className="relative min-w-0 flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-slate-400" />
           </div>
@@ -245,7 +245,7 @@ export default function StationsFilters({
           placeholder="สถานะ"
           value={selectedStatus}
           onChange={(e) => onStatusChange(e.target.value)}
-          className="w-full min-w-0 md:ml-auto md:w-64 md:shrink-0"
+          className="w-[140px] min-w-0 shrink-0 md:ml-auto md:w-64 md:shrink-0"
         />
       </div>
     </div>

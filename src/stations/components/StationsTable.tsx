@@ -284,7 +284,7 @@ export default function StationsTable({
                     onClick={() => onRowClick(job.id)}
                   >
                     <td className="box-border px-6 py-4">
-                      <div className="text-[18px] font-semibold leading-tight text-slate-800">
+                      <div className="text-[16px] font-semibold leading-tight text-slate-800">
                         {job.vehicle.registration}
                       </div>
                       {hasAlert ? (
