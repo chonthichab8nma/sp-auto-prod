@@ -14,7 +14,7 @@ export function SectionWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <section className="flex min-h-[calc(100vh-210px)] flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
       <div className="mb-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
@@ -24,7 +24,7 @@ export function SectionWrapper({
           <p className="mt-1 text-sm text-slate-500">{description}</p>
         ) : null}
       </div>
-      {children}
+      <div className="flex-1">{children}</div>
     </section>
   );
 }

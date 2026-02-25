@@ -8,7 +8,7 @@ import type {
 import type { GroupedCreateForm } from "../../constants/manage";
 import { FormModal, SectionWrapper } from "./ManageShared";
 import FormSelect from "../../../../shared/components/form/FormSelect";
-
+import countries from '../../../../data/countries.json';
 export function BrandsSection({
   brands,
   vehicleTypes,
@@ -337,11 +337,14 @@ export function BrandsSection({
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">ประเทศ (ถ้ามี)</label>
-                    <input
+                    <FormSelect
                       value={groupedCreateForm.brandCountry}
+                      options={countries.map((country) => ({
+                        value: String(country.id),
+                        label: country.th,
+                      }))}
+                      placeholder="เลือกประเทศ"
                       onChange={(e) => setForm({ brandCountry: e.target.value })}
-                      placeholder="เช่น เยอรมนี"
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-600"
                     />
                   </div>
                 </div>
