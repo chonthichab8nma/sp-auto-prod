@@ -1,4 +1,4 @@
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type {
   VehicleBrandItem,
@@ -21,6 +21,7 @@ export function BrandsSection({
   loadingModelsByBrand,
   editingModelId,
   deletingModelId,
+  deletingTypeId,
   onGroupedFormChange,
   onCreateGrouped,
   onClearGrouped,
@@ -29,6 +30,7 @@ export function BrandsSection({
   onDelete,
   onEditModel,
   onDeleteModel,
+  onDeleteType,
 }: {
   brands: VehicleBrandItem[];
   vehicleTypes: VehicleTypeItem[];
@@ -41,17 +43,19 @@ export function BrandsSection({
   loadingModelsByBrand: boolean;
   editingModelId: number | null;
   deletingModelId: number | null;
+  deletingTypeId: number | null;
   onGroupedFormChange: (next: GroupedCreateForm) => void;
-  onCreateGrouped: (e: React.FormEvent) => void;
+  onCreateGrouped: (e: React.FormEvent) => Promise<boolean>;
   onClearGrouped: () => void;
   onSelectModelsBrand: (brandId: string) => void;
   onEdit: (item: VehicleBrandItem) => void;
   onDelete: (item: VehicleBrandItem) => void;
   onEditModel: (item: VehicleModelItem) => void;
   onDeleteModel: (item: VehicleModelItem) => void;
+  onDeleteType: (item: VehicleTypeItem) => void;
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [manageView, setManageView] = useState<"brand" | "model">("brand");
+  const [manageView, setManageView] = useState<"brand" | "model" | "type">("brand");
 
   const setForm = (patch: Partial<GroupedCreateForm>) => {
     onGroupedFormChange({ ...groupedCreateForm, ...patch });
@@ -59,7 +63,14 @@ export function BrandsSection({
 
   const closeCreateModal = () => {
     if (creatingGrouped) return;
+    onClearGrouped();
     setShowCreateModal(false);
+  };
+
+  const handleCreateGroupedSubmit = async (e: React.FormEvent) => {
+    const success = await onCreateGrouped(e);
+    if (!success) return;
+    closeCreateModal();
   };
 
   const selectedBrandName =
@@ -77,9 +88,10 @@ export function BrandsSection({
               options={[
                 { value: "brand", label: "ยี่ห้อ" },
                 { value: "model", label: "รุ่น" },
+                { value: "type", label: "ประเภทรถ" },
               ]}
               onChange={(e) =>
-                setManageView(e.target.value as "brand" | "model")
+                setManageView(e.target.value as "brand" | "model" | "type")
               }
             />
           </div>
@@ -88,7 +100,6 @@ export function BrandsSection({
             onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
           >
-            <Plus className="h-4 w-4" />
             เพิ่มข้อมูลรถ
           </button>
         </div>
@@ -161,7 +172,7 @@ export function BrandsSection({
               </table>
             </div>
           </div>
-        ) : (
+        ) : manageView === "model" ? (
           <div>
             <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div className="w-full md:w-[320px]">
@@ -251,6 +262,55 @@ export function BrandsSection({
               </table>
             </div>
           </div>
+        ) : (
+          <div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-sm">
+                <thead className="bg-slate-50 text-slate-700">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">รหัสประเภท</th>
+                    <th className="px-3 py-2 text-left font-medium">ชื่อประเภท</th>
+                    <th className="px-3 py-2 text-left font-medium">ชื่ออังกฤษ</th>
+                    <th className="px-3 py-2 text-right font-medium">การจัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicleTypes.map((item) => (
+                    <tr key={item.id} className="border-t border-slate-200 bg-white">
+                      <td className="px-3 py-2">{item.code}</td>
+                      <td className="px-3 py-2">{item.name}</td>
+                      <td className="px-3 py-2">{item.nameEn || "-"}</td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => onDeleteType(item)}
+                            disabled={deletingTypeId === item.id}
+                            aria-label={`ลบประเภท ${item.name}`}
+                            title="ลบ"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600 shadow-sm transition hover:-translate-y-[1px] hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {deletingTypeId === item.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {vehicleTypes.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-3 py-4 text-center text-slate-500">
+                        ยังไม่มีข้อมูลประเภทรถ
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 
@@ -260,7 +320,7 @@ export function BrandsSection({
           onClose={closeCreateModal}
           disableClose={creatingGrouped}
         >
-          <form onSubmit={onCreateGrouped} className="flex h-full flex-col gap-5">
+          <form onSubmit={handleCreateGroupedSubmit} className="flex h-full flex-col gap-5">
             <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
               <div className="mb-3 flex items-center gap-2">
                 <span className="inline-flex rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
@@ -458,7 +518,7 @@ export function BrandsSection({
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {creatingGrouped ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                เพิ่มข้อมูลแบบกลุ่ม
+                บันทึก
               </button>
             </div>
           </form>

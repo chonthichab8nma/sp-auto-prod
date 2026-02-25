@@ -60,6 +60,14 @@ export type CreateVehicleBrandInput = {
   logoUrl: string;
 };
 
+export type UpsertVehicleBrandInput = {
+  code: string;
+  name: string;
+  nameEn?: string;
+  country?: string;
+  logoUrl?: string;
+};
+
 export type VehicleTypeItem = {
   id: number;
   code: string;
@@ -202,14 +210,14 @@ export const superadminService = {
     return data ?? [];
   },
 
-  async createVehicleBrand(payload: CreateVehicleBrandInput): Promise<VehicleBrandItem> {
+  async createVehicleBrand(payload: UpsertVehicleBrandInput): Promise<VehicleBrandItem> {
     const { data } = await http.post<VehicleBrandItem>("/private/vehicles/brands", payload);
     return data;
   },
 
   async updateVehicleBrand(
     id: number,
-    payload: CreateVehicleBrandInput,
+    payload: UpsertVehicleBrandInput,
   ): Promise<VehicleBrandItem> {
     const { data } = await http.patch<VehicleBrandItem>(
       `/private/vehicles/brands/${id}`,

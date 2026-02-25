@@ -11,6 +11,7 @@ import {
   type CreateVehicleTypeInput,
   type EmployeeItem,
   type InsuranceCompanyItem,
+  type UpsertVehicleBrandInput,
   type UpdateAlertConfigInput,
   type UpdateEmployeeInput,
   type VehicleBrandItem,
@@ -148,6 +149,7 @@ export function useSuperAdminManage() {
   const [loadingModelsByBrand, setLoadingModelsByBrand] = useState(false);
   const [editingModelId, setEditingModelId] = useState<number | null>(null);
   const [deletingModelId, setDeletingModelId] = useState<number | null>(null);
+  const [deletingTypeId, setDeletingTypeId] = useState<number | null>(null);
   const [modelEditTarget, setModelEditTarget] = useState<VehicleModelItem | null>(null);
   const [modelEditForm, setModelEditForm] = useState({
     name: "",
@@ -499,12 +501,13 @@ export function useSuperAdminManage() {
     e.preventDefault();
     if (!brandEditTarget || editingBrandId) return;
 
-    const payload: CreateVehicleBrandInput = {
+    const normalizedName = brandEditForm.name.trim();
+    const payload: UpsertVehicleBrandInput = {
       code: brandEditForm.code.trim().toLowerCase(),
-      name: brandEditForm.name.trim(),
-      nameEn: brandEditForm.nameEn.trim(),
-      country: brandEditForm.country.trim(),
-      logoUrl: brandEditForm.logoUrl.trim(),
+      name: normalizedName,
+      nameEn: brandEditForm.nameEn.trim() || normalizedName,
+      country: brandEditForm.country.trim() || "-",
+      logoUrl: brandEditForm.logoUrl.trim() || undefined,
     };
 
     if (!payload.code || !payload.name) {
@@ -571,6 +574,13 @@ export function useSuperAdminManage() {
         toast.success("ลบรุ่นรถแล้ว");
       }
 
+      if (deleteTarget.type === "type") {
+        setDeletingTypeId(deleteTarget.id);
+        await superadminService.deleteVehicleType(deleteTarget.id);
+        setVehicleTypes((prev) => prev.filter((item) => item.id !== deleteTarget.id));
+        toast.success("ลบประเภทรถแล้ว");
+      }
+
       setDeleteTarget(null);
     } catch (e) {
       if (deleteTarget.type === "employee") {
@@ -585,49 +595,53 @@ export function useSuperAdminManage() {
       if (deleteTarget.type === "model") {
         toast.error(toThaiErrorMessage(e, "ลบรุ่นรถไม่สำเร็จ"));
       }
+      if (deleteTarget.type === "type") {
+        toast.error(toThaiErrorMessage(e, "ลบประเภทรถไม่สำเร็จ"));
+      }
     } finally {
       setDeletingEmployeeId(null);
       setDeletingInsuranceId(null);
       setDeletingBrandId(null);
       setDeletingModelId(null);
+      setDeletingTypeId(null);
     }
   }
 
-  async function handleCreateGroupedVehicle(e: React.FormEvent) {
+  async function handleCreateGroupedVehicle(e: React.FormEvent): Promise<boolean> {
     e.preventDefault();
-    if (creatingGrouped) return;
+    if (creatingGrouped) return false;
 
     const modelNames = splitModelNames(groupedCreateForm.modelNamesText);
     if (modelNames.length === 0) {
       toast.error("กรุณากรอกชื่อรุ่นรถอย่างน้อย 1 รุ่น");
-      return;
+      return false;
     }
 
     if (groupedCreateForm.brandMode === "existing") {
       if (!Number(groupedCreateForm.existingBrandId)) {
         toast.error("กรุณาเลือกยี่ห้อรถ");
-        return;
+        return false;
       }
     } else {
       const brandCode = groupedCreateForm.brandCode.trim().toLowerCase();
       const brandName = groupedCreateForm.brandName.trim();
       if (!brandCode || !brandName) {
         toast.error("กรุณากรอกรหัสและชื่อยี่ห้อรถ");
-        return;
+        return false;
       }
     }
 
     if (groupedCreateForm.typeMode === "existing") {
       if (!Number(groupedCreateForm.existingTypeId)) {
         toast.error("กรุณาเลือกประเภทรถ");
-        return;
+        return false;
       }
     } else {
       const typeCode = groupedCreateForm.typeCode.trim().toLowerCase();
       const typeName = groupedCreateForm.typeName.trim();
       if (!typeCode || !typeName) {
         toast.error("กรุณากรอกรหัสและชื่อประเภทรถ");
-        return;
+        return false;
       }
     }
 
@@ -649,12 +663,13 @@ export function useSuperAdminManage() {
           brandId = existingBrandByCode.id;
           toast("พบรหัสยี่ห้อเดิม ระบบจะใช้ยี่ห้อเดิมให้อัตโนมัติ");
         } else {
-          const brandPayload: CreateVehicleBrandInput = {
+          const normalizedBrandName = groupedCreateForm.brandName.trim();
+          const brandPayload: UpsertVehicleBrandInput = {
             code: normalizedBrandCode,
-            name: groupedCreateForm.brandName.trim(),
-            nameEn: groupedCreateForm.brandNameEn.trim(),
-            country: groupedCreateForm.brandCountry.trim(),
-            logoUrl: groupedCreateForm.brandLogoUrl.trim(),
+            name: normalizedBrandName,
+            nameEn: groupedCreateForm.brandNameEn.trim() || normalizedBrandName,
+            country: groupedCreateForm.brandCountry.trim() || "-",
+            logoUrl: groupedCreateForm.brandLogoUrl.trim() || undefined,
           };
           const createdBrand = await superadminService.createVehicleBrand(brandPayload);
           setBrands((prev) => [createdBrand, ...prev]);
@@ -701,6 +716,7 @@ export function useSuperAdminManage() {
       setSelectedModelsBrandId(String(brandId));
       await loadModelsForBrand(brandId);
       toast.success(`เพิ่มข้อมูลรถสำเร็จ ${modelNames.length} รุ่น`);
+      return true;
     } catch (e) {
       if (createdBrandId) {
         try {
@@ -719,6 +735,7 @@ export function useSuperAdminManage() {
         }
       }
       toast.error(toThaiErrorMessage(e, "เพิ่มข้อมูลรถไม่สำเร็จ"));
+      return false;
     } finally {
       setCreatingGrouped(false);
     }
@@ -831,7 +848,9 @@ export function useSuperAdminManage() {
           ? deletingBrandId === deleteTarget.id
           : deleteTarget?.type === "model"
             ? deletingModelId === deleteTarget.id
-          : false;
+            : deleteTarget?.type === "type"
+              ? deletingTypeId === deleteTarget.id
+              : false;
 
   return {
     loading,
@@ -891,6 +910,7 @@ export function useSuperAdminManage() {
     loadingModelsByBrand,
     editingModelId,
     deletingModelId,
+    deletingTypeId,
     modelEditTarget,
     setModelEditForm,
     modelEditForm,

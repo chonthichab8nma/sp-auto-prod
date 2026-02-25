@@ -67,4 +67,5 @@ export type DeleteTarget =
   | { type: "employee"; id: number; name: string }
   | { type: "insurance"; id: number; name: string }
   | { type: "brand"; id: number; name: string }
-  | { type: "model"; id: number; name: string; brandId: number };
+  | { type: "model"; id: number; name: string; brandId: number }
+  | { type: "type"; id: number; name: string };

@@ -128,6 +128,7 @@ export default function SuperAdminManagePage() {
           loadingModelsByBrand={vm.loadingModelsByBrand}
           editingModelId={vm.editingModelId}
           deletingModelId={vm.deletingModelId}
+          deletingTypeId={vm.deletingTypeId}
           onGroupedFormChange={vm.setGroupedCreateForm}
           onCreateGrouped={vm.handleCreateGroupedVehicle}
           onClearGrouped={() => vm.setGroupedCreateForm(defaultGroupedCreateForm)}
@@ -142,6 +143,9 @@ export default function SuperAdminManagePage() {
               name: item.name,
               brandId: item.brandId ?? Number(vm.selectedModelsBrandId),
             })
+          }
+          onDeleteType={(item) =>
+            vm.openDeleteModal({ type: "type", id: item.id, name: item.name })
           }
         />
       ) : null}
@@ -176,7 +180,7 @@ export default function SuperAdminManagePage() {
               }
             />
             <TextInput
-              label="เบอร์โทร"
+              label="เบอร์โทรศัพท์"
               value={vm.employeeForm.phone}
               onChange={(next) =>
                 vm.setEmployeeForm((prev) => {
@@ -185,7 +189,7 @@ export default function SuperAdminManagePage() {
                   return { ...prev, phone: digits };
                 })
               }
-              placeholder="0811112222"
+              placeholder="กรอกเบอร์โทรศัพท์"
             />
             <TextInput
               label="ชื่อผู้ใช้งาน"
@@ -257,7 +261,7 @@ export default function SuperAdminManagePage() {
                   return { ...prev, phone: digits };
                 })
               }
-              placeholder="0811112222"
+              placeholder="กรอกเบอร์โทร"
             />
             <TextInput
               label="ชื่อผู้ใช้งาน"
@@ -310,7 +314,7 @@ export default function SuperAdminManagePage() {
               label="ชื่อบริษัท"
               value={vm.insuranceForm.name}
               onChange={(next) => vm.setInsuranceForm((prev) => ({ ...prev, name: next }))}
-              placeholder="ชื่อบริษัท"
+              placeholder="กรอกชื่อบริษัท"
             />
             <TextInput
               label="เบอร์ติดต่อ"
@@ -321,7 +325,7 @@ export default function SuperAdminManagePage() {
                   contactPhone: next.replace(/\D/g, ""),
                 }))
               }
-              placeholder="เบอร์ติดต่อ"
+              placeholder="กรอกเบอร์ติดต่อ"
             />
             <div className="flex items-center gap-2 pt-1">
               <input
@@ -481,7 +485,7 @@ export default function SuperAdminManagePage() {
               label="ชื่อบริษัท"
               value={vm.insuranceEditForm.name}
               onChange={(next) => vm.setInsuranceEditForm((prev) => ({ ...prev, name: next }))}
-              placeholder="ชื่อบริษัท"
+              placeholder="กรอกชื่อบริษัท"
             />
             <TextInput
               label="เบอร์ติดต่อ"
@@ -492,7 +496,7 @@ export default function SuperAdminManagePage() {
                   contactPhone: next.replace(/\D/g, ""),
                 }))
               }
-              placeholder="เบอร์ติดต่อ"
+              placeholder="กรอกเบอร์ติดต่อ"
             />
             <div className="flex items-center gap-2 pt-1">
               <input

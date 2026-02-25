@@ -1,6 +1,19 @@
 import type { ReactNode } from "react";
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Tooltip,
+  type ChartOptions,
+} from "chart.js";
 import { BriefcaseBusiness, Coins, RefreshCw, Wallet } from "lucide-react";
+import { Bar } from "react-chartjs-2";
+import FormSelect from "../../../shared/components/form/FormSelect";
 import { useDashboardSummaryQuery } from "../hooks/useDashboardSummaryQuery";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 type StatCardProps = {
   label: string;
@@ -15,11 +28,6 @@ const amountFormatter = new Intl.NumberFormat("th-TH", {
   maximumFractionDigits: 2,
 });
 const numberFormatter = new Intl.NumberFormat("th-TH");
-const compactNumberFormatter = new Intl.NumberFormat("th-TH", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
 const monthNameFormatter = new Intl.DateTimeFormat("th-TH", { month: "long" });
 
 function formatMonthName(monthNumber: number) {
@@ -32,11 +40,6 @@ function formatMonthName(monthNumber: number) {
 
 function formatAmount(value: number) {
   return amountFormatter.format(value || 0);
-}
-
-function shortMonthLabel(value: string) {
-  if (!value) return "-";
-  return value.length > 4 ? value.slice(0, 3) : value;
 }
 
 function StatCard({
@@ -95,9 +98,15 @@ export default function ReportSummaryPage() {
     monthlyTrends,
     topInsurance,
     selectedYear,
+    setSelectedYear,
     loading,
     error,
   } = useDashboardSummaryQuery();
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 7 }, (_, index) => {
+    const year = currentYear - index;
+    return { value: String(year), label: `ปี ${year}` };
+  });
 
   const insuranceRevenue =
     data?.totalClaimAmount ??
@@ -154,29 +163,58 @@ export default function ReportSummaryPage() {
   );
 
   const monthlyRows = monthlyTrends?.data ?? [];
-  const monthlyChartData = monthlyRows.map((month) => {
-    const processing = Math.max(
-      month.totalClaimAmount - month.totalApprovedAmount,
-      0,
-    );
+  const monthlyChartData = monthlyRows.map((month) => ({
+    key: `${month.year}-${month.month}`,
+    month: month.monthName || formatMonthName(month.month),
+    total: month.totalClaimAmount,
+  }));
+  const monthlyBarData = {
+    labels: monthlyChartData.map((item) => item.month),
+    datasets: [
+      {
+        label: "รายได้รวม",
+        data: monthlyChartData.map((item) => item.total),
+        backgroundColor: "#0ea5e9",
+        borderRadius: 6,
+        maxBarThickness: 28,
+      },
+    ],
+  };
+  const monthlyBarOptions: ChartOptions<"bar"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context) =>
+            `${context.dataset.label}: ${formatAmount(Number(context.raw) || 0)} บาท`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: {
+          color: "#64748b",
+          maxRotation: 0,
+          minRotation: 0,
+        },
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: "#e2e8f0" },
+        ticks: {
+          color: "#64748b",
+          callback: (value) =>
+            typeof value === "number"
+              ? `${numberFormatter.format(value)}`
+              : `${value}`,
+        },
+      },
+    },
+  };
 
-    return {
-      key: `${month.year}-${month.month}`,
-      month: month.monthName || formatMonthName(month.month),
-      total: month.totalClaimAmount,
-      disbursed: month.totalDisbursedAmount,
-      processing,
-      jobCount: month.jobCount,
-    };
-  });
-  const maxChartValue = Math.max(
-    ...monthlyChartData.flatMap((item) => [
-      item.total,
-      item.disbursed,
-      item.processing,
-    ]),
-    1,
-  );
   return (
     <div className="flex w-full flex-col gap-5">
       {error && (
@@ -251,6 +289,14 @@ export default function ReportSummaryPage() {
               <h2 className="text-lg font-semibold text-slate-900">
                 รายงานรายเดือน ปี {selectedYear}
               </h2>
+              <div className="w-[150px]">
+                <FormSelect
+                  value={String(selectedYear)}
+                  options={yearOptions}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  placeholder="เลือกปี"
+                />
+              </div>
             </div>
 
             {monthlyRows.length === 0 ? (
@@ -265,147 +311,18 @@ export default function ReportSummaryPage() {
                       <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
                       รายได้รวม
                     </span>
-                    <span className="inline-flex items-center gap-1 text-slate-600">
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                      ยอดคงค้างเคลม
-                    </span>
                   </div>
                   <div className="overflow-x-auto">
-                    {(() => {
-                      const chartWidth = Math.max(
-                        720,
-                        monthlyChartData.length * 72,
-                      );
-                      const chartHeight = 240;
-                      const padding = {
-                        top: 16,
-                        right: 16,
-                        bottom: 16,
-                        left: 16,
-                      };
-                      const plotWidth =
-                        chartWidth - padding.left - padding.right;
-                      const plotHeight =
-                        chartHeight - padding.top - padding.bottom;
-                      const stepX =
-                        monthlyChartData.length > 1
-                          ? plotWidth / (monthlyChartData.length - 1)
-                          : 0;
-
-                      const totalPoints = monthlyChartData.map(
-                        (item, index) => {
-                          const x = padding.left + stepX * index;
-                          const y =
-                            padding.top +
-                            (1 - item.total / maxChartValue) * plotHeight;
-                          return { ...item, x, y };
-                        },
-                      );
-                      const processingPoints = monthlyChartData.map(
-                        (item, index) => {
-                          const x = padding.left + stepX * index;
-                          const y =
-                            padding.top +
-                            (1 - item.processing / maxChartValue) * plotHeight;
-                          return { ...item, x, y };
-                        },
-                      );
-
-                      const totalLine = totalPoints
-                        .map((p) => `${p.x},${p.y}`)
-                        .join(" ");
-                      const processingLine = processingPoints
-                        .map((p) => `${p.x},${p.y}`)
-                        .join(" ");
-                      const guideLines = Array.from({ length: 5 }, (_, idx) => {
-                        const y = padding.top + (plotHeight / 4) * idx;
-                        return y;
-                      });
-
-                      return (
-                        <div className="min-w-[720px]">
-                          <svg
-                            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                            className="h-56 w-full overflow-visible"
-                            role="img"
-                            aria-label="กราฟเส้นรายได้รายเดือน"
-                          >
-                            {guideLines.map((y) => (
-                              <line
-                                key={`guide-${y}`}
-                                x1={padding.left}
-                                y1={y}
-                                x2={chartWidth - padding.right}
-                                y2={y}
-                                stroke="#e2e8f0"
-                                strokeWidth="1"
-                              />
-                            ))}
-
-                            <polyline
-                              points={totalLine}
-                              fill="none"
-                              stroke="#0ea5e9"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <polyline
-                              points={processingLine}
-                              fill="none"
-                              stroke="#f59e0b"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-
-                            {totalPoints.map((point) => (
-                              <circle
-                                key={`total-${point.key}`}
-                                cx={point.x}
-                                cy={point.y}
-                                r="3.5"
-                                fill="#0ea5e9"
-                              >
-                                <title>{`${point.month} | รายได้รวม: ${formatAmount(point.total)} บาท`}</title>
-                              </circle>
-                            ))}
-                            {processingPoints.map((point) => (
-                              <circle
-                                key={`processing-${point.key}`}
-                                cx={point.x}
-                                cy={point.y}
-                                r="3.5"
-                                fill="#f59e0b"
-                              >
-                                <title>{`${point.month} | ยอดคงค้างเคลม: ${formatAmount(point.processing)} บาท`}</title>
-                              </circle>
-                            ))}
-                          </svg>
-
-                          <div
-                            className="mt-2 grid gap-2"
-                            style={{
-                              gridTemplateColumns: `repeat(${monthlyChartData.length}, minmax(0, 1fr))`,
-                            }}
-                          >
-                            {monthlyChartData.map((item) => (
-                              <div
-                                key={`label-${item.key}`}
-                                className="text-center"
-                              >
-                                <span className="block text-xs text-slate-500">
-                                  {shortMonthLabel(item.month)}
-                                </span>
-                                <span className="block text-[11px] text-slate-400">
-                                  {compactNumberFormatter.format(item.total)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
+                    <div
+                      className="h-64 min-w-[720px]"
+                      style={{ width: Math.max(720, monthlyChartData.length * 90) }}
+                    >
+                      <Bar
+                        data={monthlyBarData}
+                        options={monthlyBarOptions}
+                        aria-label="กราฟแท่งรายได้รายเดือน"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -461,8 +378,16 @@ export default function ReportSummaryPage() {
       </section>
 
       <section className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6 lg:max-h-[520px] overflow-hidden">
-        <div className="px-1 pb-3 text-lg font-semibold text-slate-900">
-          ตารางตัวเลขรายเดือน
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-3">
+          <div className="text-lg font-semibold text-slate-900">ตารางตัวเลขรายเดือน</div>
+          <div className="w-[150px]">
+            <FormSelect
+              value={String(selectedYear)}
+              options={yearOptions}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              placeholder="เลือกปี"
+            />
+          </div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white">
           <div className="border-t border-slate-100 overflow-x-auto">
