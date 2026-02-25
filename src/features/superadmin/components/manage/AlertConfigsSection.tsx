@@ -38,6 +38,7 @@ export function AlertConfigsSection({
     <SectionWrapper
       title="ตั้งค่าระยะเวลาการแจ้งเตือน"
       description=""
+      headerAction={<div className="h-15" />}
     >
       <div className="mt-5 space-y-3 md:hidden">
         {configs.map((item) => {

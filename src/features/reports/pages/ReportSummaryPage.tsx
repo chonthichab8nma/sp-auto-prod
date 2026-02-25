@@ -89,6 +89,55 @@ function SummarySkeletonCard() {
   );
 }
 
+function ReportPageSkeleton() {
+  return (
+    <div className="flex w-full flex-col gap-5">
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div className="space-y-5 lg:col-span-12">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
+            <SummarySkeletonCard />
+            <SummarySkeletonCard />
+            <SummarySkeletonCard />
+            <SummarySkeletonCard />
+            <SummarySkeletonCard />
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-stretch">
+        <div className="lg:col-span-8">
+          <div className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+            <div className="mb-4 h-8 w-64 animate-pulse rounded bg-slate-200" />
+            <div className="h-72 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+          </div>
+        </div>
+        <div className="lg:col-span-4">
+          <div className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+            <div className="mb-4 h-7 w-52 animate-pulse rounded bg-slate-200" />
+            <div className="space-y-3">
+              <div className="h-16 animate-pulse rounded-xl bg-slate-100" />
+              <div className="h-16 animate-pulse rounded-xl bg-slate-100" />
+              <div className="h-16 animate-pulse rounded-xl bg-slate-100" />
+              <div className="h-16 animate-pulse rounded-xl bg-slate-100" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
+        <div className="mb-4 h-7 w-56 animate-pulse rounded bg-slate-200" />
+        <div className="space-y-3">
+          <div className="h-10 animate-pulse rounded bg-slate-100" />
+          <div className="h-10 animate-pulse rounded bg-slate-100" />
+          <div className="h-10 animate-pulse rounded bg-slate-100" />
+          <div className="h-10 animate-pulse rounded bg-slate-100" />
+          <div className="h-10 animate-pulse rounded bg-slate-100" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function ReportSummaryPage() {
   const {
     data,
@@ -107,6 +156,10 @@ export default function ReportSummaryPage() {
     const year = currentYear - index;
     return { value: String(year), label: `ปี ${year}` };
   });
+
+  if (loading) {
+    return <ReportPageSkeleton />;
+  }
 
   const insuranceRevenue =
     data?.totalClaimAmount ??
@@ -235,48 +288,36 @@ export default function ReportSummaryPage() {
               </span> */}
             </div>
             <div className=" grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
-              {loading ? (
-                <>
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                  <SummarySkeletonCard />
-                </>
-              ) : (
-                <>
-                  <StatCard
-                    label="รายได้จากบริษัทประกัน"
-                    value={`฿${formatAmount(insuranceRevenue)}`}
-                    icon={<BriefcaseBusiness size={18} />}
-                    tone="blue"
-                  />
-                  <StatCard
-                    label="ยอดเงินประกันที่รับชำระแล้ว"
-                    value={`฿${formatAmount(receivedInsurance)}`}
-                    icon={<Coins size={18} />}
-                    tone="green"
-                  />
-                  <StatCard
-                    label="ยอดเงินประกันที่ยังไม่ได้รับ"
-                    value={`฿${formatAmount(pendingInsurance)}`}
-                    icon={<RefreshCw size={18} />}
-                    tone="amber"
-                  />
-                  <StatCard
-                    label="รายได้จากเงินสด"
-                    value={`฿${formatAmount(cashRevenue)}`}
-                    icon={<Wallet size={18} />}
-                    tone="amber"
-                  />
-                  <StatCard
-                    label="ยอดรายได้รวม"
-                    value={`฿${formatAmount(totalRevenue)}`}
-                    icon={<Coins size={18} />}
-                    tone="green"
-                  />
-                </>
-              )}
+              <StatCard
+                label="รายได้จากบริษัทประกัน"
+                value={`฿${formatAmount(insuranceRevenue)}`}
+                icon={<BriefcaseBusiness size={18} />}
+                tone="blue"
+              />
+              <StatCard
+                label="ยอดเงินประกันที่รับชำระแล้ว"
+                value={`฿${formatAmount(receivedInsurance)}`}
+                icon={<Coins size={18} />}
+                tone="green"
+              />
+              <StatCard
+                label="ยอดเงินประกันที่ยังไม่ได้รับ"
+                value={`฿${formatAmount(pendingInsurance)}`}
+                icon={<RefreshCw size={18} />}
+                tone="amber"
+              />
+              <StatCard
+                label="รายได้จากเงินสด"
+                value={`฿${formatAmount(cashRevenue)}`}
+                icon={<Wallet size={18} />}
+                tone="amber"
+              />
+              <StatCard
+                label="ยอดรายได้รวม"
+                value={`฿${formatAmount(totalRevenue)}`}
+                icon={<Coins size={18} />}
+                tone="green"
+              />
             </div>
           </section>
         </div>

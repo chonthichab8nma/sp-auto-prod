@@ -87,7 +87,7 @@ export function BrandsSection({
       title={sectionTitle}
       description=""
       headerAction={
-        <div className="flex items-center gap-2">
+        <div className="flex h-10 items-center gap-2">
           <div className="w-[180px]">
             <FormSelect
               value={manageView}
@@ -96,6 +96,7 @@ export function BrandsSection({
                 { value: "model", label: "รุ่น" },
                 { value: "type", label: "ประเภทรถ" },
               ]}
+              className="h-10"
               onChange={(e) =>
                 setManageView(e.target.value as "brand" | "model" | "type")
               }
@@ -110,6 +111,7 @@ export function BrandsSection({
                   label: brand.name,
                 }))}
                 placeholder="เลือกยี่ห้อรถ"
+                className="h-10"
                 onChange={(e) => onSelectModelsBrand(e.target.value)}
               />
             </div>
@@ -117,7 +119,7 @@ export function BrandsSection({
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
             >
               เพิ่มข้อมูลรถ
             </button>

@@ -22,13 +22,15 @@ export function InsurancesSection({
       title="จัดการบริษัทประกันภัย"
       description=""
       headerAction={
-        <button
-          type="button"
-          onClick={onOpenCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          เพิ่มบริษัทประกันภัย
-        </button>
+        <div className="flex h-10 items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenCreate}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            เพิ่มบริษัทประกันภัย
+          </button>
+        </div>
       }
     >
       <div className="mt-5 overflow-x-auto">
