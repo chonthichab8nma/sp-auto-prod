@@ -57,6 +57,10 @@ export default function CreateJobForm() {
     navigate("/dashboard", { replace: true });
   }
 
+  const selectZeroValue = (input: HTMLInputElement) => {
+    if (input.value === "0") input.select();
+  };
+
   return (
     <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <div className="px-5 md:px-8 py-5 md:py-8 border-b border-slate-100 flex justify-between items-start">
@@ -213,7 +217,8 @@ export default function CreateJobForm() {
               value={formData.excessFee}
               onChange={handleChange}
               type="number"
-              onFocus={(e) => e.target.select()}
+              onFocus={(e) => selectZeroValue(e.currentTarget)}
+              onClick={(e) => selectZeroValue(e.currentTarget)}
               // error={errors.excessFee}
             />
             <div className="sm:col-span-2 lg:col-span-3 pt-1">
@@ -416,7 +421,8 @@ export default function CreateJobForm() {
                     value={formData.claimAmount}
                     onChange={handleChange}
                     type="number"
-                    onFocus={(e) => e.target.select()}
+                    onFocus={(e) => selectZeroValue(e.currentTarget)}
+                    onClick={(e) => selectZeroValue(e.currentTarget)}
                     error={errors.claimAmount}
                   />
                 </div>

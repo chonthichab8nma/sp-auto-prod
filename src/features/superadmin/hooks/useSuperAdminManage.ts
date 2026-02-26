@@ -791,6 +791,12 @@ export function useSuperAdminManage() {
     setShowEmployeeForm(false);
   }
 
+  function openEmployeeCreateModal() {
+    if (creatingEmployee) return;
+    setEmployeeForm(defaultEmployeeForm);
+    setShowEmployeeForm(true);
+  }
+
   function closeEmployeeEditModal() {
     if (editingEmployeeId) return;
     setEmployeeEditTarget(null);
@@ -931,6 +937,7 @@ export function useSuperAdminManage() {
     handleCreateGroupedVehicle,
     openModelEditModal,
     handleUpdateVehicleModel,
+    openEmployeeCreateModal,
     closeEmployeeForm,
     closeEmployeeEditModal,
     closeInsuranceForm,

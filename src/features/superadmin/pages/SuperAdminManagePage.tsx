@@ -94,7 +94,7 @@ export default function SuperAdminManagePage() {
         <EmployeesSection
           employees={vm.employees}
           deletingEmployeeId={vm.deletingEmployeeId}
-          onOpenCreate={() => vm.setShowEmployeeForm(true)}
+          onOpenCreate={vm.openEmployeeCreateModal}
           onEdit={vm.openEmployeeEditModal}
           onDelete={(item) =>
             vm.openDeleteModal({ type: "employee", id: item.id, name: item.name })
@@ -164,12 +164,18 @@ export default function SuperAdminManagePage() {
           onClose={vm.closeEmployeeForm}
           disableClose={vm.creatingEmployee}
         >
-          <form onSubmit={vm.handleCreateEmployee} className="flex h-full flex-col gap-4">
+          <form
+            onSubmit={vm.handleCreateEmployee}
+            autoComplete="off"
+            className="flex h-full flex-col gap-4"
+          >
             <TextInput
               label="ชื่อ - นามสกุล"
               value={vm.employeeForm.name}
               onChange={(next) => vm.setEmployeeForm((prev) => ({ ...prev, name: next }))}
               placeholder="กรอกชื่อ - นามสกุล"
+              autoComplete="off"
+              name="employee_name"
             />
             <FormSelect
               label="สิทธิ์การใช้งาน"
@@ -190,12 +196,16 @@ export default function SuperAdminManagePage() {
                 })
               }
               placeholder="กรอกเบอร์โทรศัพท์"
+              autoComplete="tel"
+              name="employee_phone"
             />
             <TextInput
               label="ชื่อผู้ใช้งาน"
               value={vm.employeeForm.username}
               onChange={(next) => vm.setEmployeeForm((prev) => ({ ...prev, username: next }))}
               placeholder="กรอกชื่อผู้ใช้งาน"
+              autoComplete="off"
+              name="employee_username"
             />
             <TextInput
               label="รหัสผ่าน"
@@ -203,6 +213,8 @@ export default function SuperAdminManagePage() {
               onChange={(next) => vm.setEmployeeForm((prev) => ({ ...prev, password: next }))}
               placeholder="กรอกรหัสผ่าน"
               type="password"
+              autoComplete="new-password"
+              name="employee_password"
             />
 
             <div className="mt-auto flex justify-end gap-2 border-t border-slate-200 pt-4">

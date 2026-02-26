@@ -35,20 +35,26 @@ export function TextInput({
   onChange,
   placeholder,
   type = "text",
+  autoComplete,
+  name,
 }: {
   label: string;
   value: string;
   onChange: (next: string) => void;
   placeholder: string;
   type?: "text" | "password";
+  autoComplete?: string;
+  name?: string;
 }) {
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-medium text-slate-800">{label}</label>
       <input
+        name={name}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
         placeholder={placeholder}
         className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-blue-600"
       />
