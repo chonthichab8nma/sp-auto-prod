@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import type { JobApi } from "../api/job.api";
+import type { JobApi, JobStatusApi } from "../api/job.api";
 import StatusBadge from "../../../shared/components/ui/StatusBadge";
 import Skeleton from "../../../shared/components/ui/Skeleton";
 import { formatThaiDate } from "../../../shared/lib/date";
@@ -49,10 +49,12 @@ function SkeletonCell({ colKey }: { colKey: (typeof columns)[number]["key"] }) {
 export default function StationsTable({
   jobs,
   loading,
+  statusOverrides,
   onRowClick,
 }: {
   jobs: JobApi[];
   loading: boolean;
+  statusOverrides?: Record<number, JobStatusApi>;
   onRowClick: (id: number) => void;
 }) {
   const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
@@ -87,6 +89,8 @@ export default function StationsTable({
     return (
       <div className="space-y-3 md:hidden">
         {jobs.map((job) => {
+          const statusOverride = statusOverrides?.[job.id];
+          const statusJob = statusOverride ? { ...job, status: statusOverride } : job;
           const isExpanded = expandedJobId === job.id;
           const repairDescription = job.repairDescription?.trim() || "";
           const notes = job.notes?.trim() || "";
@@ -106,7 +110,7 @@ export default function StationsTable({
                     {job.vehicle.registration}
                   </div>
                 </div>
-                <StatusBadge job={job} />
+                <StatusBadge job={statusJob} />
               </div>
 
               <div className="mt-3 flex items-center gap-2">
@@ -252,7 +256,12 @@ export default function StationsTable({
                 </td>
               </tr>
             ) : (
-              jobs.map((job) => (
+              jobs.map((job) => {
+                const statusOverride = statusOverrides?.[job.id];
+                const statusJob = statusOverride
+                  ? { ...job, status: statusOverride }
+                  : job;
+                return (
                 <tr
                   key={job.id}
                   className="h-15 hover:bg-slate-50/50 transition-colors cursor-pointer"
@@ -274,7 +283,7 @@ export default function StationsTable({
                   </td>
 
                   <td className="box-border px-6 py-4 text-center">
-                    <StatusBadge job={job} />
+                    <StatusBadge job={statusJob} />
                   </td>
 
                   <td className="box-border px-6 py-4 text-slate-600 whitespace-nowrap">
@@ -296,7 +305,8 @@ export default function StationsTable({
                     {job.customer?.phone || "-"}
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

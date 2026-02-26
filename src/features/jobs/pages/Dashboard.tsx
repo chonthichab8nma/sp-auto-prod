@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import DashboardFilters from "../components/DashboardFilters";
@@ -6,7 +6,8 @@ import DashboardStats from "../components/DashboardStats";
 import JobsTable from "../components/JobsTable";
 import Pagination from "../../../shared/components/ui/Pagination";
 
-import type { JobsQuery } from "../api/job.api";
+import type { JobStatusApi, JobsQuery } from "../api/job.api";
+import { getJobByIdApi } from "../api/job.api";
 import { useDashboardQuery } from "../hooks/useDashboardQuery";
 import DashboardSearchInput from "../components/DashboardSearchInput";
 import {
@@ -14,6 +15,7 @@ import {
   mapUiStatusToApi,
   resolveTotalPages,
 } from "../lib/query";
+import { getEffectiveJobStatus } from "../lib/stage";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -24,6 +26,9 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusOverrides, setStatusOverrides] = useState<
+    Record<number, JobStatusApi>
+  >({});
 
   // Advanced Filters State
   const [advancedFilters, setAdvancedFilters] = useState({
@@ -79,6 +84,42 @@ export default function Dashboard() {
 
   const items = data?.data ?? [];
   const totalPages = resolveTotalPages(data, pageSize);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (!items.length) {
+      setStatusOverrides({});
+      return;
+    }
+
+    (async () => {
+      const next: Record<number, JobStatusApi> = {};
+
+      await Promise.all(
+        items.map(async (job) => {
+          if (job.jobStages?.length) {
+            next[job.id] = getEffectiveJobStatus(job);
+            return;
+          }
+          try {
+            const detail = await getJobByIdApi(job.id);
+            if (!alive) return;
+            next[job.id] = getEffectiveJobStatus(detail);
+          } catch {
+            // keep original status if detail fetch fails
+          }
+        }),
+      );
+
+      if (!alive) return;
+      setStatusOverrides(next);
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [items]);
 
   const counts = data?.statusCounts ?? {
     all: 0,
@@ -178,6 +219,7 @@ export default function Dashboard() {
         <JobsTable
           jobs={items}
           loading={loading}
+          statusOverrides={statusOverrides}
           onRowClick={(id) => navigate(`/job/${id}`)}
         />
 

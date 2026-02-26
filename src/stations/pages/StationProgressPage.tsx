@@ -13,6 +13,7 @@ import ProgressHeader from "../components/ProgressHeader";
 import type { EmployeeApi } from "../api/employees.api";
 import { useStationProgressViewModel } from "../hooks/useStationProgressViewModel";
 import { useAuth } from "../../shared/auth/useAuth";
+import { getEffectiveJobStatus } from "../../features/jobs/lib/stage";
 
 export default function StationProgressPage({
   job,
@@ -80,6 +81,7 @@ export default function StationProgressPage({
     onUpdateStep,
     forcedEmployee: isStaff ? authEmployee : null,
   });
+  const effectiveStatus = useMemo(() => getEffectiveJobStatus(jobState), [jobState]);
   const showDoneReadonlyCard = jobState.status === "DONE" && !isSuperAdmin;
   const canManageReceipt = !(jobState.status === "DONE" && !isSuperAdmin);
   const billingStageIndex = stages.findIndex(
@@ -128,7 +130,7 @@ export default function StationProgressPage({
       <div className="mb-3 md:mb-6">
         <ProgressHeader
         registration={jobState.vehicle.registration}
-        status={jobState.status}
+        status={effectiveStatus}
         onBack={() => navigate(-1)}
         />
       </div>

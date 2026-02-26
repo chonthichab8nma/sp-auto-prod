@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import type { StepStatus } from "../../Type";
 import type {
   JobApi,
+  JobStatusApi,
   JobStepStatusApi,
 } from "../../features/jobs/api/job.api";
 import {
@@ -26,6 +27,12 @@ import { jobsService } from "../../features/jobs/services/jobs.service";
 
 function isDone(status: StepStatus | JobStepStatusApi) {
   return status === "completed" || status === "skipped";
+}
+
+function toJobStatus(stageCode?: string | null): JobStatusApi | null {
+  const code = (stageCode ?? "").trim().toUpperCase();
+  if (code === "CLAIM" || code === "REPAIR" || code === "BILLING") return code;
+  return null;
 }
 
 type Params = {
@@ -367,6 +374,7 @@ export function useStationProgressViewModel({
     }
 
     const tId = toast.loading("กำลังบันทึก...");
+    const nowIso = new Date().toISOString();
     try {
       await saveStep({
         stepId: activeStepId,
@@ -382,7 +390,6 @@ export function useStationProgressViewModel({
         Number(jobState.claimAmount ?? 0) > 0;
 
       if (shouldMarkInsuranceDisbursed) {
-        const nowIso = new Date().toISOString();
         const disbursedAmount = Number(jobState.claimAmount ?? 0);
         const res = await jobsService.update(jobState.id, {
           disbursedAmount,
@@ -398,6 +405,26 @@ export function useStationProgressViewModel({
           disbursedAmount,
           disbursementDate: nowIso,
         }));
+      }
+
+      const shouldPromoteToBillingNow =
+        isRepairCustomerReceiveStep &&
+        selectedAction === "completed" &&
+        billingStageIndex >= 0;
+
+      if (shouldPromoteToBillingNow) {
+        const moveToBillingRes = await jobsService.update(jobState.id, {
+          status: "BILLING",
+          currentStageIndex: billingStageIndex,
+        });
+        if (!moveToBillingRes.ok) {
+          toast.error(
+            toThaiErrorMessage(
+              moveToBillingRes.error,
+              "อัปเดตสถานะเป็นตั้งเบิกไม่สำเร็จ",
+            ),
+          );
+        }
       }
 
       onUpdateStep(
@@ -455,14 +482,26 @@ export function useStationProgressViewModel({
           index === checkpointIndex ? { ...item, jobSteps: updatedSteps } : item,
         );
         const prevIdx = prev.currentStageIndex ?? 0;
+        const isLastStation = checkpointIndex >= newStages.length - 1;
+        const movedNext = isSavingLastStep && stageDone;
+        const nextIdx = movedNext
+          ? Math.min(prevIdx + 1, newStages.length - 1)
+          : prevIdx;
+        const jumpBilling = shouldJumpToBilling && billingStageIndex >= 0;
+        const nextStatus: JobStatusApi = jumpBilling
+          ? (toJobStatus(newStages[billingStageIndex]?.stage.code) ?? "BILLING")
+          : movedNext
+            ? isLastStation
+              ? "DONE"
+              : (toJobStatus(newStages[nextIdx]?.stage.code) ?? prev.status)
+            : prev.status;
 
         return {
           ...prev,
           jobStages: newStages,
-          currentStageIndex:
-            isSavingLastStep && stageDone
-              ? Math.min(prevIdx + 1, newStages.length - 1)
-              : prevIdx,
+          status: nextStatus,
+          currentStageIndex: jumpBilling ? billingStageIndex : nextIdx,
+          updatedAt: nowIso,
         };
       });
 

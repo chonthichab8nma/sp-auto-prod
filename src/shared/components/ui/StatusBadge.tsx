@@ -1,8 +1,10 @@
-import type { JobStatusApi } from "../../../features/jobs/api/job.api";
+import type { JobApi, JobStatusApi } from "../../../features/jobs/api/job.api";
+import { getEffectiveJobStatus } from "../../../features/jobs/lib/stage";
 
 type StatusBadgeJob = {
   status: JobStatusApi | string;
   isFinished?: boolean;
+  jobStages?: JobApi["jobStages"];
 };
 
 type BadgeConfig = {
@@ -27,7 +29,16 @@ export default function StatusBadge({
   job: StatusBadgeJob;
   forceWhiteBackground?: boolean;
 }) {
-  if (job.isFinished) {
+  const resolvedStatus =
+    Array.isArray(job.jobStages) && job.jobStages.length > 0
+      ? getEffectiveJobStatus({
+          status: job.status as JobStatusApi,
+          isFinished: Boolean(job.isFinished),
+          jobStages: job.jobStages,
+        })
+      : String(job.status).toUpperCase();
+
+  if (job.isFinished || resolvedStatus === "DONE") {
     return (
       <span
         className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[12px] font-semibold min-w-[80px] text-emerald-600 ${forceWhiteBackground ? "bg-white" : "bg-emerald-50"}`}
@@ -37,7 +48,7 @@ export default function StatusBadge({
     );
   }
 
-  const config = STATUS_BADGE[job.status] ?? {
+  const config = STATUS_BADGE[resolvedStatus] ?? {
     label: "รอดำเนินการ",
     bgClassName: "bg-slate-50",
     textClassName: "text-slate-600",

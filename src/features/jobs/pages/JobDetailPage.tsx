@@ -14,7 +14,7 @@ import {
   vehiclesService,
   type VehicleBrandApi,
 } from "../services/vehicles.service";
-import { buildJobTimelineStages } from "../lib/stage";
+import { buildJobTimelineStages, getEffectiveStageIndex } from "../lib/stage";
 import {
   resolveBrandLogoUrl,
   resolveVehicleTypeFromCatalog,
@@ -167,6 +167,10 @@ export default function JobDetailPage({
   const canEditVehicleDetails = false;
 
   const stages = useMemo(() => (job ? buildJobTimelineStages(job) : []), [job]);
+  const activeTimelineIndex = useMemo(() => {
+    if (!job) return 0;
+    return getEffectiveStageIndex(job);
+  }, [job]);
 
   useEffect(() => {
     let alive = true;
@@ -332,7 +336,7 @@ export default function JobDetailPage({
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {stages?.map((stage, idx) => {
-              const isActive = idx === job?.currentStageIndex;
+              const isActive = idx === activeTimelineIndex;
               const isCompleted = stage.isCompleted;
 
               return (

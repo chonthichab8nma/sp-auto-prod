@@ -184,6 +184,10 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
     job.paymentType === "Insurance"
       ? `ประกัน : ${insuranceCompanyName}`
       : "ประกัน";
+  const insuranceAmount =
+    job.paymentType === "Insurance"
+      ? Number(job.claimAmount ?? 0).toLocaleString("th-TH")
+      : "-";
 
   return `
     <div data-work-order-sheet class="bg-[#ffffff] text-[#111] w-[1122px] min-h-[793px] border-[1px] border-black p-2 font-[\"TH_Sarabun_New\",\"Sarabun\",sans-serif]">
@@ -206,6 +210,11 @@ function renderSheetInner(job: JobApi, vehicleTypeValue: string): string {
           <div class="grid grid-cols-1 gap-y-0.5">
             <div class="text-start">${renderCheckbox(job.paymentType === "Insurance", insuranceLabel)}</div>
             <div class="text-start">${renderCheckbox(job.paymentType !== "Insurance", "เงินสด")}</div>
+            ${
+              job.paymentType === "Insurance"
+                ? `<div class="text-start"><strong>จำนวนเงินประกัน :</strong> ${text(insuranceAmount)} บาท</div>`
+                : ""
+            }
           </div>
         </div>
       </div>
