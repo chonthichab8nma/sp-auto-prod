@@ -82,14 +82,14 @@ export default function Dashboard() {
 
   const { data, loading, error } = useDashboardQuery(query);
 
-  const items = data?.data ?? [];
+  const items = useMemo(() => data?.data ?? [], [data]);
   const totalPages = resolveTotalPages(data, pageSize);
 
   useEffect(() => {
     let alive = true;
 
     if (!items.length) {
-      setStatusOverrides({});
+      setStatusOverrides((prev) => (Object.keys(prev).length ? {} : prev));
       return;
     }
 
@@ -129,12 +129,46 @@ export default function Dashboard() {
     DONE: 0,
   };
 
+  const effectiveItems = useMemo(
+    () =>
+      items.map((job) => {
+        const effectiveStatus = statusOverrides[job.id] ?? job.status;
+        return { ...job, status: effectiveStatus };
+      }),
+    [items, statusOverrides],
+  );
+
+  const adjustedCounts = useMemo(() => {
+    const next = { ...counts };
+    for (const job of items) {
+      const original = job.status;
+      const effective = statusOverrides[job.id];
+      if (!effective || effective === original) continue;
+
+      if (original in next) {
+        const key = original as keyof typeof next;
+        next[key] = Math.max(0, (next[key] as number) - 1);
+      }
+      if (effective in next) {
+        const key = effective as keyof typeof next;
+        next[key] = (next[key] as number) + 1;
+      }
+    }
+    return next;
+  }, [counts, items, statusOverrides]);
+
+  const displayItems = useMemo(() => {
+    const selectedApiStatus = mapUiStatusToApi(selectedStatus);
+    if (!selectedApiStatus) return effectiveItems;
+    return effectiveItems.filter((job) => job.status === selectedApiStatus);
+  }, [effectiveItems, selectedStatus]);
+
   const statsValues = {
-    total: counts.all,
-    claim: counts.CLAIM,
-    repair: counts.REPAIR,
-    billing: counts.BILLING,
-    finished: counts.DONE,
+    total: adjustedCounts.all,
+    claim: adjustedCounts.CLAIM,
+    repair: adjustedCounts.REPAIR,
+    billing: adjustedCounts.BILLING,
+    finished: adjustedCounts.DONE,
   };
 
   return (
@@ -217,7 +251,7 @@ export default function Dashboard() {
         </div>
 
         <JobsTable
-          jobs={items}
+          jobs={displayItems}
           loading={loading}
           statusOverrides={statusOverrides}
           onRowClick={(id) => navigate(`/job/${id}`)}
