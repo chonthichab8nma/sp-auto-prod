@@ -145,7 +145,6 @@ export default function ReportSummaryPage() {
     insuranceFinancialSummary,
     insuranceStats,
     monthlyTrends,
-    topInsurance,
     selectedYear,
     setSelectedYear,
     loading,
@@ -177,36 +176,14 @@ export default function ReportSummaryPage() {
   // Pending insurance must always be "total claim - total received", never negative.
   const pendingInsurance = Math.max(insuranceRevenue - receivedInsurance, 0);
 
-  const fallbackSortedCompanies = [...insuranceStats].sort(
-    (a, b) => b.jobCount - a.jobCount,
-  );
-  const statsByCompanyId = new Map(
-    insuranceStats.map((item) => [item.insuranceCompanyId, item]),
-  );
-
-  const rankedCompanies = (() => {
-    if (!topInsurance.length) return fallbackSortedCompanies;
-
-    const topIds = new Set(topInsurance.map((item) => item.insuranceCompanyId));
-    const topWithAmounts = topInsurance
-      .map((item) => {
-        const stat = statsByCompanyId.get(item.insuranceCompanyId);
-        return {
-          insuranceCompanyId: item.insuranceCompanyId,
-          insuranceCompanyName: item.insuranceCompanyName,
-          jobCount: item.jobCount,
-          totalClaimAmount: stat?.totalClaimAmount ?? 0,
-          totalApprovedAmount: stat?.totalApprovedAmount ?? 0,
-          totalDisbursedAmount: stat?.totalDisbursedAmount ?? 0,
-        };
-      })
-      .sort((a, b) => b.jobCount - a.jobCount);
-
-    const remaining = fallbackSortedCompanies.filter(
-      (item) => !topIds.has(item.insuranceCompanyId),
+  const rankedCompanies = [...insuranceStats].sort((a, b) => {
+    const byJobCount = b.jobCount - a.jobCount;
+    if (byJobCount !== 0) return byJobCount;
+    return a.insuranceCompanyName.localeCompare(
+      b.insuranceCompanyName,
+      "th-TH",
     );
-    return [...topWithAmounts, ...remaining];
-  })();
+  });
 
   // const topFiveCompanies = rankedCompanies.slice(0, 5);
   // const remainingCompanies = rankedCompanies.slice(5);
