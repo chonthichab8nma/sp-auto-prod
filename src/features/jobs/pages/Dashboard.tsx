@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import DashboardFilters from "../components/DashboardFilters";
@@ -7,7 +7,6 @@ import JobsTable from "../components/JobsTable";
 import Pagination from "../../../shared/components/ui/Pagination";
 
 import type { JobStatusApi, JobsQuery } from "../api/job.api";
-import { getJobByIdApi } from "../api/job.api";
 import { useDashboardQuery } from "../hooks/useDashboardQuery";
 import DashboardSearchInput from "../components/DashboardSearchInput";
 import {
@@ -26,9 +25,6 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusOverrides, setStatusOverrides] = useState<
-    Record<number, JobStatusApi>
-  >({});
 
   // Advanced Filters State
   const [advancedFilters, setAdvancedFilters] = useState({
@@ -85,40 +81,13 @@ export default function Dashboard() {
   const items = useMemo(() => data?.data ?? [], [data]);
   const totalPages = resolveTotalPages(data, pageSize);
 
-  useEffect(() => {
-    let alive = true;
-
-    if (!items.length) {
-      setStatusOverrides((prev) => (Object.keys(prev).length ? {} : prev));
-      return;
+  const statusOverrides = useMemo<Record<number, JobStatusApi>>(() => {
+    const next: Record<number, JobStatusApi> = {};
+    for (const job of items) {
+      if (!job.jobStages?.length) continue;
+      next[job.id] = getEffectiveJobStatus(job);
     }
-
-    (async () => {
-      const next: Record<number, JobStatusApi> = {};
-
-      await Promise.all(
-        items.map(async (job) => {
-          if (job.jobStages?.length) {
-            next[job.id] = getEffectiveJobStatus(job);
-            return;
-          }
-          try {
-            const detail = await getJobByIdApi(job.id);
-            if (!alive) return;
-            next[job.id] = getEffectiveJobStatus(detail);
-          } catch {
-            // keep original status if detail fetch fails
-          }
-        }),
-      );
-
-      if (!alive) return;
-      setStatusOverrides(next);
-    })();
-
-    return () => {
-      alive = false;
-    };
+    return next;
   }, [items]);
 
   const counts = data?.statusCounts ?? {
